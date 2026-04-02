@@ -8,10 +8,27 @@ AI-OS is a local-first, multi-agent AI system designed to help technical leaders
 Built with a focus on:
 
 - Privacy by default, with local-first operation and no internet requirement
-- No-cost-friendly defaults using local models
+- Cost-conscious defaults using local models
 - Modular agent architecture
 - Grounded, evidence-based outputs
 - Pluggable model providers, starting local and extending to hybrid setups when needed
+
+## Why This Exists
+
+Technical leaders operate across fragmented systems:
+
+- Jira for project tracking
+- Docs for context and planning
+- Meetings for decisions and follow-up
+- Repositories for execution
+
+This creates:
+
+- Information overload
+- Lost context across tools
+- Time spent synthesizing instead of deciding
+
+AI-OS exists to turn fragmented inputs into structured, actionable insight without defaulting to cloud-dependent or opaque agent behavior.
 
 ## Purpose
 
@@ -41,6 +58,8 @@ flowchart TD
     R --> M[Model Provider Layer]
     M --> V[Validator Agent]
 ```
+
+`Engineering OS` is a future extension for code-oriented workflows such as repository analysis, implementation assistance, and engineering execution support.
 
 ## Director OS
 
@@ -117,8 +136,8 @@ Specialized agents with strict roles, such as:
 ### Model Provider Layer
 
 - Ollama as the default local model runtime
-- Optional external providers only as an explicit future extension
-- Abstracted provider interface so local-first remains the default posture
+- External providers are optional and explicitly opt-in
+- Abstracted provider interface so local-first remains the default execution mode
 
 ### Validator Agent
 
@@ -138,7 +157,7 @@ Acts as the final quality gate and enforces:
 ### Grounded Outputs
 
 - Responses should be based on retrieved context
-- Agents should cite sources when possible
+- Non-trivial claims should include source references when evidence is available
 
 ### Structured Responses
 
@@ -154,7 +173,7 @@ Acts as the final quality gate and enforces:
 
 - The user retains final judgment and control
 
-## Planned Project Structure
+## Repository Structure (Target State)
 
 The repository is currently minimal. The structure below reflects intended direction, not necessarily current implementation:
 
@@ -196,12 +215,13 @@ The repository is currently minimal. The structure below reflects intended direc
 
 The intended initial stack is:
 
-- `Ollama` for no-cost-friendly local inference
+- `Ollama` for cost-conscious local inference
 - `Python` for orchestration and backend logic
 - `LangGraph` for deterministic workflow orchestration
 - `FastAPI` for a local API layer
 - `Pydantic` for schemas and validation contracts
-- Local file-based retrieval first, with `FAISS` or `Chroma` only if needed later
+- Start with simple local file-based retrieval
+- Introduce `FAISS` or `Chroma` only if retrieval complexity justifies it
 - `Markdown`, `CSV`, and `JSON` as common local input formats
 
 The frontend is optional in the first slice. If added, it should focus on workflow traceability rather than chat-style interaction:
@@ -232,6 +252,17 @@ Phase 3:
 - Add stronger retrieval infrastructure if plain file retrieval becomes limiting
 - Expand provider support only if local-first constraints remain intact
 - Add more domain agents without weakening determinism or validation
+
+## Non-Goals
+
+This project intentionally does not aim to:
+
+- Build fully autonomous agents
+- Replace human decision-making
+- Maximize agent complexity or parallelism for its own sake
+- Depend on cloud APIs for core functionality
+
+The focus is on clarity, reliability, grounded reasoning, and operator control.
 
 ## Example Workflows
 
@@ -268,9 +299,9 @@ Output:
 ## Important Notes
 
 - This system is not autonomous
-- Agents should operate within strict constraints
+- Agents operate within strict constraints
 - Accuracy and clarity are prioritized over creativity
-- Local execution and low-cost operation are default design requirements
+- Local execution and cost-efficient operation are default design requirements
 - Outputs should be reviewed before external use
 
 ## Contributing
