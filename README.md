@@ -8,6 +8,7 @@ AI-OS is a local-first, multi-agent AI system designed to help technical leaders
 Built with a focus on:
 
 - Privacy by default, with local-first operation and no internet requirement
+- No-cost-friendly defaults using local models
 - Modular agent architecture
 - Grounded, evidence-based outputs
 - Pluggable model providers, starting local and extending to hybrid setups when needed
@@ -115,9 +116,9 @@ Specialized agents with strict roles, such as:
 
 ### Model Provider Layer
 
-- Local model support by default
-- Optional external providers in future iterations
-- Abstracted interface for flexibility
+- Ollama as the default local model runtime
+- Optional external providers only as an explicit future extension
+- Abstracted provider interface so local-first remains the default posture
 
 ### Validator Agent
 
@@ -191,16 +192,46 @@ The repository is currently minimal. The structure below reflects intended direc
     routing.yaml
 ```
 
-## Technology Direction
+## MVP Technology Stack
 
-Likely components for the system include:
+The intended initial stack is:
 
-- Local LLM runtime such as Ollama
-- Python for orchestration and backend logic
-- FastAPI for an API layer
-- Next.js or React for the frontend
-- FAISS or Chroma for local retrieval
-- Markdown, CSV, and JSON as common input formats
+- `Ollama` for no-cost-friendly local inference
+- `Python` for orchestration and backend logic
+- `LangGraph` for deterministic workflow orchestration
+- `FastAPI` for a local API layer
+- `Pydantic` for schemas and validation contracts
+- Local file-based retrieval first, with `FAISS` or `Chroma` only if needed later
+- `Markdown`, `CSV`, and `JSON` as common local input formats
+
+The frontend is optional in the first slice. If added, it should focus on workflow traceability rather than chat-style interaction:
+
+- `Next.js` or `React` for a local UI
+- Execution trace and validation state over animated "agent chat"
+
+## Implementation Plan
+
+The initial build should stay narrow and prove the system with one end-to-end local workflow before expanding.
+
+Phase 1:
+
+- Build a single `Director OS` workflow
+- Accept local project notes or exports as input
+- Retrieve evidence from local files
+- Route through the orchestrator
+- Produce structured output with validator checks
+
+Phase 2:
+
+- Reuse the same shared core for one `Brand OS` workflow
+- Turn real work artifacts into grounded content drafts
+- Expose workflow state and evidence in a simple local UI
+
+Phase 3:
+
+- Add stronger retrieval infrastructure if plain file retrieval becomes limiting
+- Expand provider support only if local-first constraints remain intact
+- Add more domain agents without weakening determinism or validation
 
 ## Example Workflows
 
@@ -239,6 +270,7 @@ Output:
 - This system is not autonomous
 - Agents should operate within strict constraints
 - Accuracy and clarity are prioritized over creativity
+- Local execution and low-cost operation are default design requirements
 - Outputs should be reviewed before external use
 
 ## Contributing
