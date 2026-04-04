@@ -1,6 +1,11 @@
 from director_os.workflows.weekly_update import build_weekly_update
+from packages.shared.providers.base import WeeklyUpdateProvider
 from packages.shared.retrieval.local_files import retrieve_relevant_documents
-from packages.shared.schemas.director_os import WeeklyUpdateRequest, WeeklyUpdateResponse
+from packages.shared.schemas.director_os import (
+    WeeklyUpdateDraft,
+    WeeklyUpdateRequest,
+    WeeklyUpdateResponse,
+)
 from packages.shared.validation.weekly_update import validate_weekly_update
 
 
@@ -51,6 +56,40 @@ def test_weekly_update_without_focus_uses_full_note() -> None:
             max_documents=10,
         )
     )
+    assert result.wins
+    assert result.risks
+    assert result.next_steps
+
+
+def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
+    """The next phase should support model-assisted synthesis without breaking the API contract."""
+
+    class FakeProvider(WeeklyUpdateProvider):
+        def generate_weekly_update(self, focus, evidence):
+            return WeeklyUpdateDraft(
+                summary="Model-assisted weekly update from grounded evidence.",
+                wins=["Win: provider synthesized the wins section."],
+                risks=["Risk: provider synthesized the risks section."],
+                next_steps=["Next: provider synthesized the next steps section."],
+            )
+
+    from director_os.workflows import weekly_update as workflow_module
+
+    monkeypatch.setattr(
+        workflow_module,
+        "OllamaWeeklyUpdateProvider",
+        lambda base_url, model: FakeProvider(),
+    )
+
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            focus="leadership update",
+            max_documents=5,
+            use_model=True,
+        )
+    )
+    assert result.summary.startswith("Model-assisted")
     assert result.wins
     assert result.risks
     assert result.next_steps

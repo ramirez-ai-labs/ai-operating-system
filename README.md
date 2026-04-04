@@ -180,6 +180,7 @@ The repository now includes a minimal Phase 1 slice for `Director OS`:
 - A local FastAPI service in `apps/api`
 - A deterministic weekly update workflow in `director_os/workflows`
 - Shared schemas, retrieval, and validation logic in `packages/shared`
+- An explicit provider layer for optional Ollama-backed synthesis
 - Sample local project data in `data/local_only/projects`
 - Focused tests for retrieval and validation behavior
 
@@ -258,7 +259,8 @@ Phase 1 status:
 - Implemented as a minimal local weekly-update endpoint
 - Current endpoint: `POST /director-os/weekly-update`
 - Current support: local markdown retrieval, concise structured output, evidence list, validation checks
-- Not yet implemented: model-backed generation, UI trace view, multi-workflow orchestration
+- Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
+- Not yet implemented: UI trace view, multi-workflow orchestration
 
 Phase 2:
 
@@ -344,6 +346,21 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
     "data_path": "data/local_only/projects",
     "focus": "leadership update",
     "max_documents": 5
+  }'
+```
+
+Call the optional Ollama-backed path:
+
+```bash
+curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data_path": "data/local_only/projects",
+    "focus": "leadership update",
+    "max_documents": 5,
+    "use_model": true,
+    "ollama_url": "http://127.0.0.1:11434",
+    "ollama_model": "llama3.2"
   }'
 ```
 

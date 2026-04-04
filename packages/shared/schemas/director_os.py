@@ -17,6 +17,18 @@ class WeeklyUpdateRequest(BaseModel):
         le=20,
         description="Maximum number of evidence items to include in the response.",
     )
+    use_model: bool = Field(
+        default=False,
+        description="Enable optional model-assisted synthesis instead of deterministic extraction.",
+    )
+    ollama_url: str = Field(
+        default="http://127.0.0.1:11434",
+        description="Base URL for the local Ollama server when model synthesis is enabled.",
+    )
+    ollama_model: str = Field(
+        default="llama3.2",
+        description="Ollama model name used when model synthesis is enabled.",
+    )
 
 
 class EvidenceItem(BaseModel):
@@ -34,6 +46,14 @@ class WeeklyUpdateResponse(BaseModel):
     risks: list[str]
     next_steps: list[str]
     evidence: list[EvidenceItem]
+
+
+class WeeklyUpdateDraft(BaseModel):
+    """Intermediate structured draft generated before evidence is attached."""
+    summary: str
+    wins: list[str]
+    risks: list[str]
+    next_steps: list[str]
 
 
 class ErrorResponse(BaseModel):

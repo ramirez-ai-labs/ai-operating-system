@@ -1,6 +1,8 @@
+from packages.shared.providers.ollama import OllamaWeeklyUpdateProvider
 from packages.shared.retrieval.local_files import retrieve_relevant_documents
 from packages.shared.schemas.director_os import (
     EvidenceItem,
+    WeeklyUpdateDraft,
     WeeklyUpdateRequest,
     WeeklyUpdateResponse,
 )
@@ -20,16 +22,48 @@ def build_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
             "No relevant local documents were found. Add markdown files under the data path or adjust the focus."
         )
 
-    # The MVP uses deterministic extraction rules so the workflow stays easy to inspect.
+    # The deterministic path remains the default so the MVP stays stable even
+    # without a local model runtime. Ollama is opt-in for the next phase.
+    draft = (
+        _build_model_draft(request, evidence)
+        if request.use_model
+        else _build_deterministic_draft(request.focus, evidence)
+    )
+
     response = WeeklyUpdateResponse(
-        summary=_build_summary(request.focus, evidence),
-        wins=_collect_sentences(evidence, ("win", "shipped", "completed", "launched"), 3),
-        risks=_collect_sentences(evidence, ("risk", "blocked", "delay", "issue"), 3),
-        next_steps=_collect_sentences(evidence, ("next", "follow-up", "plan", "action"), 3),
+        summary=draft.summary,
+        wins=draft.wins,
+        risks=draft.risks,
+        next_steps=draft.next_steps,
         evidence=evidence,
     )
 
     return validate_weekly_update(response)
+
+
+def _build_deterministic_draft(
+    focus: str | None,
+    evidence: list[EvidenceItem],
+) -> WeeklyUpdateDraft:
+    """Build a predictable draft directly from evidence lines."""
+    return WeeklyUpdateDraft(
+        summary=_build_summary(focus, evidence),
+        wins=_collect_sentences(evidence, ("win", "shipped", "completed", "launched"), 3),
+        risks=_collect_sentences(evidence, ("risk", "blocked", "delay", "issue"), 3),
+        next_steps=_collect_sentences(evidence, ("next", "follow-up", "plan", "action"), 3),
+    )
+
+
+def _build_model_draft(
+    request: WeeklyUpdateRequest,
+    evidence: list[EvidenceItem],
+) -> WeeklyUpdateDraft:
+    """Use the configured local provider to synthesize a structured draft."""
+    provider = OllamaWeeklyUpdateProvider(
+        base_url=request.ollama_url,
+        model=request.ollama_model,
+    )
+    return provider.generate_weekly_update(request.focus, evidence)
 
 
 def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:
