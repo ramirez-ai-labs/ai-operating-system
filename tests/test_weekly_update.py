@@ -5,6 +5,7 @@ from packages.shared.validation.weekly_update import validate_weekly_update
 
 
 def test_retrieval_returns_sample_markdown() -> None:
+    """The sample project note should be discoverable through local retrieval."""
     evidence = retrieve_relevant_documents(
         base_path="data/local_only/projects",
         query="leadership update",
@@ -15,6 +16,7 @@ def test_retrieval_returns_sample_markdown() -> None:
 
 
 def test_weekly_update_builds_from_local_data() -> None:
+    """The main workflow should return a structured response from sample input data."""
     result = build_weekly_update(
         WeeklyUpdateRequest(
             data_path="data/local_only/projects",
@@ -29,6 +31,7 @@ def test_weekly_update_builds_from_local_data() -> None:
 
 
 def test_validation_requires_evidence() -> None:
+    """Validator should reject responses that are not grounded in retrieved evidence."""
     empty = WeeklyUpdateResponse(
         summary="Short summary",
         wins=[],

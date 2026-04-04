@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class WeeklyUpdateRequest(BaseModel):
+    """Input contract for the Phase 1 Director OS workflow."""
     data_path: str = Field(
         default="data/local_only/projects",
         description="Local directory containing markdown notes for synthesis.",
@@ -19,12 +20,14 @@ class WeeklyUpdateRequest(BaseModel):
 
 
 class EvidenceItem(BaseModel):
+    """Minimal evidence payload returned from local retrieval."""
     source: str
     title: str
     excerpt: str
 
 
 class WeeklyUpdateResponse(BaseModel):
+    """Structured weekly update returned to the operator."""
     summary: str
     wins: list[str]
     risks: list[str]
@@ -33,4 +36,5 @@ class WeeklyUpdateResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
+    """Simple error envelope for API failures."""
     detail: str

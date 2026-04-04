@@ -10,6 +10,7 @@ def retrieve_relevant_documents(
     query: str | None,
     limit: int,
 ) -> list[EvidenceItem]:
+    """Search local markdown files and return the best matching evidence snippets."""
     root = Path(base_path).resolve()
     if not root.exists() or not root.is_dir():
         raise ValueError(f"Data path does not exist or is not a directory: {base_path}")
@@ -22,6 +23,7 @@ def retrieve_relevant_documents(
         if not text:
             continue
 
+        # Score each file by simple keyword frequency to keep the MVP deterministic.
         score = _score_text(text, keywords)
         if keywords and score == 0:
             continue
@@ -43,12 +45,14 @@ def retrieve_relevant_documents(
 
 
 def _normalize_keywords(query: str | None) -> list[str]:
+    """Drop very short tokens so retrieval focuses on more meaningful terms."""
     if not query:
         return []
     return [part.lower() for part in query.split() if len(part.strip()) > 2]
 
 
 def _score_text(text: str, keywords: list[str]) -> int:
+    """Use a basic count-based score until richer retrieval is needed."""
     if not keywords:
         return 1
     lowered = text.lower()
@@ -56,6 +60,7 @@ def _score_text(text: str, keywords: list[str]) -> int:
 
 
 def _best_excerpt(text: str, keywords: list[str]) -> str:
+    """Return the first line that best matches the current query."""
     lines = [line.strip("- ").strip() for line in text.splitlines() if line.strip()]
     if not lines:
         return ""
