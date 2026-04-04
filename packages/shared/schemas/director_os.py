@@ -15,13 +15,14 @@ class WeeklyUpdateRequest(BaseModel):
         default=5,
         ge=1,
         le=20,
-        description="Maximum number of local documents to include as evidence.",
+        description="Maximum number of evidence items to include in the response.",
     )
 
 
 class EvidenceItem(BaseModel):
     """Minimal evidence payload returned from local retrieval."""
     source: str
+    line_number: int
     title: str
     excerpt: str
 

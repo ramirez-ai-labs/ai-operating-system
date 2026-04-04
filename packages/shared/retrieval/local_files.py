@@ -23,22 +23,15 @@ def retrieve_relevant_documents(
         if not text:
             continue
 
-        # Score each file by simple keyword frequency to keep the MVP deterministic.
-        score = _score_text(text, keywords)
-        if keywords and score == 0:
-            continue
-
-        excerpt = _best_excerpt(text, keywords)
-        matches.append(
-            (
-                score,
-                EvidenceItem(
-                    source=str(file_path.relative_to(root)),
-                    title=file_path.stem.replace("_", " ").replace("-", " ").title(),
-                    excerpt=excerpt,
-                ),
-            )
+        # Return multiple evidence lines from a single file so one note can surface
+        # wins, risks, and next steps together instead of collapsing to one excerpt.
+        file_matches = _extract_matching_lines(
+            file_path=file_path,
+            root=root,
+            text=text,
+            keywords=keywords,
         )
+        matches.extend(file_matches)
 
     matches.sort(key=lambda item: item[0], reverse=True)
     return [item for _, item in matches[:limit]]
@@ -59,14 +52,48 @@ def _score_text(text: str, keywords: list[str]) -> int:
     return sum(lowered.count(keyword) for keyword in keywords)
 
 
-def _best_excerpt(text: str, keywords: list[str]) -> str:
-    """Return the first line that best matches the current query."""
-    lines = [line.strip("- ").strip() for line in text.splitlines() if line.strip()]
-    if not lines:
-        return ""
+def _extract_matching_lines(
+    file_path: Path,
+    root: Path,
+    text: str,
+    keywords: list[str],
+) -> list[tuple[int, EvidenceItem]]:
+    """Convert a markdown file into ranked line-level evidence items."""
+    matches: list[tuple[int, EvidenceItem]] = []
+    title = file_path.stem.replace("_", " ").replace("-", " ").title()
 
-    for line in lines:
-        lowered = line.lower()
-        if not keywords or any(keyword in lowered for keyword in keywords):
-            return line[:280]
-    return lines[0][:280]
+    for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        cleaned_line = raw_line.strip("- ").strip()
+        if not cleaned_line:
+            continue
+
+        line_score = _line_score(cleaned_line, keywords)
+        if keywords and line_score == 0:
+            continue
+
+        matches.append(
+            (
+                line_score,
+                EvidenceItem(
+                    source=str(file_path.relative_to(root)),
+                    line_number=line_number,
+                    title=title,
+                    excerpt=cleaned_line[:280],
+                ),
+            )
+        )
+
+    return matches
+
+
+def _line_score(line: str, keywords: list[str]) -> int:
+    """Rank lines by keyword overlap and common status markers."""
+    lowered = line.lower()
+    score = sum(lowered.count(keyword) for keyword in keywords) if keywords else 1
+
+    # Status prefixes are useful signals for the weekly-update workflow even
+    # when the explicit query terms only appear elsewhere in the same file.
+    if lowered.startswith(("win:", "risk:", "next:")):
+        score += 2
+
+    return score

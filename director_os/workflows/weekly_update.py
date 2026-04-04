@@ -35,7 +35,10 @@ def build_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
 def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:
     """Create a concise operator-facing summary anchored to the top evidence sources."""
     focus_text = focus or "current leadership activity"
-    top_sources = ", ".join(item.title for item in evidence[:2])
+    # Deduplicate titles because line-level evidence can now yield several
+    # entries from the same source file.
+    top_source_titles = list(dict.fromkeys(item.title for item in evidence))
+    top_sources = ", ".join(top_source_titles[:2])
     return (
         f"Weekly update synthesized from local project evidence about {focus_text}. "
         f"Primary supporting context came from {top_sources}."
