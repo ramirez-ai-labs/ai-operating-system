@@ -315,6 +315,17 @@ Useful focus areas:
 - Retrieval and grounding improvements
 - UI and UX improvements for structured workflows
 
+## SDLC and CI
+
+The project uses lightweight GitHub Actions to keep quality checks cheap and fast:
+
+- Repository checks run on pushes to `main` and `mvp-*` branches, plus pull requests
+- Python checks automatically run when a `pyproject.toml`-based MVP exists
+- CI installs the project, compiles Python sources, and runs `pytest`
+- Concurrency cancellation is enabled to avoid wasting minutes on stale branch runs
+
+The intent is to keep the workflow production-minded without adding paid infrastructure or unnecessary pipeline complexity early.
+
 ## Final Thought
 
 > This is not just an AI project.
