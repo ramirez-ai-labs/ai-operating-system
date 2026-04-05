@@ -178,6 +178,7 @@ Acts as the final quality gate and enforces:
 The repository now includes a minimal Phase 1 slice for `Director OS`:
 
 - A local FastAPI service in `apps/api`
+- A lightweight Chief of Staff orchestration endpoint for deterministic routing
 - A deterministic weekly update workflow in `director_os/workflows`
 - Shared schemas, retrieval, and validation logic in `packages/shared`
 - An explicit provider layer for optional Ollama-backed synthesis
@@ -259,6 +260,7 @@ Phase 1:
 Phase 1 status:
 
 - Implemented as a minimal local weekly-update endpoint
+- Implemented as a minimal orchestration endpoint: `POST /orchestrate`
 - Current endpoint: `POST /director-os/weekly-update`
 - Current support: local markdown retrieval, concise structured output, evidence list, validation checks
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
@@ -351,6 +353,18 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   }'
 ```
 
+Call the Chief of Staff orchestrator endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/orchestrate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Prepare my leadership weekly update",
+    "data_path": "data/local_only/projects",
+    "max_documents": 10
+  }'
+```
+
 Call the optional Ollama-backed path:
 
 ```bash
@@ -407,4 +421,3 @@ The intent is to keep the workflow production-minded without adding paid infrast
 
 > This is not just an AI project.
 > It is a system designed to help you think, decide, and operate better.
-

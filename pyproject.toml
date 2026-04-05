@@ -27,6 +27,7 @@ packages = [
   "director_os.workflows",
   "packages",
   "packages.shared",
+  "packages.shared.orchestration",
   "packages.shared.providers",
   "packages.shared.retrieval",
   "packages.shared.schemas",
