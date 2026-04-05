@@ -1,4 +1,4 @@
-from packages.shared.schemas.director_os import WeeklyUpdateResponse
+from packages.shared.schemas.director_os import GroundedItem, WeeklyUpdateResponse
 
 
 def validate_weekly_update(response: WeeklyUpdateResponse) -> WeeklyUpdateResponse:
@@ -15,4 +15,22 @@ def validate_weekly_update(response: WeeklyUpdateResponse) -> WeeklyUpdateRespon
             "Weekly update must include at least one actionable section populated from evidence."
         )
 
+    for item in response.wins + response.risks + response.next_steps:
+        _validate_grounded_item(item, response)
+
     return response
+
+
+def _validate_grounded_item(
+    item: GroundedItem,
+    response: WeeklyUpdateResponse,
+) -> None:
+    """Require each output item to point to a real evidence line."""
+    if not item.text.strip():
+        raise ValueError("Grounded output items must include text.")
+
+    evidence_locations = {
+        (evidence.source, evidence.line_number) for evidence in response.evidence
+    }
+    if (item.source, item.line_number) not in evidence_locations:
+        raise ValueError("Grounded output items must reference existing evidence.")

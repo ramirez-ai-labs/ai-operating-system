@@ -66,6 +66,8 @@ def _extract_matching_lines(
         cleaned_line = raw_line.strip("- ").strip()
         if not cleaned_line:
             continue
+        if _should_skip_line(cleaned_line):
+            continue
 
         line_score = _line_score(cleaned_line, keywords)
         if keywords and line_score == 0:
@@ -97,3 +99,13 @@ def _line_score(line: str, keywords: list[str]) -> int:
         score += 2
 
     return score
+
+
+def _should_skip_line(line: str) -> bool:
+    """Ignore headings and weak structural lines that do not help grounding."""
+    stripped = line.strip()
+    if not stripped:
+        return True
+    if stripped.startswith("#"):
+        return True
+    return False

@@ -2,6 +2,7 @@ from director_os.workflows.weekly_update import build_weekly_update
 from packages.shared.providers.base import WeeklyUpdateProvider
 from packages.shared.retrieval.local_files import retrieve_relevant_documents
 from packages.shared.schemas.director_os import (
+    GroundedItem,
     WeeklyUpdateDraft,
     WeeklyUpdateRequest,
     WeeklyUpdateResponse,
@@ -19,6 +20,7 @@ def test_retrieval_returns_sample_markdown() -> None:
     assert evidence
     assert evidence[0].source == "director_week_14.md"
     assert evidence[0].line_number >= 1
+    assert not evidence[0].excerpt.startswith("#")
 
 
 def test_retrieval_returns_multiple_lines_from_one_file() -> None:
@@ -46,6 +48,8 @@ def test_weekly_update_builds_from_local_data() -> None:
     assert result.evidence
     assert result.summary
     assert result.wins
+    assert result.wins[0].source == "director_week_14.md"
+    assert result.wins[0].line_number >= 1
 
 
 def test_weekly_update_without_focus_uses_full_note() -> None:
@@ -59,6 +63,7 @@ def test_weekly_update_without_focus_uses_full_note() -> None:
     assert result.wins
     assert result.risks
     assert result.next_steps
+    assert all(item.source == "director_week_14.md" for item in result.wins)
 
 
 def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
@@ -68,9 +73,27 @@ def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
         def generate_weekly_update(self, focus, evidence):
             return WeeklyUpdateDraft(
                 summary="Model-assisted weekly update from grounded evidence.",
-                wins=["Win: provider synthesized the wins section."],
-                risks=["Risk: provider synthesized the risks section."],
-                next_steps=["Next: provider synthesized the next steps section."],
+                wins=[
+                    GroundedItem(
+                        text="Win: provider synthesized the wins section.",
+                        source=evidence[0].source,
+                        line_number=evidence[0].line_number,
+                    )
+                ],
+                risks=[
+                    GroundedItem(
+                        text="Risk: provider synthesized the risks section.",
+                        source=evidence[1].source,
+                        line_number=evidence[1].line_number,
+                    )
+                ],
+                next_steps=[
+                    GroundedItem(
+                        text="Next: provider synthesized the next steps section.",
+                        source=evidence[2].source,
+                        line_number=evidence[2].line_number,
+                    )
+                ],
             )
 
     from director_os.workflows import weekly_update as workflow_module
@@ -100,7 +123,13 @@ def test_validation_requires_evidence() -> None:
     empty = WeeklyUpdateResponse(
         summary="Short summary",
         wins=[],
-        risks=["A risk"],
+        risks=[
+            GroundedItem(
+                text="A risk",
+                source="missing.md",
+                line_number=1,
+            )
+        ],
         next_steps=[],
         evidence=[],
     )
@@ -110,3 +139,36 @@ def test_validation_requires_evidence() -> None:
         assert "evidence" in str(exc).lower()
     else:
         raise AssertionError("Expected validation to fail without evidence.")
+
+
+def test_validation_rejects_missing_evidence_reference() -> None:
+    """Validator should reject output items that point to non-existent evidence lines."""
+    response = WeeklyUpdateResponse(
+        summary="Short summary",
+        wins=[
+            GroundedItem(
+                text="Win: did a thing",
+                source="missing.md",
+                line_number=99,
+            )
+        ],
+        risks=[],
+        next_steps=[],
+        evidence=[
+            {
+                "source": "director_week_14.md",
+                "line_number": 3,
+                "title": "Director Week 14",
+                "excerpt": (
+                    "Win: shipped the internal status dashboard "
+                    "refresh for leadership review."
+                ),
+            }
+        ],
+    )
+    try:
+        validate_weekly_update(response)
+    except ValueError as exc:
+        assert "reference existing evidence" in str(exc)
+    else:
+        raise AssertionError("Expected validation to fail for an invalid evidence reference.")

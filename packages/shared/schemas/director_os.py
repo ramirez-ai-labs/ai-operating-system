@@ -39,21 +39,28 @@ class EvidenceItem(BaseModel):
     excerpt: str
 
 
+class GroundedItem(BaseModel):
+    """Output item tied to a specific supporting evidence location."""
+    text: str
+    source: str
+    line_number: int
+
+
 class WeeklyUpdateResponse(BaseModel):
     """Structured weekly update returned to the operator."""
     summary: str
-    wins: list[str]
-    risks: list[str]
-    next_steps: list[str]
+    wins: list[GroundedItem]
+    risks: list[GroundedItem]
+    next_steps: list[GroundedItem]
     evidence: list[EvidenceItem]
 
 
 class WeeklyUpdateDraft(BaseModel):
     """Intermediate structured draft generated before evidence is attached."""
     summary: str
-    wins: list[str]
-    risks: list[str]
-    next_steps: list[str]
+    wins: list[GroundedItem]
+    risks: list[GroundedItem]
+    next_steps: list[GroundedItem]
 
 
 class ErrorResponse(BaseModel):
