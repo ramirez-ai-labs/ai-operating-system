@@ -29,6 +29,9 @@ def _validate_grounded_item(
     if not item.text.strip():
         raise ValueError("Grounded output items must include text.")
 
+    # Validation uses the evidence list as the source of truth. If an output
+    # item points to a source line that is not in the response evidence, the
+    # workflow should fail instead of returning an unsupported claim.
     evidence_locations = {
         (evidence.source, evidence.line_number) for evidence in response.evidence
     }

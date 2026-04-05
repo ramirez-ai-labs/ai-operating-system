@@ -21,6 +21,8 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
     ) -> WeeklyUpdateDraft:
         """Call Ollama's generate endpoint and parse structured JSON output."""
         prompt = _build_prompt(focus, evidence)
+        # Ask Ollama for JSON so the workflow can keep using typed Python
+        # objects instead of trying to parse free-form prose.
         payload = {
             "model": self.model,
             "prompt": prompt,
@@ -75,6 +77,8 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
 def _build_prompt(focus: str | None, evidence: list[EvidenceItem]) -> str:
     """Keep the Ollama prompt explicit, grounded, and low-verbosity."""
     focus_text = focus or "current leadership activity"
+    # Each evidence line includes the source file and line number so the model
+    # can stay grounded and the caller can trace outputs back to local notes.
     evidence_lines = "\n".join(
         f"- {item.source}:{item.line_number} | {item.excerpt}" for item in evidence
     )
@@ -103,6 +107,8 @@ def _attach_grounding(items: list[str], evidence: list[EvidenceItem]) -> list[Gr
     for item_text in items:
         if not remaining_evidence:
             break
+        # The current MVP uses a simple first-match attachment strategy. It is
+        # easy to understand and can be replaced later by stronger alignment.
         evidence_item = remaining_evidence.pop(0)
         grounded.append(
             GroundedItem(
