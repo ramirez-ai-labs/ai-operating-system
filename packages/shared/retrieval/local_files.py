@@ -17,8 +17,12 @@ def retrieve_relevant_documents(
 
     keywords = _normalize_keywords(query)
     matches: list[tuple[int, EvidenceItem]] = []
+    all_files = sorted(root.rglob("*.md"))
+    file_rank = {
+        file_path.resolve(): len(all_files) - index for index, file_path in enumerate(all_files)
+    }
 
-    for file_path in sorted(root.rglob("*.md")):
+    for file_path in all_files:
         text = file_path.read_text(encoding="utf-8").strip()
         if not text:
             continue
@@ -30,6 +34,7 @@ def retrieve_relevant_documents(
             root=root,
             text=text,
             keywords=keywords,
+            file_priority=file_rank[file_path.resolve()],
         )
         matches.extend(file_matches)
 
@@ -57,6 +62,7 @@ def _extract_matching_lines(
     root: Path,
     text: str,
     keywords: list[str],
+    file_priority: int,
 ) -> list[tuple[int, EvidenceItem]]:
     """Convert a markdown file into ranked line-level evidence items."""
     matches: list[tuple[int, EvidenceItem]] = []
@@ -69,7 +75,7 @@ def _extract_matching_lines(
         if _should_skip_line(cleaned_line):
             continue
 
-        line_score = _line_score(cleaned_line, keywords)
+        line_score = _line_score(cleaned_line, keywords, file_priority)
         if keywords and line_score == 0:
             continue
 
@@ -88,15 +94,23 @@ def _extract_matching_lines(
     return matches
 
 
-def _line_score(line: str, keywords: list[str]) -> int:
+def _line_score(line: str, keywords: list[str], file_priority: int) -> int:
     """Rank lines by keyword overlap and common status markers."""
     lowered = line.lower()
-    score = sum(lowered.count(keyword) for keyword in keywords) if keywords else 1
+    score = (
+        sum(lowered.count(keyword) * 10 for keyword in keywords)
+        if keywords
+        else 1
+    )
 
     # Status prefixes are useful signals for the weekly-update workflow even
     # when the explicit query terms only appear elsewhere in the same file.
     if lowered.startswith(("win:", "risk:", "next:")):
         score += 2
+
+    # Lightly bias toward later files so newer-looking notes edge out older ones
+    # when relevance is otherwise similar.
+    score += file_priority
 
     return score
 

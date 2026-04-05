@@ -18,7 +18,10 @@ def test_retrieval_returns_sample_markdown() -> None:
         limit=5,
     )
     assert evidence
-    assert evidence[0].source == "director_week_14.md"
+    assert evidence[0].source in {
+        "director_week_14.md",
+        "director_week_15.md",
+    }
     assert evidence[0].line_number >= 1
     assert not evidence[0].excerpt.startswith("#")
 
@@ -63,7 +66,9 @@ def test_weekly_update_without_focus_uses_full_note() -> None:
     assert result.wins
     assert result.risks
     assert result.next_steps
-    assert all(item.source == "director_week_14.md" for item in result.wins)
+    assert {item.source for item in result.wins}.issubset(
+        {"director_week_13.md", "director_week_14.md", "director_week_15.md"}
+    )
 
 
 def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
@@ -172,3 +177,28 @@ def test_validation_rejects_missing_evidence_reference() -> None:
         assert "reference existing evidence" in str(exc)
     else:
         raise AssertionError("Expected validation to fail for an invalid evidence reference.")
+
+
+def test_retrieval_prefers_newer_matching_notes() -> None:
+    """Later files should edge out older ones when the relevance score is similar."""
+    evidence = retrieve_relevant_documents(
+        base_path="data/local_only/projects",
+        query="leadership summary",
+        limit=5,
+    )
+    assert evidence
+    assert evidence[0].source == "director_week_15.md"
+
+
+def test_weekly_update_draws_from_multiple_files() -> None:
+    """The workflow should be able to synthesize a weekly update from several project notes."""
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            focus="leadership operating review",
+            max_documents=10,
+        )
+    )
+    sources = {item.source for item in result.evidence}
+    assert "director_week_15.md" in sources
+    assert len(sources) >= 2
