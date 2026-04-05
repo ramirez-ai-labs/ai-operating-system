@@ -16,13 +16,25 @@ This repo should be treated as a reusable local-first agent system, not a generi
 
 ## Current Repository State
 
-The repository currently contains the project specification in `README.md` and may not yet contain the implementation files described there.
+The repository now contains both project documentation and an implemented Phase 1 MVP slice.
+
+Current implemented areas include:
+
+- a local FastAPI service under `apps/api`
+- a `Director OS` weekly update workflow
+- shared schemas, retrieval, validation, and provider abstractions under `packages/shared`
+- sample local project data under `data/local_only/projects`
+- focused tests for the current workflow
+- lightweight GitHub Actions CI/CD workflows
+
+The broader architecture described in `README.md` is still only partially implemented.
 
 Implications:
 
 - Do not claim a file, feature, workflow, or deployment path exists unless it is actually present in the repo.
 - When adding implementation, keep the README and the codebase aligned in the same change when practical.
 - If the README describes planned files that do not exist yet, treat them as intended targets rather than current reality.
+- Use `plan.md` as the phased roadmap for sequencing future work.
 
 ## Expected Repo Shape
 

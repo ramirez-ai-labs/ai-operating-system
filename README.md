@@ -186,6 +186,8 @@ The repository now includes a minimal Phase 1 slice for `Director OS`:
 
 The broader system described below is still the target state rather than the full current implementation.
 
+The phased execution roadmap for closing that gap is documented in [plan.md](/Users/victor/Github/Ramirez%20AI%20Labs/ai-operating-system/plan.md).
+
 ## Repository Structure (Target State)
 
 The structure below reflects intended direction as the MVP grows:
@@ -395,8 +397,9 @@ The project uses lightweight GitHub Actions to keep quality checks cheap and fas
 
 - Repository checks run on pushes to `main` and `mvp-*` branches, plus pull requests
 - Python checks automatically run when a `pyproject.toml`-based MVP exists
-- CI installs the project, compiles Python sources, and runs `pytest`
+- CI installs the project, runs `ruff`, compiles Python sources, and runs `pytest` with coverage output
 - Concurrency cancellation is enabled to avoid wasting minutes on stale branch runs
+- Tag-based release workflows build Python artifacts without introducing paid deployment tooling
 
 The intent is to keep the workflow production-minded without adding paid infrastructure or unnecessary pipeline complexity early.
 
