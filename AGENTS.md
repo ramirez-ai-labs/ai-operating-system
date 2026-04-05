@@ -110,6 +110,7 @@ Supporting concerns should include:
 - bounded cost and explicit opt-in for external providers
 - grounded responses with source-aware reasoning when evidence is available
 - readable workflow state and traceability
+- framework choices that support the product without becoming the product story
 
 ## Engineering Standards
 
@@ -128,6 +129,10 @@ Supporting concerns should include:
 - Validate untrusted input at the boundary.
 - Keep orchestrators, retrieval helpers, provider adapters, and validators straightforward and testable.
 - Avoid overusing classes when plain functions and typed objects are sufficient.
+- Use `LangGraph` for explicit workflow state and orchestration when it improves control and inspectability.
+- Use `LangChain` selectively for model, prompt, and tool abstractions instead of centering the codebase on framework conventions.
+- Use `LangSmith` for tracing and evaluation where workflows become sufficiently complex to justify it.
+- Use `Langflow` as an optional prototyping or demo aid, not the canonical runtime definition of AI-OS workflows.
 
 ### Configuration
 
@@ -174,6 +179,7 @@ Supporting concerns should include:
 - Do not document files, workflows, providers, or interfaces that do not exist yet without clearly marking them as planned.
 - When adding config, document required values, defaults, and privacy or cost implications.
 - When adding operational features, include enough detail for another engineer to run and debug the system.
+- Keep framework branding secondary to product concepts such as operating domains, workflows, retrieval, validation, and operator control.
 
 ## What To Avoid
 
@@ -194,3 +200,4 @@ If you are an AI agent working in this repository:
 - Prioritize privacy, grounded outputs, cost control, and operational clarity.
 - Make small, defensible changes that improve correctness and maintainability.
 - Prefer simple, inspectable orchestration patterns over elaborate agent architecture.
+- Treat `LangChain`, `LangGraph`, `Langflow`, and `LangSmith` as implementation tools, not the primary user-facing identity of the repo.
