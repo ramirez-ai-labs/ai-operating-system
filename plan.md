@@ -20,20 +20,23 @@ The repository currently includes:
 - project documentation in `README.md`
 - contribution and implementation guidance in `AGENTS.md`
 - a minimal `Director OS` FastAPI MVP
+- a lightweight Chief of Staff orchestration endpoint
+- a first `Brand OS` workflow
 - local retrieval from markdown files
 - validation logic
 - optional Ollama provider support
 - sample local project data
-- tests for core weekly-update behavior
+- tests for core weekly-update, orchestration, and Brand OS behavior
 - GitHub Actions CI and release workflows
 
 The repository does not yet include:
 
-- a true orchestrator layer
-- a `Brand OS` workflow
 - a local UI
-- strong evidence lineage per output item
+- explicit `LangGraph` workflow state graphs
+- `LangSmith` tracing and evaluation wiring
+- strong evidence lineage per output item in the model-assisted path
 - broader evaluation coverage
+- a stable visual demo layer
 
 ## Guiding Principles
 
@@ -43,113 +46,138 @@ All phases should preserve the core project standards:
 - cost-conscious execution
 - grounded outputs
 - deterministic workflows where practical
+- agentic behavior only where it materially improves outcomes
 - human-in-the-loop review
 - simple, inspectable architecture
+- framework choices that remain subordinate to the AI-OS product model
 
-## Phase 1: Stabilize the Director OS MVP
+## Phase 1: Stabilize the Director OS MVP and Align the Docs
 
 ### Objective
 
-Turn the current `Director OS` weekly update slice into a reliable and defensible foundation.
+Turn the current `Director OS` weekly update slice into a reliable and defensible foundation while aligning the docs with the actual repo and intended framework direction.
 
 ### Deliverables
 
-- Update `AGENTS.md` so it reflects the actual implemented repository state
+- Update `README.md`, `AGENTS.md`, and `plan.md` so they describe AI-OS as the product and the `lang*` stack as implementation infrastructure
 - Commit and stabilize the current CI/CD workflows
 - Improve evidence quality in retrieval
 - Filter headings and non-action lines from returned evidence
+- Constrain local data access to approved local roots for the MVP
 - Attach explicit source references to output items where practical
-- Strengthen validation rules for evidence-backed output
+- Strengthen validation rules for evidence-backed output, especially for model-assisted drafts
 - Add more local sample data to test multi-file retrieval
 - Expand tests for retrieval ranking, provider failures, and validation edge cases
 
 ### Exit Criteria
 
 - `README.md` and `AGENTS.md` are aligned with the real codebase
+- The roadmap reflects the LangGraph-first implementation direction without turning the repo into a framework demo
 - `Director OS` output is consistently grounded in meaningful evidence
 - CI passes on branch and pull request workflows
 - The MVP can be run locally from documented quickstart steps without guesswork
 
-## Phase 2: Add the Shared Orchestration Layer
+## Phase 2: Refactor Director OS into an Explicit LangGraph Workflow
 
 ### Objective
 
-Introduce a small, explicit orchestration layer that begins to match the “Chief of Staff” architecture described in the README.
+Move the current `Director OS` workflow from plain function orchestration into an explicit `LangGraph` state graph while keeping the API contract and AI-OS terminology stable.
 
 ### Deliverables
 
-- Add a lightweight orchestration module for workflow selection
-- Define routing rules for choosing the correct workflow based on request intent
-- Keep orchestration deterministic and easy to inspect
-- Document the orchestrator contract and request flow
-- Add tests for routing and failure behavior
+- Define a `Director OS` graph with explicit nodes such as request intake, retrieval, draft generation, validation, and final response assembly
+- Keep the first graph primarily deterministic, with model use remaining optional and bounded
+- Keep the current FastAPI routes stable so the graph is an internal refactor rather than an API redesign
+- Add tests for graph state transitions, failure behavior, and deterministic fallback paths
+- Document the graph at the workflow level, not as a framework showcase
 
 ### Exit Criteria
 
-- Requests flow through an explicit orchestrator layer
-- Workflow selection is testable and deterministic
-- The architecture more closely matches the README without adding unnecessary abstraction
+- `Director OS` runs through an explicit graph with inspectable state transitions
+- The public API and product language remain AI-OS-centered
+- The refactor improves control and observability without increasing conceptual noise
 
-## Phase 3: Add the First Brand OS Workflow
+## Phase 3: Add LangSmith Tracing and Evaluation
 
 ### Objective
 
-Prove that the shared core can support a second domain without duplicating architecture.
+Add workflow visibility and quality measurement so agentic behavior can be introduced without losing trust or inspectability.
 
 ### Deliverables
 
-- Add one `Brand OS` workflow
-- Reuse shared retrieval, schemas, validation, and provider logic
-- Define clear Brand OS inputs and structured outputs
-- Add sample local content or notes for Brand OS testing
-- Add focused tests for the new workflow
+- Wire `LangSmith` tracing into the main `Director OS` workflow path
+- Capture workflow-level traces for retrieval, draft generation, validation, and fallback behavior
+- Define evaluation cases for strong retrieval, weak retrieval, malformed model output, and unsupported claims
+- Create a small repeatable local eval dataset for `Director OS`
+- Document how traces and evals support AI-OS workflow development
 
 ### Exit Criteria
 
-- AI-OS supports at least two real workflows across different domains
-- Shared infrastructure is reused instead of copied
-- The “multi-domain operating system” story is now supported by actual code
+- A `Director OS` run can be traced end-to-end
+- Workflow changes can be compared against a stable evaluation set
+- Observability improves confidence without reframing the repo as a LangSmith demo
 
-## Phase 4: Improve Model Reliability and Evaluation
+## Phase 4: Expand the Chief of Staff and Brand OS on the Shared Graph Foundation
 
 ### Objective
 
-Make local-model-backed generation more reliable and easier to trust.
+Use the shared foundation to support multi-domain routing while keeping workflows explicit and bounded.
+
+### Deliverables
+
+- Refactor the Chief of Staff routing layer so it can select between graph-backed workflows
+- Bring `Brand OS` onto the same shared graph-oriented architecture where practical
+- Reuse shared retrieval, schemas, validation, and provider logic across domains
+- Add more realistic sample datasets for both `Director OS` and `Brand OS`
+- Expand tests for routing, domain selection, and domain-specific failure behavior
+
+### Exit Criteria
+
+- AI-OS supports at least two real workflows across different domains on a shared foundation
+- Routing remains explicit, testable, and explainable
+- The multi-domain AI-OS story is supported by actual code instead of docs alone
+
+## Phase 5: Improve Model Reliability and Bounded Agentic Behavior
+
+### Objective
+
+Make model-assisted and selectively agentic behavior more reliable without weakening grounding or operator trust.
 
 ### Deliverables
 
 - Define deterministic fallback behavior when Ollama is unavailable
-- Improve provider error handling and output parsing
-- Add evaluation cases for weak retrieval, malformed model output, and unsupported claims
-- Add more realistic sample datasets for both `Director OS` and `Brand OS`
-- Strengthen validator behavior for source-aware output checks
+- Improve provider error handling and structured output parsing
+- Fix or replace weak evidence attachment strategies in the model-assisted path
+- Introduce bounded agentic steps only where they materially improve the workflow
+- Expand eval coverage for weak retrieval, malformed model output, unsupported claims, and agentic branch behavior
 
 ### Exit Criteria
 
 - Ollama-backed generation is usable in normal local development
-- Failure modes are readable and well-tested
+- Agentic branches remain bounded, observable, and easy to disable
 - The validator meaningfully improves output trustworthiness
 
-## Phase 5: Add a Lightweight Local UI
+## Phase 6: Add a Lightweight Local UI and Optional Langflow Demo Layer
 
 ### Objective
 
-Expose workflow execution in a way that supports both usability and project credibility.
+Expose workflow execution in a way that supports both usability and project credibility without turning the repo into a framework showcase.
 
 ### Deliverables
 
 - Add a local UI under `apps/web`
-- Show workflow request, selected path, evidence, validation outcome, and final output
+- Show workflow request, selected path, evidence, validation outcome, trace summary, and final output
 - Keep the UI focused on traceability rather than “agents chatting”
 - Support desktop-first local operation with simple run instructions
+- Optionally add `Langflow` exports or demo flows for visual exploration without making them the canonical workflow definitions
 
 ### Exit Criteria
 
 - A user can run the system locally through a UI
 - The UI improves traceability and operator control
-- The project becomes easier to demo and evaluate
+- Any Langflow usage supports demos and prototyping without displacing the core codebase
 
-## Phase 6: Harden the Project for Ongoing Growth
+## Phase 7: Harden the Project for Ongoing Growth
 
 ### Objective
 
@@ -174,11 +202,11 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 The best next sequence from the current repo state is:
 
 1. Commit the CI/CD and SDLC workflow changes currently in progress
-2. Update `AGENTS.md` to reflect the real implementation state
-3. Improve evidence quality and evidence lineage in `Director OS`
-4. Add more sample data and stronger tests
-5. Introduce the small orchestrator layer
-6. Add the first `Brand OS` workflow
+2. Align `README.md`, `AGENTS.md`, and `plan.md` around AI-OS as the product and `LangGraph` / `LangChain` / `LangSmith` as implementation infrastructure
+3. Improve evidence quality, path safety, and evidence lineage in `Director OS`
+4. Refactor `Director OS` into an explicit `LangGraph` workflow without changing the current public API
+5. Add `LangSmith` tracing and a small evaluation set
+6. Expand the shared graph-oriented foundation across the Chief of Staff and `Brand OS`
 
 ## Definition of Success
 
@@ -188,6 +216,7 @@ This project should be considered successful when it can clearly demonstrate:
 - cost-conscious AI workflows
 - grounded, evidence-based outputs
 - deterministic or well-bounded orchestration
+- selective agentic behavior where it genuinely improves outcomes
 - at least two useful domain workflows
 - strong operator visibility and control
 

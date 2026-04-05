@@ -188,7 +188,7 @@ The repository now includes a minimal Phase 1 slice for `Director OS`:
 
 The broader system described below is still the target state rather than the full current implementation.
 
-The phased execution roadmap for closing that gap is documented in [plan.md](/Users/victor/Github/Ramirez%20AI%20Labs/ai-operating-system/plan.md).
+The phased execution roadmap for closing that gap is documented in [plan.md](plan.md).
 
 ## Repository Structure (Target State)
 
@@ -234,17 +234,22 @@ The intended initial stack is:
 
 - `Ollama` for cost-conscious local inference
 - `Python` for orchestration and backend logic
-- Deterministic workflow orchestration, with `LangGraph` available when state complexity justifies it
 - `FastAPI` for a local API layer
 - `Pydantic` for schemas and validation contracts
+- `LangGraph` for explicit workflow orchestration and state transitions
+- `LangChain` for model and tool abstractions where those abstractions reduce boilerplate without defining the product
+- `LangSmith` for traces, debugging, and evaluation as workflows become more agentic
 - Start with simple local file-based retrieval
 - Introduce `FAISS` or `Chroma` only if retrieval complexity justifies it
 - `Markdown`, `CSV`, and `JSON` as common local input formats
+
+These framework choices are implementation infrastructure, not the product identity. AI-OS should present operating domains, workflows, retrieval, validation, and operator control as the primary concepts. The repo should not read like a `lang*` demo.
 
 The frontend is optional in the first slice. If added, it should focus on workflow traceability rather than chat-style interaction:
 
 - `Next.js` or `React` for a local UI
 - Execution trace and validation state over animated "agent chat"
+- `Langflow` can be useful later for visual prototyping and demo support, but it should not become the system of record for workflow definitions
 
 ## Implementation Plan
 
@@ -266,7 +271,9 @@ Phase 1 status:
 - Current support: local markdown retrieval, concise structured output, evidence list, validation checks
 - Current multi-domain support: `director_os.weekly_update` and `brand_os.content_draft`
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
-- Not yet implemented: UI trace view, multi-workflow orchestration
+- Planned next: refactor orchestration and workflow execution into explicit `LangGraph` state graphs while keeping the public API and AI-OS terminology stable
+- Planned next: add `LangSmith` tracing and evaluation coverage for workflow quality
+- Not yet implemented: UI trace view, broader multi-workflow orchestration
 
 Phase 2:
 
@@ -333,8 +340,14 @@ Install dependencies:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+.venv\Scripts\activate
 pip install -e ".[dev]"
+```
+
+On macOS or Linux, use:
+
+```bash
+source .venv/bin/activate
 ```
 
 Run the local API:
