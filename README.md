@@ -180,9 +180,10 @@ The repository now includes a minimal Phase 1 slice for `Director OS`:
 - A local FastAPI service in `apps/api`
 - A lightweight Chief of Staff orchestration endpoint for deterministic routing
 - A deterministic weekly update workflow in `director_os/workflows`
+- A first Brand OS content-draft workflow in `brand_os/workflows`
 - Shared schemas, retrieval, and validation logic in `packages/shared`
 - An explicit provider layer for optional Ollama-backed synthesis
-- Sample local project data in `data/local_only/projects`
+- Sample local project and brand data in `data/local_only`
 - Focused tests for retrieval and validation behavior
 
 The broader system described below is still the target state rather than the full current implementation.
@@ -263,6 +264,7 @@ Phase 1 status:
 - Implemented as a minimal orchestration endpoint: `POST /orchestrate`
 - Current endpoint: `POST /director-os/weekly-update`
 - Current support: local markdown retrieval, concise structured output, evidence list, validation checks
+- Current multi-domain support: `director_os.weekly_update` and `brand_os.content_draft`
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
 - Not yet implemented: UI trace view, multi-workflow orchestration
 
@@ -362,6 +364,18 @@ curl -X POST http://127.0.0.1:8000/orchestrate \
     "prompt": "Prepare my leadership weekly update",
     "data_path": "data/local_only/projects",
     "max_documents": 10
+  }'
+```
+
+Call the Brand OS workflow directly through the orchestrator:
+
+```bash
+curl -X POST http://127.0.0.1:8000/orchestrate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Turn this work into a podcast and LinkedIn content draft",
+    "data_path": "data/local_only/brand",
+    "max_documents": 5
   }'
 ```
 
