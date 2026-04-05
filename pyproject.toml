@@ -21,6 +21,18 @@ dev = [
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = [
+  "director_os",
+  "director_os.workflows",
+  "packages",
+  "packages.shared",
+  "packages.shared.providers",
+  "packages.shared.retrieval",
+  "packages.shared.schemas",
+  "packages.shared.validation",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

@@ -19,7 +19,8 @@ def build_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
 
     if not evidence:
         raise ValueError(
-            "No relevant local documents were found. Add markdown files under the data path or adjust the focus."
+            "No relevant local documents were found. "
+            "Add markdown files under the data path or adjust the focus."
         )
 
     # The deterministic path remains the default so the MVP stays stable even

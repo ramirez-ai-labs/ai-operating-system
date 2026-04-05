@@ -49,7 +49,8 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
                 body = json.loads(response.read().decode("utf-8"))
         except error.URLError as exc:
             raise ValueError(
-                f"Unable to reach Ollama at {self.base_url}. Confirm Ollama is running and reachable."
+                f"Unable to reach Ollama at {self.base_url}. "
+                "Confirm Ollama is running and reachable."
             ) from exc
         except json.JSONDecodeError as exc:
             raise ValueError("Ollama returned a non-JSON response.") from exc

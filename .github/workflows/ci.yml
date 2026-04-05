@@ -2,10 +2,9 @@ name: CI
 
 on:
   pull_request:
-  push:
     branches:
       - main
-      - "mvp-*"
+  push:
   workflow_dispatch:
 
 permissions:
@@ -39,7 +38,6 @@ jobs:
   python-mvp:
     name: Python MVP Quality Gates
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('pyproject.toml') != '' }}
 
     steps:
       - name: Check out repository
@@ -66,15 +64,9 @@ jobs:
           done
 
       - name: Run test suite
-        run: |
-          if [ -d tests ]; then
-            pytest --cov=. --cov-report=term-missing --cov-report=xml
-          else
-            echo "No tests directory present; skipping pytest."
-          fi
+        run: pytest --cov=. --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage artifact
-        if: ${{ hashFiles('coverage.xml') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
