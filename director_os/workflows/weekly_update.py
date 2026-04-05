@@ -65,7 +65,17 @@ def _build_model_draft(
         base_url=request.ollama_url,
         model=request.ollama_model,
     )
-    return provider.generate_weekly_update(request.focus, evidence)
+    try:
+        draft = provider.generate_weekly_update(request.focus, evidence)
+        _validate_model_draft(draft)
+        return draft
+    except ValueError:
+        if not request.fallback_to_deterministic:
+            raise
+
+    # Fallback keeps the workflow reliable when Ollama is unavailable or returns
+    # an under-specified response.
+    return _build_deterministic_draft(request.focus, evidence)
 
 
 def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:
@@ -101,3 +111,14 @@ def _collect_sentences(
         if len(results) >= limit:
             break
     return results
+
+
+def _validate_model_draft(draft: WeeklyUpdateDraft) -> None:
+    """Reject weak model drafts so they do not bypass the deterministic baseline."""
+    if not draft.summary.strip():
+        raise ValueError("Model-generated weekly update summary cannot be empty.")
+
+    if not any((draft.wins, draft.risks, draft.next_steps)):
+        raise ValueError(
+            "Model-generated weekly update must include at least one actionable section."
+        )

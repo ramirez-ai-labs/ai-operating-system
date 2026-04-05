@@ -21,6 +21,13 @@ class WeeklyUpdateRequest(BaseModel):
         default=False,
         description="Enable optional model-assisted synthesis instead of deterministic extraction.",
     )
+    fallback_to_deterministic: bool = Field(
+        default=True,
+        description=(
+            "When model synthesis fails or returns weak output, fall back to the "
+            "deterministic workflow instead of raising an error."
+        ),
+    )
     ollama_url: str = Field(
         default="http://127.0.0.1:11434",
         description="Base URL for the local Ollama server when model synthesis is enabled.",

@@ -123,6 +123,96 @@ def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
     assert result.next_steps
 
 
+def test_weekly_update_model_failure_falls_back_to_deterministic(monkeypatch) -> None:
+    """Provider failures should fall back to the deterministic workflow by default."""
+
+    class FailingProvider(WeeklyUpdateProvider):
+        def generate_weekly_update(self, focus, evidence):
+            raise ValueError("Ollama is unavailable")
+
+    from director_os.workflows import weekly_update as workflow_module
+
+    monkeypatch.setattr(
+        workflow_module,
+        "OllamaWeeklyUpdateProvider",
+        lambda base_url, model: FailingProvider(),
+    )
+
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            focus="leadership update",
+            max_documents=5,
+            use_model=True,
+        )
+    )
+    assert result.summary.startswith("Weekly update synthesized from local project evidence")
+    assert result.wins
+
+
+def test_weekly_update_model_failure_can_raise_when_fallback_disabled(monkeypatch) -> None:
+    """Callers should be able to disable fallback and surface provider errors directly."""
+
+    class FailingProvider(WeeklyUpdateProvider):
+        def generate_weekly_update(self, focus, evidence):
+            raise ValueError("Ollama is unavailable")
+
+    from director_os.workflows import weekly_update as workflow_module
+
+    monkeypatch.setattr(
+        workflow_module,
+        "OllamaWeeklyUpdateProvider",
+        lambda base_url, model: FailingProvider(),
+    )
+
+    try:
+        build_weekly_update(
+            WeeklyUpdateRequest(
+                data_path="data/local_only/projects",
+                focus="leadership update",
+                max_documents=5,
+                use_model=True,
+                fallback_to_deterministic=False,
+            )
+        )
+    except ValueError as exc:
+        assert "unavailable" in str(exc).lower()
+    else:
+        raise AssertionError("Expected the provider error when fallback is disabled.")
+
+
+def test_weekly_update_weak_model_output_falls_back_to_deterministic(monkeypatch) -> None:
+    """Weak model output should not replace the deterministic grounded baseline."""
+
+    class WeakProvider(WeeklyUpdateProvider):
+        def generate_weekly_update(self, focus, evidence):
+            return WeeklyUpdateDraft(
+                summary="",
+                wins=[],
+                risks=[],
+                next_steps=[],
+            )
+
+    from director_os.workflows import weekly_update as workflow_module
+
+    monkeypatch.setattr(
+        workflow_module,
+        "OllamaWeeklyUpdateProvider",
+        lambda base_url, model: WeakProvider(),
+    )
+
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            focus="leadership update",
+            max_documents=5,
+            use_model=True,
+        )
+    )
+    assert result.summary.startswith("Weekly update synthesized from local project evidence")
+    assert result.wins
+
+
 def test_validation_requires_evidence() -> None:
     """Validator should reject responses that are not grounded in retrieved evidence."""
     empty = WeeklyUpdateResponse(
