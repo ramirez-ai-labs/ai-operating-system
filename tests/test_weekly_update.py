@@ -80,21 +80,21 @@ def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
                 summary="Model-assisted weekly update from grounded evidence.",
                 wins=[
                     GroundedItem(
-                        text="Win: provider synthesized the wins section.",
+                        text=evidence[0].excerpt,
                         source=evidence[0].source,
                         line_number=evidence[0].line_number,
                     )
                 ],
                 risks=[
                     GroundedItem(
-                        text="Risk: provider synthesized the risks section.",
+                        text=evidence[1].excerpt,
                         source=evidence[1].source,
                         line_number=evidence[1].line_number,
                     )
                 ],
                 next_steps=[
                     GroundedItem(
-                        text="Next: provider synthesized the next steps section.",
+                        text=evidence[2].excerpt,
                         source=evidence[2].source,
                         line_number=evidence[2].line_number,
                     )
@@ -121,6 +121,44 @@ def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
     assert result.wins
     assert result.risks
     assert result.next_steps
+
+
+def test_weekly_update_model_output_falls_back_when_not_supported_by_evidence(monkeypatch) -> None:
+    """Model output should not pass validation if the cited evidence does not support the text."""
+
+    class UngroundedProvider(WeeklyUpdateProvider):
+        def generate_weekly_update(self, focus, evidence):
+            return WeeklyUpdateDraft(
+                summary="Model-assisted weekly update from grounded evidence.",
+                wins=[
+                    GroundedItem(
+                        text="Win: created a new hiring plan and budget proposal.",
+                        source=evidence[0].source,
+                        line_number=evidence[0].line_number,
+                    )
+                ],
+                risks=[],
+                next_steps=[],
+            )
+
+    from director_os.workflows import weekly_update as workflow_module
+
+    monkeypatch.setattr(
+        workflow_module,
+        "OllamaWeeklyUpdateProvider",
+        lambda base_url, model: UngroundedProvider(),
+    )
+
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            focus="leadership update",
+            max_documents=5,
+            use_model=True,
+        )
+    )
+    assert result.summary.startswith("Weekly update synthesized from local project evidence")
+    assert result.wins
 
 
 def test_weekly_update_model_failure_falls_back_to_deterministic(monkeypatch) -> None:
@@ -267,6 +305,50 @@ def test_validation_rejects_missing_evidence_reference() -> None:
         assert "reference existing evidence" in str(exc)
     else:
         raise AssertionError("Expected validation to fail for an invalid evidence reference.")
+
+
+def test_validation_rejects_text_not_supported_by_cited_evidence() -> None:
+    """Validator should reject output text that is not anchored to the cited evidence line."""
+    response = WeeklyUpdateResponse(
+        summary="Short summary",
+        wins=[
+            GroundedItem(
+                text="Win: created an unrelated staffing plan for a new department.",
+                source="director_week_14.md",
+                line_number=3,
+            )
+        ],
+        risks=[],
+        next_steps=[],
+        evidence=[
+            {
+                "source": "director_week_14.md",
+                "line_number": 3,
+                "title": "Director Week 14",
+                "excerpt": "Win: shipped the internal status dashboard refresh for leadership review.",
+            }
+        ],
+    )
+    try:
+        validate_weekly_update(response)
+    except ValueError as exc:
+        assert "semantically anchored" in str(exc)
+    else:
+        raise AssertionError("Expected validation to fail for unsupported grounded text.")
+
+
+def test_retrieval_rejects_paths_outside_local_data_root() -> None:
+    """The MVP should only read markdown from approved local data directories."""
+    try:
+        retrieve_relevant_documents(
+            base_path="tests",
+            query="leadership update",
+            limit=5,
+        )
+    except ValueError as exc:
+        assert "approved local data root" in str(exc).lower()
+    else:
+        raise AssertionError("Expected retrieval to reject paths outside the local data root.")
 
 
 def test_retrieval_prefers_newer_matching_notes() -> None:

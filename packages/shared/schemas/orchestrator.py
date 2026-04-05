@@ -17,7 +17,7 @@ class OrchestratorRequest(BaseModel):
     )
     data_path: str = Field(
         default="data/local_only/projects",
-        description="Local directory containing notes or project artifacts.",
+        description="Local directory under data/local_only containing notes or project artifacts.",
     )
     focus: str | None = Field(
         default=None,

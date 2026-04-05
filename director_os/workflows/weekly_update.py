@@ -27,11 +27,7 @@ def build_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
 
     # The deterministic path remains the default so the MVP stays stable even
     # without a local model runtime. Ollama is opt-in for the next phase.
-    draft = (
-        _build_model_draft(request, evidence)
-        if request.use_model
-        else _build_deterministic_draft(request.focus, evidence)
-    )
+    draft = _build_draft(request, evidence)
 
     # Step 3: attach the evidence list to the structured draft before the
     # validator checks that every output item is properly grounded.
@@ -43,7 +39,33 @@ def build_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
         evidence=evidence,
     )
 
-    return validate_weekly_update(response)
+    try:
+        return validate_weekly_update(response)
+    except ValueError:
+        if not request.use_model or not request.fallback_to_deterministic:
+            raise
+
+    fallback_draft = _build_deterministic_draft(request.focus, evidence)
+    fallback_response = WeeklyUpdateResponse(
+        summary=fallback_draft.summary,
+        wins=fallback_draft.wins,
+        risks=fallback_draft.risks,
+        next_steps=fallback_draft.next_steps,
+        evidence=evidence,
+    )
+    return validate_weekly_update(fallback_response)
+
+
+def _build_draft(
+    request: WeeklyUpdateRequest,
+    evidence: list[EvidenceItem],
+) -> WeeklyUpdateDraft:
+    """Select the deterministic or model-assisted draft path for the workflow."""
+    return (
+        _build_model_draft(request, evidence)
+        if request.use_model
+        else _build_deterministic_draft(request.focus, evidence)
+    )
 
 
 def _build_deterministic_draft(
