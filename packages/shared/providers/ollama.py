@@ -4,7 +4,7 @@ import json
 from urllib import error, request
 
 from packages.shared.providers.base import WeeklyUpdateProvider
-from packages.shared.schemas.director_os import EvidenceItem, WeeklyUpdateDraft
+from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateDraft
 
 
 class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
@@ -64,7 +64,12 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
         except json.JSONDecodeError as exc:
             raise ValueError("Ollama returned invalid JSON for the weekly update draft.") from exc
 
-        return WeeklyUpdateDraft.model_validate(parsed)
+        return WeeklyUpdateDraft(
+            summary=parsed.get("summary", ""),
+            wins=_attach_grounding(parsed.get("wins", []), evidence),
+            risks=_attach_grounding(parsed.get("risks", []), evidence),
+            next_steps=_attach_grounding(parsed.get("next_steps", []), evidence),
+        )
 
 
 def _build_prompt(focus: str | None, evidence: list[EvidenceItem]) -> str:
@@ -88,3 +93,23 @@ Focus:
 Evidence:
 {evidence_lines}
 """.strip()
+
+
+def _attach_grounding(items: list[str], evidence: list[EvidenceItem]) -> list[GroundedItem]:
+    """Attach each generated line to the first compatible evidence item."""
+    grounded: list[GroundedItem] = []
+    remaining_evidence = list(evidence)
+
+    for item_text in items:
+        if not remaining_evidence:
+            break
+        evidence_item = remaining_evidence.pop(0)
+        grounded.append(
+            GroundedItem(
+                text=item_text,
+                source=evidence_item.source,
+                line_number=evidence_item.line_number,
+            )
+        )
+
+    return grounded

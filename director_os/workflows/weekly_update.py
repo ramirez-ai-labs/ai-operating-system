@@ -2,6 +2,7 @@ from packages.shared.providers.ollama import OllamaWeeklyUpdateProvider
 from packages.shared.retrieval.local_files import retrieve_relevant_documents
 from packages.shared.schemas.director_os import (
     EvidenceItem,
+    GroundedItem,
     WeeklyUpdateDraft,
     WeeklyUpdateRequest,
     WeeklyUpdateResponse,
@@ -84,13 +85,19 @@ def _collect_sentences(
     evidence: list[EvidenceItem],
     keywords: tuple[str, ...],
     limit: int,
-) -> list[str]:
-    """Pull matching excerpts into a specific output section such as wins or risks."""
-    results: list[str] = []
+) -> list[GroundedItem]:
+    """Pull grounded excerpts into a specific output section such as wins or risks."""
+    results: list[GroundedItem] = []
     for item in evidence:
         lowered = item.excerpt.lower()
         if any(keyword in lowered for keyword in keywords):
-            results.append(item.excerpt)
+            results.append(
+                GroundedItem(
+                    text=item.excerpt,
+                    source=item.source,
+                    line_number=item.line_number,
+                )
+            )
         if len(results) >= limit:
             break
     return results
