@@ -173,9 +173,22 @@ Acts as the final quality gate and enforces:
 
 - The user retains final judgment and control
 
+## Current MVP Status
+
+The repository now includes a minimal Phase 1 slice for `Director OS`:
+
+- A local FastAPI service in `apps/api`
+- A deterministic weekly update workflow in `director_os/workflows`
+- Shared schemas, retrieval, and validation logic in `packages/shared`
+- An explicit provider layer for optional Ollama-backed synthesis
+- Sample local project data in `data/local_only/projects`
+- Focused tests for retrieval and validation behavior
+
+The broader system described below is still the target state rather than the full current implementation.
+
 ## Repository Structure (Target State)
 
-The repository is currently minimal. The structure below reflects intended direction, not necessarily current implementation:
+The structure below reflects intended direction as the MVP grows:
 
 ```text
 /ai-os
@@ -217,7 +230,7 @@ The intended initial stack is:
 
 - `Ollama` for cost-conscious local inference
 - `Python` for orchestration and backend logic
-- `LangGraph` for deterministic workflow orchestration
+- Deterministic workflow orchestration, with `LangGraph` available when state complexity justifies it
 - `FastAPI` for a local API layer
 - `Pydantic` for schemas and validation contracts
 - Start with simple local file-based retrieval
@@ -240,6 +253,14 @@ Phase 1:
 - Retrieve evidence from local files
 - Route through the orchestrator
 - Produce structured output with validator checks
+
+Phase 1 status:
+
+- Implemented as a minimal local weekly-update endpoint
+- Current endpoint: `POST /director-os/weekly-update`
+- Current support: local markdown retrieval, concise structured output, evidence list, validation checks
+- Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
+- Not yet implemented: UI trace view, multi-workflow orchestration
 
 Phase 2:
 
@@ -295,6 +316,59 @@ Output:
 - Content draft such as a post or outline
 - Potential podcast topic
 - Repository improvement suggestions
+
+## Quickstart
+
+Requirements:
+
+- Python 3.11+
+
+Install dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+Run the local API:
+
+```bash
+uvicorn apps.api.main:app --reload
+```
+
+Call the Phase 1 MVP endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data_path": "data/local_only/projects",
+    "focus": "leadership update",
+    "max_documents": 5
+  }'
+```
+
+Call the optional Ollama-backed path:
+
+```bash
+curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data_path": "data/local_only/projects",
+    "focus": "leadership update",
+    "max_documents": 5,
+    "use_model": true,
+    "ollama_url": "http://127.0.0.1:11434",
+    "ollama_model": "llama3.2"
+  }'
+```
+
+Run tests:
+
+```bash
+pytest
+```
 
 ## Important Notes
 
