@@ -28,12 +28,25 @@ def test_orchestrator_supports_explicit_workflow_override() -> None:
     assert "explicitly requested" in response.rationale.lower()
 
 
+def test_orchestrator_routes_brand_os_prompt() -> None:
+    """Brand-oriented prompts should route into the first Brand OS workflow."""
+    response = route_request(
+        OrchestratorRequest(
+            prompt="Turn this work into a podcast and LinkedIn content draft",
+            data_path="data/local_only/brand",
+            max_documents=5,
+        )
+    )
+    assert response.selected_workflow == "brand_os.content_draft"
+    assert response.result.post_outline
+
+
 def test_orchestrator_rejects_unknown_workflow() -> None:
     """Unsupported workflow ids should fail fast instead of silently routing elsewhere."""
     try:
         route_request(
             OrchestratorRequest(
-                workflow="brand_os.content_draft",
+                workflow="engineering_os.repo_review",
                 data_path="data/local_only/projects",
             )
         )

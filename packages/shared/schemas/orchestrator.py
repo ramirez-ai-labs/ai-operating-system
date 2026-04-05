@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+from packages.shared.schemas.brand_os import BrandContentDraftResponse
 from packages.shared.schemas.director_os import WeeklyUpdateResponse
 
 
@@ -51,4 +52,4 @@ class OrchestratorResponse(BaseModel):
 
     selected_workflow: str
     rationale: str
-    result: WeeklyUpdateResponse
+    result: WeeklyUpdateResponse | BrandContentDraftResponse
