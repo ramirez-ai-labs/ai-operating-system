@@ -11,6 +11,8 @@ def retrieve_relevant_documents(
     limit: int,
 ) -> list[EvidenceItem]:
     """Search local markdown files and return the best matching evidence snippets."""
+    # Retrieval is intentionally local-only: the workflow only looks at files
+    # under the provided directory and never calls an external service here.
     root = Path(base_path).resolve()
     if not root.exists() or not root.is_dir():
         raise ValueError(f"Data path does not exist or is not a directory: {base_path}")
@@ -18,6 +20,8 @@ def retrieve_relevant_documents(
     keywords = _normalize_keywords(query)
     matches: list[tuple[int, EvidenceItem]] = []
     all_files = sorted(root.rglob("*.md"))
+    # Later files get a slightly higher tie-breaker so newer-looking notes can
+    # win when two files are otherwise similarly relevant.
     file_rank = {
         file_path.resolve(): len(all_files) - index for index, file_path in enumerate(all_files)
     }
@@ -69,6 +73,8 @@ def _extract_matching_lines(
     title = file_path.stem.replace("_", " ").replace("-", " ").title()
 
     for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        # Strip common markdown list markers so the evidence text reads like a
+        # normal sentence in the API response.
         cleaned_line = raw_line.strip("- ").strip()
         if not cleaned_line:
             continue
@@ -120,6 +126,8 @@ def _should_skip_line(line: str) -> bool:
     stripped = line.strip()
     if not stripped:
         return True
+    # Headings add structure for humans reading markdown files, but they are
+    # not strong evidence for a weekly update output.
     if stripped.startswith("#"):
         return True
     return False
