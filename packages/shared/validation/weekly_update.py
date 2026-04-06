@@ -3,6 +3,9 @@ from packages.shared.schemas.director_os import GroundedItem, WeeklyUpdateRespon
 
 def validate_weekly_update(response: WeeklyUpdateResponse) -> WeeklyUpdateResponse:
     """Enforce basic guardrails so the workflow returns usable, grounded output."""
+    # Validation is the final quality gate. By this point the workflow has
+    # already produced a response, and this function decides whether it is safe
+    # enough to return to the caller.
     if not response.evidence:
         raise ValueError("Weekly update responses must include at least one evidence item.")
 
@@ -32,8 +35,41 @@ def _validate_grounded_item(
     # Validation uses the evidence list as the source of truth. If an output
     # item points to a source line that is not in the response evidence, the
     # workflow should fail instead of returning an unsupported claim.
-    evidence_locations = {
-        (evidence.source, evidence.line_number) for evidence in response.evidence
+    evidence_lookup = {
+        (evidence.source, evidence.line_number): evidence for evidence in response.evidence
     }
-    if (item.source, item.line_number) not in evidence_locations:
+    evidence = evidence_lookup.get((item.source, item.line_number))
+    if evidence is None:
         raise ValueError("Grounded output items must reference existing evidence.")
+
+    if not _text_is_supported_by_evidence(item.text, evidence.excerpt):
+        raise ValueError(
+            "Grounded output items must stay semantically anchored to their cited evidence."
+        )
+
+
+def _text_is_supported_by_evidence(item_text: str, evidence_excerpt: str) -> bool:
+    """Require meaningful lexical overlap between output text and cited evidence."""
+    # This check is intentionally lightweight. It is not trying to "understand"
+    # language perfectly; it is just making sure the output still resembles the
+    # evidence it claims to be grounded in.
+    item_tokens = set(_meaningful_tokens(item_text))
+    evidence_tokens = set(_meaningful_tokens(evidence_excerpt))
+
+    if not item_tokens or not evidence_tokens:
+        return False
+
+    overlap = item_tokens & evidence_tokens
+    if len(overlap) < min(2, len(item_tokens)):
+        return False
+
+    overlap_ratio = len(overlap) / len(item_tokens)
+    return overlap_ratio >= 0.5
+
+
+def _meaningful_tokens(text: str) -> list[str]:
+    """Normalize text into meaningful tokens for lightweight grounding checks."""
+    # We keep only longer alphanumeric tokens so common filler words such as
+    # "the" or punctuation do not dominate the overlap calculation.
+    cleaned = "".join(character.lower() if character.isalnum() else " " for character in text)
+    return [token for token in cleaned.split() if len(token) > 3]

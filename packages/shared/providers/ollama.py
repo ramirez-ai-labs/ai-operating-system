@@ -21,6 +21,9 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
     ) -> WeeklyUpdateDraft:
         """Call Ollama's generate endpoint and parse structured JSON output."""
         prompt = _build_prompt(focus, evidence)
+        # The provider is responsible for one narrow job: talk to Ollama and
+        # convert the model response into the typed structure the rest of AI-OS
+        # already understands.
         # Ask Ollama for JSON so the workflow can keep using typed Python
         # objects instead of trying to parse free-form prose.
         payload = {
@@ -50,6 +53,9 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
             with request.urlopen(http_request, timeout=30) as response:
                 body = json.loads(response.read().decode("utf-8"))
         except error.URLError as exc:
+            # Provider-specific infrastructure problems are converted into
+            # plain ValueError instances so the workflow can decide whether to
+            # surface the error or fall back to a deterministic path.
             raise ValueError(
                 f"Unable to reach Ollama at {self.base_url}. "
                 "Confirm Ollama is running and reachable."
@@ -108,7 +114,8 @@ def _attach_grounding(items: list[str], evidence: list[EvidenceItem]) -> list[Gr
         if not remaining_evidence:
             break
         # The current MVP uses a simple first-match attachment strategy. It is
-        # easy to understand and can be replaced later by stronger alignment.
+        # easy to understand for beginners and can be replaced later by stronger
+        # alignment once the workflow grows more sophisticated.
         evidence_item = remaining_evidence.pop(0)
         grounded.append(
             GroundedItem(

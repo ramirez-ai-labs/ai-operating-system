@@ -8,6 +8,8 @@ from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 
 def build_content_draft(request: BrandContentDraftRequest) -> BrandContentDraftResponse:
     """Build a grounded Brand OS content draft from local notes and work artifacts."""
+    # Brand OS reuses the same local retrieval layer as Director OS. The only
+    # difference is how the retrieved evidence is shaped into output sections.
     evidence = retrieve_relevant_documents(
         base_path=request.data_path,
         query=request.focus,
@@ -20,6 +22,9 @@ def build_content_draft(request: BrandContentDraftRequest) -> BrandContentDraftR
         )
 
     return BrandContentDraftResponse(
+        # Each section below is a different "lens" over the same evidence set.
+        # That keeps the workflow simple for beginners: retrieve once, then
+        # organize the evidence into a few useful output buckets.
         insight_summary=_build_summary(request.focus, evidence),
         post_outline=_collect_items(
             evidence,
@@ -60,6 +65,9 @@ def _collect_items(
     for item in evidence:
         lowered = item.excerpt.lower()
         if any(keyword in lowered for keyword in keywords):
+            # Instead of rewriting the evidence, the MVP returns the original
+            # grounded line so a beginner can always trace the output back to
+            # exactly what was retrieved from local files.
             results.append(
                 GroundedItem(
                     text=item.excerpt,
