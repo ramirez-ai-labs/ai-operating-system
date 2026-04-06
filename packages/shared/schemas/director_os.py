@@ -5,7 +5,10 @@ class WeeklyUpdateRequest(BaseModel):
     """Input contract for the Phase 1 Director OS workflow."""
     data_path: str = Field(
         default="data/local_only/projects",
-        description="Local directory under data/local_only containing markdown notes for synthesis.",
+        description=(
+            "Local directory under data/local_only containing markdown notes "
+            "for synthesis."
+        ),
     )
     focus: str | None = Field(
         default=None,

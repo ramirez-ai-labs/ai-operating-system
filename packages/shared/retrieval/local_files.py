@@ -4,7 +4,6 @@ from pathlib import Path
 
 from packages.shared.schemas.director_os import EvidenceItem
 
-
 ALLOWED_LOCAL_DATA_ROOT = (Path.cwd() / "data" / "local_only").resolve()
 
 
