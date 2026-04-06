@@ -20,6 +20,8 @@ def retrieve_relevant_documents(
     if not root.exists() or not root.is_dir():
         raise ValueError(f"Data path does not exist or is not a directory: {base_path}")
 
+    # Turn a free-form query into simple keywords. This is intentionally basic:
+    # the MVP is using understandable ranking rules instead of embeddings.
     keywords = _normalize_keywords(query)
     matches: list[tuple[int, EvidenceItem]] = []
     all_files = sorted(root.rglob("*.md"))
@@ -89,6 +91,9 @@ def _extract_matching_lines(
     title = file_path.stem.replace("_", " ").replace("-", " ").title()
 
     for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        # Retrieval works at the line level, not the whole-file level. That
+        # makes the grounding story easier to explain because each output item
+        # can point back to one specific line in one specific file.
         # Strip common markdown list markers so the evidence text reads like a
         # normal sentence in the API response.
         cleaned_line = raw_line.strip("- ").strip()
@@ -119,6 +124,8 @@ def _extract_matching_lines(
 def _line_score(line: str, keywords: list[str], file_priority: int) -> int:
     """Rank lines by keyword overlap and common status markers."""
     lowered = line.lower()
+    # The score is just a weighted keyword count plus a couple of simple boosts.
+    # It is not "smart", but it is transparent and easy to debug.
     score = (
         sum(lowered.count(keyword) * 10 for keyword in keywords)
         if keywords

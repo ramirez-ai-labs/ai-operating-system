@@ -3,6 +3,9 @@ from packages.shared.schemas.director_os import GroundedItem, WeeklyUpdateRespon
 
 def validate_weekly_update(response: WeeklyUpdateResponse) -> WeeklyUpdateResponse:
     """Enforce basic guardrails so the workflow returns usable, grounded output."""
+    # Validation is the final quality gate. By this point the workflow has
+    # already produced a response, and this function decides whether it is safe
+    # enough to return to the caller.
     if not response.evidence:
         raise ValueError("Weekly update responses must include at least one evidence item.")
 
@@ -47,6 +50,9 @@ def _validate_grounded_item(
 
 def _text_is_supported_by_evidence(item_text: str, evidence_excerpt: str) -> bool:
     """Require meaningful lexical overlap between output text and cited evidence."""
+    # This check is intentionally lightweight. It is not trying to "understand"
+    # language perfectly; it is just making sure the output still resembles the
+    # evidence it claims to be grounded in.
     item_tokens = set(_meaningful_tokens(item_text))
     evidence_tokens = set(_meaningful_tokens(evidence_excerpt))
 
@@ -63,5 +69,7 @@ def _text_is_supported_by_evidence(item_text: str, evidence_excerpt: str) -> boo
 
 def _meaningful_tokens(text: str) -> list[str]:
     """Normalize text into meaningful tokens for lightweight grounding checks."""
+    # We keep only longer alphanumeric tokens so common filler words such as
+    # "the" or punctuation do not dominate the overlap calculation.
     cleaned = "".join(character.lower() if character.isalnum() else " " for character in text)
     return [token for token in cleaned.split() if len(token) > 3]

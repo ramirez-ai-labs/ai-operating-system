@@ -101,7 +101,7 @@ def test_weekly_update_model_path_uses_provider(monkeypatch) -> None:
                 ],
             )
 
-    from director_os.workflows import weekly_update as workflow_module
+    from packages.shared.graphs import director_os as workflow_module
 
     monkeypatch.setattr(
         workflow_module,
@@ -168,7 +168,7 @@ def test_weekly_update_model_failure_falls_back_to_deterministic(monkeypatch) ->
         def generate_weekly_update(self, focus, evidence):
             raise ValueError("Ollama is unavailable")
 
-    from director_os.workflows import weekly_update as workflow_module
+    from packages.shared.graphs import director_os as workflow_module
 
     monkeypatch.setattr(
         workflow_module,
@@ -195,7 +195,7 @@ def test_weekly_update_model_failure_can_raise_when_fallback_disabled(monkeypatc
         def generate_weekly_update(self, focus, evidence):
             raise ValueError("Ollama is unavailable")
 
-    from director_os.workflows import weekly_update as workflow_module
+    from packages.shared.graphs import director_os as workflow_module
 
     monkeypatch.setattr(
         workflow_module,
@@ -231,7 +231,7 @@ def test_weekly_update_weak_model_output_falls_back_to_deterministic(monkeypatch
                 next_steps=[],
             )
 
-    from director_os.workflows import weekly_update as workflow_module
+    from packages.shared.graphs import director_os as workflow_module
 
     monkeypatch.setattr(
         workflow_module,
