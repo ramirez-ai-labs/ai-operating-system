@@ -10,6 +10,8 @@ from packages.shared.schemas.orchestrator import (
 
 def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
     """Route an incoming request to the correct domain workflow."""
+    # Workflow selection happens first. A caller can either explicitly pick a
+    # workflow or let the orchestrator infer one from the prompt text.
     workflow = request.workflow or _select_workflow(request.prompt)
 
     if workflow == "director_os.weekly_update":
@@ -26,6 +28,8 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
         )
         result = build_weekly_update(workflow_request)
     elif workflow == "brand_os.content_draft":
+        # Brand OS uses a different request schema, but the pattern is the same:
+        # convert the generic orchestrator input into a workflow-specific contract.
         workflow_request = BrandContentDraftRequest(
             data_path=request.data_path,
             focus=request.focus or request.prompt,
@@ -48,6 +52,8 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
 def _select_workflow(prompt: str | None) -> str:
     """Choose a workflow using simple keyword rules that are easy to inspect."""
     lowered = (prompt or "").lower()
+    # These rules are intentionally simple. The MVP favors readability over a
+    # "smart" classifier so a beginner can see exactly why a workflow was chosen.
     if any(
         keyword in lowered
         for keyword in ("content", "linkedin", "podcast", "thought leadership", "brand")

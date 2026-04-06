@@ -33,6 +33,8 @@ def health() -> dict[str, str]:
 def create_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
     """Run the Director OS weekly update workflow against local project notes."""
     try:
+        # FastAPI handles HTTP parsing and validation for us. After that, the
+        # route simply hands the typed request object to the workflow layer.
         # The API layer stays intentionally thin. The real workflow logic lives
         # in Director OS so it can be tested without starting FastAPI.
         return build_weekly_update(request)
@@ -49,6 +51,9 @@ def create_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
 def orchestrate(request: OrchestratorRequest) -> OrchestratorResponse:
     """Route a request through the lightweight Chief of Staff layer."""
     try:
+        # This endpoint shows the "AI-OS" idea at a higher level: the caller
+        # sends one generic request, and the orchestrator decides which domain
+        # workflow should handle it.
         return route_request(request)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
