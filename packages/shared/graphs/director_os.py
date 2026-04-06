@@ -4,6 +4,10 @@ from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from packages.shared.observability.langsmith import (
+    get_langsmith_tracing_context,
+    traceable,
+)
 from packages.shared.providers.ollama import OllamaWeeklyUpdateProvider
 from packages.shared.retrieval.local_files import retrieve_relevant_documents
 from packages.shared.schemas.director_os import (
@@ -27,19 +31,22 @@ class DirectorOSState(TypedDict, total=False):
     fallback_attempted: bool
 
 
+@traceable(name="director_os.run_weekly_update_graph", run_type="chain")
 def run_weekly_update_graph(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
     """Execute the Director OS weekly update graph and return the final response."""
     graph = _get_weekly_update_graph()
-    final_state = graph.invoke(
-        {
-            "request": request,
-            "used_model": request.use_model,
-            "fallback_attempted": False,
-        }
-    )
+    with get_langsmith_tracing_context():
+        final_state = graph.invoke(
+            {
+                "request": request,
+                "used_model": request.use_model,
+                "fallback_attempted": False,
+            }
+        )
     return final_state["response"]
 
 
+@traceable(name="director_os.retrieve_evidence", run_type="chain")
 def retrieve_evidence(state: DirectorOSState) -> DirectorOSState:
     """Collect the local evidence that the workflow is allowed to use."""
     request = state["request"]
@@ -56,6 +63,7 @@ def retrieve_evidence(state: DirectorOSState) -> DirectorOSState:
     return {"evidence": evidence}
 
 
+@traceable(name="director_os.build_draft", run_type="chain")
 def build_draft(state: DirectorOSState) -> DirectorOSState:
     """Build a deterministic or model-assisted draft for the weekly update."""
     request = state["request"]
@@ -68,6 +76,7 @@ def build_draft(state: DirectorOSState) -> DirectorOSState:
     return {"draft": draft, "used_model": False}
 
 
+@traceable(name="director_os.assemble_response", run_type="chain")
 def assemble_response(state: DirectorOSState) -> DirectorOSState:
     """Attach evidence to the current draft before validation."""
     draft = state["draft"]
@@ -82,6 +91,7 @@ def assemble_response(state: DirectorOSState) -> DirectorOSState:
     return {"response": response}
 
 
+@traceable(name="director_os.validate_response", run_type="chain")
 def validate_response(state: DirectorOSState) -> DirectorOSState:
     """Validate the current response and trigger deterministic fallback when allowed."""
     response = state["response"]
@@ -128,6 +138,7 @@ def _build_weekly_update_graph():
     return graph.compile()
 
 
+@traceable(name="director_os.deterministic_fallback", run_type="chain")
 def _run_deterministic_fallback(state: DirectorOSState) -> DirectorOSState:
     """Replace the current draft with the deterministic baseline."""
     request = state["request"]
