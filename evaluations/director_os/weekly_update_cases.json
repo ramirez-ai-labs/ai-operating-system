@@ -1,0 +1,73 @@
+[
+  {
+    "id": "leadership-update-baseline",
+    "description": "Baseline leadership update should pull the latest weekly notes and produce wins and next steps.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership update",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "leadership update",
+        "Director Week 14",
+        "Director Week 15"
+      ],
+      "expected_evidence_sources": [
+        "director_week_14.md",
+        "director_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "wins": 1,
+        "next_steps": 1
+      },
+      "expected_min_source_count": 2
+    }
+  },
+  {
+    "id": "full-note-without-focus",
+    "description": "Without a focus query the workflow should still surface structured wins, risks, and next steps.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "max_documents": 10
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "current leadership activity"
+      ],
+      "expected_evidence_sources": [
+        "director_week_13.md",
+        "director_week_14.md",
+        "director_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "wins": 1,
+        "risks": 1,
+        "next_steps": 1
+      },
+      "expected_min_source_count": 3
+    }
+  },
+  {
+    "id": "operating-review-multifile",
+    "description": "A leadership operating review query should pull from more than one note rather than collapsing to a single file.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership operating review",
+      "max_documents": 10
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "leadership operating review"
+      ],
+      "expected_evidence_sources": [
+        "director_week_14.md",
+        "director_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "wins": 1
+      },
+      "expected_min_source_count": 2
+    }
+  }
+]

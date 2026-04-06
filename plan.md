@@ -26,6 +26,8 @@ The repository currently includes:
 - local retrieval from markdown files
 - validation logic
 - optional Ollama provider support
+- optional `LangSmith` tracing for the `Director OS` graph
+- a small checked-in local evaluation set for `Director OS`
 - sample local project data
 - tests for core weekly-update, orchestration, and Brand OS behavior
 - GitHub Actions CI and release workflows
@@ -33,8 +35,6 @@ The repository currently includes:
 The repository does not yet include:
 
 - a local UI
-- `LangSmith` tracing and evaluation wiring
-- strong evidence lineage per output item in the model-assisted path
 - broader evaluation coverage
 - a stable visual demo layer
 
@@ -116,6 +116,14 @@ Add workflow visibility and quality measurement so agentic behavior can be intro
 - A `Director OS` run can be traced end-to-end
 - Workflow changes can be compared against a stable evaluation set
 - Observability improves confidence without reframing the repo as a LangSmith demo
+
+### Status
+
+- Implemented for `Director OS`: optional LangSmith tracing, a checked-in evaluation set, and a CLI runner
+- Current run modes:
+  - on-demand local evals with `python scripts/run_director_os_evals.py`
+  - on-demand LangSmith evals with `python scripts/run_director_os_evals.py --langsmith`
+- Remaining work: broaden the evaluation cases, wire the eval flow into CI intentionally, and extend the same pattern to more workflows
 
 ## Phase 4: Expand the Chief of Staff and Brand OS on the Shared Graph Foundation
 
@@ -205,7 +213,7 @@ The best next sequence from the current repo state is:
 2. Align `README.md`, `AGENTS.md`, and `plan.md` around AI-OS as the product and `LangGraph` / `LangChain` / `LangSmith` as implementation infrastructure
 3. Improve evidence quality, path safety, and evidence lineage in `Director OS`
 4. Stabilize and document the implemented `LangGraph` workflow foundation in `Director OS`
-5. Add `LangSmith` tracing and a small evaluation set
+5. Expand the `Director OS` evaluation set and decide how much of it should run in CI
 6. Expand the shared graph-oriented foundation across the Chief of Staff and `Brand OS`
 
 ## Definition of Success

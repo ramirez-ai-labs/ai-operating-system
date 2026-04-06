@@ -183,6 +183,8 @@ The repository now includes a minimal Phase 1 slice for `Director OS`:
 - A first Brand OS content-draft workflow in `brand_os/workflows`
 - Shared schemas, retrieval, and validation logic in `packages/shared`
 - An explicit provider layer for optional Ollama-backed synthesis
+- Optional `LangSmith` tracing for the `Director OS` graph
+- A small checked-in `Director OS` evaluation set and CLI runner
 - Sample local project and brand data in `data/local_only`
 - Focused tests for retrieval and validation behavior
 
@@ -272,7 +274,8 @@ Phase 1 status:
 - Current multi-domain support: `director_os.weekly_update` and `brand_os.content_draft`
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
 - Implemented: `Director OS` runs through an explicit `LangGraph` state graph while keeping the public API and AI-OS terminology stable
-- Planned next: add `LangSmith` tracing and evaluation coverage for workflow quality
+- Implemented: optional `LangSmith` tracing and a small checked-in `Director OS` evaluation set
+- Planned next: expand evaluation coverage and reuse the same quality harness across more workflows
 - Not yet implemented: UI trace view, broader multi-workflow orchestration
 
 Phase 2:
@@ -412,6 +415,33 @@ Run tests:
 ```bash
 pytest
 ```
+
+Run the checked-in `Director OS` evaluation set locally on demand:
+
+```bash
+python scripts/run_director_os_evals.py
+```
+
+This local mode is the default quality-check path:
+
+- it runs fully on demand
+- it does not require LangSmith
+- it is the version we can safely add to CI later
+
+Run the same evaluation set on demand with LangSmith result upload enabled:
+
+```bash
+python scripts/run_director_os_evals.py --langsmith
+```
+
+Use the LangSmith-backed mode when you want experiment history, evaluator results in the LangSmith UI, or a shareable compare link.
+
+For LangSmith-backed eval runs:
+
+- Set `LANGSMITH_API_KEY`, `LANGSMITH_TRACING=true`, and `LANGSMITH_PROJECT=ai-os`
+- US workspaces use the default endpoint
+- EU workspaces must set `LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com`
+- Run the command from the same terminal session where those env vars are set
 
 ## Important Notes
 

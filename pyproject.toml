@@ -31,6 +31,7 @@ packages = [
   "director_os.workflows",
   "packages",
   "packages.shared",
+  "packages.shared.evaluations",
   "packages.shared.graphs",
   "packages.shared.observability",
   "packages.shared.orchestration",
