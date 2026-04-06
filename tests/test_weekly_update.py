@@ -141,7 +141,7 @@ def test_weekly_update_model_output_falls_back_when_not_supported_by_evidence(mo
                 next_steps=[],
             )
 
-    from director_os.workflows import weekly_update as workflow_module
+    from packages.shared.graphs import director_os as workflow_module
 
     monkeypatch.setattr(
         workflow_module,
@@ -325,7 +325,10 @@ def test_validation_rejects_text_not_supported_by_cited_evidence() -> None:
                 "source": "director_week_14.md",
                 "line_number": 3,
                 "title": "Director Week 14",
-                "excerpt": "Win: shipped the internal status dashboard refresh for leadership review.",
+                "excerpt": (
+                    "Win: shipped the internal status dashboard refresh "
+                    "for leadership review."
+                ),
             }
         ],
     )
