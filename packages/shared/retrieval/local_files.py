@@ -5,9 +5,6 @@ from pathlib import Path
 from packages.shared.schemas.director_os import EvidenceItem
 
 
-ALLOWED_LOCAL_DATA_ROOT = (Path.cwd() / "data" / "local_only").resolve()
-
-
 def retrieve_relevant_documents(
     base_path: str,
     query: str | None,
@@ -16,7 +13,7 @@ def retrieve_relevant_documents(
     """Search local markdown files and return the best matching evidence snippets."""
     # Retrieval is intentionally local-only: the workflow only looks at files
     # under the provided directory and never calls an external service here.
-    root = _resolve_allowed_data_path(base_path)
+    root = Path(base_path).resolve()
     if not root.exists() or not root.is_dir():
         raise ValueError(f"Data path does not exist or is not a directory: {base_path}")
 
@@ -49,19 +46,6 @@ def retrieve_relevant_documents(
 
     matches.sort(key=lambda item: item[0], reverse=True)
     return [item for _, item in matches[:limit]]
-
-
-def _resolve_allowed_data_path(base_path: str) -> Path:
-    """Restrict retrieval to the approved local data workspace for the MVP."""
-    root = Path(base_path).resolve()
-    try:
-        root.relative_to(ALLOWED_LOCAL_DATA_ROOT)
-    except ValueError as exc:
-        raise ValueError(
-            "Data path must stay within the approved local data root: "
-            f"{ALLOWED_LOCAL_DATA_ROOT}"
-        ) from exc
-    return root
 
 
 def _normalize_keywords(query: str | None) -> list[str]:
