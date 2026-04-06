@@ -179,7 +179,7 @@ The repository now includes a minimal Phase 1 slice for `Director OS`:
 
 - A local FastAPI service in `apps/api`
 - A lightweight Chief of Staff orchestration endpoint for deterministic routing
-- A deterministic weekly update workflow in `director_os/workflows`
+- A graph-backed weekly update workflow in `director_os/workflows` and `packages/shared/graphs`
 - A first Brand OS content-draft workflow in `brand_os/workflows`
 - Shared schemas, retrieval, and validation logic in `packages/shared`
 - An explicit provider layer for optional Ollama-backed synthesis
@@ -268,10 +268,10 @@ Phase 1 status:
 - Implemented as a minimal local weekly-update endpoint
 - Implemented as a minimal orchestration endpoint: `POST /orchestrate`
 - Current endpoint: `POST /director-os/weekly-update`
-- Current support: local markdown retrieval, concise structured output, evidence list, validation checks
+- Current support: local markdown retrieval, graph-backed workflow execution, concise structured output, evidence list, validation checks
 - Current multi-domain support: `director_os.weekly_update` and `brand_os.content_draft`
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
-- Planned next: refactor orchestration and workflow execution into explicit `LangGraph` state graphs while keeping the public API and AI-OS terminology stable
+- Implemented: `Director OS` runs through an explicit `LangGraph` state graph while keeping the public API and AI-OS terminology stable
 - Planned next: add `LangSmith` tracing and evaluation coverage for workflow quality
 - Not yet implemented: UI trace view, broader multi-workflow orchestration
 

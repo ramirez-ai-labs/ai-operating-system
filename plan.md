@@ -21,6 +21,7 @@ The repository currently includes:
 - contribution and implementation guidance in `AGENTS.md`
 - a minimal `Director OS` FastAPI MVP
 - a lightweight Chief of Staff orchestration endpoint
+- an explicit `LangGraph` workflow state graph for `Director OS`
 - a first `Brand OS` workflow
 - local retrieval from markdown files
 - validation logic
@@ -32,7 +33,6 @@ The repository currently includes:
 The repository does not yet include:
 
 - a local UI
-- explicit `LangGraph` workflow state graphs
 - `LangSmith` tracing and evaluation wiring
 - strong evidence lineage per output item in the model-assisted path
 - broader evaluation coverage
@@ -77,17 +77,17 @@ Turn the current `Director OS` weekly update slice into a reliable and defensibl
 - CI passes on branch and pull request workflows
 - The MVP can be run locally from documented quickstart steps without guesswork
 
-## Phase 2: Refactor Director OS into an Explicit LangGraph Workflow
+## Phase 2: LangGraph Workflow Foundation for Director OS
 
 ### Objective
 
-Move the current `Director OS` workflow from plain function orchestration into an explicit `LangGraph` state graph while keeping the API contract and AI-OS terminology stable.
+Complete and stabilize the first explicit `LangGraph` workflow foundation for `Director OS` while keeping the API contract and AI-OS terminology stable.
 
 ### Deliverables
 
 - Define a `Director OS` graph with explicit nodes such as request intake, retrieval, draft generation, validation, and final response assembly
 - Keep the first graph primarily deterministic, with model use remaining optional and bounded
-- Keep the current FastAPI routes stable so the graph is an internal refactor rather than an API redesign
+- Keep the current FastAPI routes stable so the graph remains an internal implementation detail rather than an API redesign
 - Add tests for graph state transitions, failure behavior, and deterministic fallback paths
 - Document the graph at the workflow level, not as a framework showcase
 
@@ -204,7 +204,7 @@ The best next sequence from the current repo state is:
 1. Commit the CI/CD and SDLC workflow changes currently in progress
 2. Align `README.md`, `AGENTS.md`, and `plan.md` around AI-OS as the product and `LangGraph` / `LangChain` / `LangSmith` as implementation infrastructure
 3. Improve evidence quality, path safety, and evidence lineage in `Director OS`
-4. Refactor `Director OS` into an explicit `LangGraph` workflow without changing the current public API
+4. Stabilize and document the implemented `LangGraph` workflow foundation in `Director OS`
 5. Add `LangSmith` tracing and a small evaluation set
 6. Expand the shared graph-oriented foundation across the Chief of Staff and `Brand OS`
 
