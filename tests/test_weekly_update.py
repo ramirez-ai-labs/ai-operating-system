@@ -269,6 +269,50 @@ def test_validation_rejects_missing_evidence_reference() -> None:
         raise AssertionError("Expected validation to fail for an invalid evidence reference.")
 
 
+def test_validation_rejects_text_not_supported_by_cited_evidence() -> None:
+    """Validator should reject output text that is not anchored to the cited evidence line."""
+    response = WeeklyUpdateResponse(
+        summary="Short summary",
+        wins=[
+            GroundedItem(
+                text="Win: created an unrelated staffing plan for a new department.",
+                source="director_week_14.md",
+                line_number=3,
+            )
+        ],
+        risks=[],
+        next_steps=[],
+        evidence=[
+            {
+                "source": "director_week_14.md",
+                "line_number": 3,
+                "title": "Director Week 14",
+                "excerpt": "Win: shipped the internal status dashboard refresh for leadership review.",
+            }
+        ],
+    )
+    try:
+        validate_weekly_update(response)
+    except ValueError as exc:
+        assert "semantically anchored" in str(exc)
+    else:
+        raise AssertionError("Expected validation to fail for unsupported grounded text.")
+
+
+def test_retrieval_rejects_paths_outside_local_data_root() -> None:
+    """The MVP should only read markdown from approved local data directories."""
+    try:
+        retrieve_relevant_documents(
+            base_path="tests",
+            query="leadership update",
+            limit=5,
+        )
+    except ValueError as exc:
+        assert "approved local data root" in str(exc).lower()
+    else:
+        raise AssertionError("Expected retrieval to reject paths outside the local data root.")
+
+
 def test_retrieval_prefers_newer_matching_notes() -> None:
     """Later files should edge out older ones when the relevance score is similar."""
     evidence = retrieve_relevant_documents(
