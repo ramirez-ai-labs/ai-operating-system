@@ -1,0 +1,219 @@
+from __future__ import annotations
+
+from typing import Literal, TypedDict
+
+from langgraph.graph import END, START, StateGraph
+
+from packages.shared.providers.ollama import OllamaWeeklyUpdateProvider
+from packages.shared.retrieval.local_files import retrieve_relevant_documents
+from packages.shared.schemas.director_os import (
+    EvidenceItem,
+    GroundedItem,
+    WeeklyUpdateDraft,
+    WeeklyUpdateRequest,
+    WeeklyUpdateResponse,
+)
+from packages.shared.validation.weekly_update import validate_weekly_update
+
+
+class DirectorOSState(TypedDict, total=False):
+    """State carried through the Director OS weekly update graph."""
+
+    request: WeeklyUpdateRequest
+    evidence: list[EvidenceItem]
+    draft: WeeklyUpdateDraft
+    response: WeeklyUpdateResponse
+    used_model: bool
+    fallback_attempted: bool
+
+
+def run_weekly_update_graph(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
+    """Execute the Director OS weekly update graph and return the final response."""
+    graph = _get_weekly_update_graph()
+    final_state = graph.invoke(
+        {
+            "request": request,
+            "used_model": request.use_model,
+            "fallback_attempted": False,
+        }
+    )
+    return final_state["response"]
+
+
+def retrieve_evidence(state: DirectorOSState) -> DirectorOSState:
+    """Collect the local evidence that the workflow is allowed to use."""
+    request = state["request"]
+    evidence = retrieve_relevant_documents(
+        base_path=request.data_path,
+        query=request.focus,
+        limit=request.max_documents,
+    )
+    if not evidence:
+        raise ValueError(
+            "No relevant local documents were found. "
+            "Add markdown files under the data path or adjust the focus."
+        )
+    return {"evidence": evidence}
+
+
+def build_draft(state: DirectorOSState) -> DirectorOSState:
+    """Build a deterministic or model-assisted draft for the weekly update."""
+    request = state["request"]
+    evidence = state["evidence"]
+    if request.use_model and not state.get("fallback_attempted", False):
+        draft = _build_model_draft(request, evidence)
+        return {"draft": draft, "used_model": True}
+
+    draft = _build_deterministic_draft(request.focus, evidence)
+    return {"draft": draft, "used_model": False}
+
+
+def assemble_response(state: DirectorOSState) -> DirectorOSState:
+    """Attach evidence to the current draft before validation."""
+    draft = state["draft"]
+    evidence = state["evidence"]
+    response = WeeklyUpdateResponse(
+        summary=draft.summary,
+        wins=draft.wins,
+        risks=draft.risks,
+        next_steps=draft.next_steps,
+        evidence=evidence,
+    )
+    return {"response": response}
+
+
+def validate_response(state: DirectorOSState) -> DirectorOSState:
+    """Validate the current response and trigger deterministic fallback when allowed."""
+    response = state["response"]
+    request = state["request"]
+    try:
+        validated = validate_weekly_update(response)
+        return {"response": validated}
+    except ValueError:
+        if not state.get("used_model", False) or not request.fallback_to_deterministic:
+            raise
+        return {"fallback_attempted": True}
+
+
+def route_after_validation(
+    state: DirectorOSState,
+) -> Literal["deterministic_fallback", END]:
+    """Choose whether to retry with the deterministic path or finish the run."""
+    if state.get("fallback_attempted", False) and state.get("used_model", False):
+        return "deterministic_fallback"
+    return END
+
+
+def _build_weekly_update_graph():
+    graph = StateGraph(DirectorOSState)
+    graph.add_node("retrieve_evidence", retrieve_evidence)
+    graph.add_node("build_draft", build_draft)
+    graph.add_node("assemble_response", assemble_response)
+    graph.add_node("validate_response", validate_response)
+    graph.add_node("deterministic_fallback", _run_deterministic_fallback)
+
+    graph.add_edge(START, "retrieve_evidence")
+    graph.add_edge("retrieve_evidence", "build_draft")
+    graph.add_edge("build_draft", "assemble_response")
+    graph.add_edge("assemble_response", "validate_response")
+    graph.add_conditional_edges(
+        "validate_response",
+        route_after_validation,
+        {
+            "deterministic_fallback": "deterministic_fallback",
+            END: END,
+        },
+    )
+    graph.add_edge("deterministic_fallback", "assemble_response")
+    return graph.compile()
+
+
+def _run_deterministic_fallback(state: DirectorOSState) -> DirectorOSState:
+    """Replace the current draft with the deterministic baseline."""
+    request = state["request"]
+    evidence = state["evidence"]
+    draft = _build_deterministic_draft(request.focus, evidence)
+    return {"draft": draft, "used_model": False}
+
+
+def _build_deterministic_draft(
+    focus: str | None,
+    evidence: list[EvidenceItem],
+) -> WeeklyUpdateDraft:
+    """Build a predictable draft directly from evidence lines."""
+    return WeeklyUpdateDraft(
+        summary=_build_summary(focus, evidence),
+        wins=_collect_sentences(evidence, ("win", "shipped", "completed", "launched"), 3),
+        risks=_collect_sentences(evidence, ("risk", "blocked", "delay", "issue"), 3),
+        next_steps=_collect_sentences(evidence, ("next", "follow-up", "plan", "action"), 3),
+    )
+
+
+def _build_model_draft(
+    request: WeeklyUpdateRequest,
+    evidence: list[EvidenceItem],
+) -> WeeklyUpdateDraft:
+    """Use the configured local provider to synthesize a structured draft."""
+    provider = OllamaWeeklyUpdateProvider(
+        base_url=request.ollama_url,
+        model=request.ollama_model,
+    )
+    try:
+        draft = provider.generate_weekly_update(request.focus, evidence)
+        _validate_model_draft(draft)
+        return draft
+    except ValueError:
+        if not request.fallback_to_deterministic:
+            raise
+    return _build_deterministic_draft(request.focus, evidence)
+
+
+def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:
+    """Create a concise operator-facing summary anchored to the top evidence sources."""
+    focus_text = focus or "current leadership activity"
+    top_source_titles = list(dict.fromkeys(item.title for item in evidence))
+    top_sources = ", ".join(top_source_titles[:2])
+    return (
+        f"Weekly update synthesized from local project evidence about {focus_text}. "
+        f"Primary supporting context came from {top_sources}."
+    )
+
+
+def _collect_sentences(
+    evidence: list[EvidenceItem],
+    keywords: tuple[str, ...],
+    limit: int,
+) -> list[GroundedItem]:
+    """Pull grounded excerpts into a specific output section such as wins or risks."""
+    results: list[GroundedItem] = []
+    for item in evidence:
+        lowered = item.excerpt.lower()
+        if any(keyword in lowered for keyword in keywords):
+            results.append(
+                GroundedItem(
+                    text=item.excerpt,
+                    source=item.source,
+                    line_number=item.line_number,
+                )
+            )
+        if len(results) >= limit:
+            break
+    return results
+
+
+def _validate_model_draft(draft: WeeklyUpdateDraft) -> None:
+    """Reject weak model drafts so they do not bypass the deterministic baseline."""
+    if not draft.summary.strip():
+        raise ValueError("Model-generated weekly update summary cannot be empty.")
+
+    if not any((draft.wins, draft.risks, draft.next_steps)):
+        raise ValueError(
+            "Model-generated weekly update must include at least one actionable section."
+        )
+
+
+def _get_weekly_update_graph():
+    return _WEEKLY_UPDATE_GRAPH
+
+
+_WEEKLY_UPDATE_GRAPH = _build_weekly_update_graph()
