@@ -34,9 +34,9 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
                 "type": "object",
                 "properties": {
                     "summary": {"type": "string"},
-                    "wins": {"type": "array", "items": {"type": "string"}},
-                    "risks": {"type": "array", "items": {"type": "string"}},
-                    "next_steps": {"type": "array", "items": {"type": "string"}},
+                    "wins": {"type": "array", "items": _grounded_item_schema()},
+                    "risks": {"type": "array", "items": _grounded_item_schema()},
+                    "next_steps": {"type": "array", "items": _grounded_item_schema()},
                 },
                 "required": ["summary", "wins", "risks", "next_steps"],
             },
@@ -74,9 +74,9 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
 
         return WeeklyUpdateDraft(
             summary=parsed.get("summary", ""),
-            wins=_attach_grounding(parsed.get("wins", []), evidence),
-            risks=_attach_grounding(parsed.get("risks", []), evidence),
-            next_steps=_attach_grounding(parsed.get("next_steps", []), evidence),
+            wins=_parse_grounded_items(parsed.get("wins", []), evidence),
+            risks=_parse_grounded_items(parsed.get("risks", []), evidence),
+            next_steps=_parse_grounded_items(parsed.get("next_steps", []), evidence),
         )
 
 
@@ -95,6 +95,9 @@ Rules:
 - Use only the evidence provided below.
 - Keep the summary to one or two sentences.
 - Do not invent wins, risks, or next steps.
+- Every item in wins, risks, and next_steps must cite the exact source and line_number
+  of the supporting evidence item you used.
+- Keep each item tightly worded to the cited evidence instead of broad paraphrases.
 - Return JSON only.
 
 Focus:
@@ -105,8 +108,25 @@ Evidence:
 """.strip()
 
 
-def _attach_grounding(items: list[str], evidence: list[EvidenceItem]) -> list[GroundedItem]:
-    """Attach each generated line to the first compatible evidence item."""
+def _grounded_item_schema() -> dict[str, object]:
+    """Describe a grounded output item for Ollama's JSON mode."""
+    return {
+        "type": "object",
+        "properties": {
+            "text": {"type": "string"},
+            "source": {"type": "string"},
+            "line_number": {"type": "integer"},
+        },
+        "required": ["text", "source", "line_number"],
+    }
+
+
+def _parse_grounded_items(
+    items: list[dict[str, object]],
+    evidence: list[EvidenceItem],
+) -> list[GroundedItem]:
+    """Parse model-returned grounded items and reject unknown evidence references."""
+    evidence_locations = {(item.source, item.line_number) for item in evidence}
     grounded: list[GroundedItem] = []
     remaining_evidence = list(evidence)
 
@@ -124,5 +144,8 @@ def _attach_grounding(items: list[str], evidence: list[EvidenceItem]) -> list[Gr
                 line_number=evidence_item.line_number,
             )
         )
+        if (grounded_item.source, grounded_item.line_number) not in evidence_locations:
+            raise ValueError("Ollama cited evidence that was not part of the retrieved context.")
+        grounded.append(grounded_item)
 
     return grounded
