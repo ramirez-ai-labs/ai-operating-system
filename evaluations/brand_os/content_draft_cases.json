@@ -19,7 +19,8 @@
         "post_outline": 1,
         "repo_improvements": 1
       },
-      "expected_min_source_count": 1
+      "expected_min_source_count": 1,
+      "expected_empty_sections": []
     }
   },
   {
@@ -40,7 +41,52 @@
       "minimum_section_counts": {
         "podcast_angles": 1
       },
-      "expected_min_source_count": 1
+      "expected_min_source_count": 1,
+      "expected_empty_sections": []
+    }
+  },
+  {
+    "id": "workflow-outline-focus",
+    "description": "A workflow-focused query should surface post-outline items without leaking podcast content into the draft.",
+    "inputs": {
+      "data_path": "data/local_only/brand",
+      "focus": "grounded content drafts workflow",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "grounded content drafts workflow"
+      ],
+      "expected_evidence_sources": [
+        "brand_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "post_outline": 1
+      },
+      "expected_min_source_count": 1,
+      "expected_empty_sections": []
+    }
+  },
+  {
+    "id": "repo-improvement-focus",
+    "description": "A trace-view improvement query should surface repo-improvement items while keeping unrelated podcast output empty.",
+    "inputs": {
+      "data_path": "data/local_only/brand",
+      "focus": "trace view validation",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "trace view validation"
+      ],
+      "expected_evidence_sources": [
+        "brand_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "repo_improvements": 1
+      },
+      "expected_min_source_count": 1,
+      "expected_empty_sections": []
     }
   }
 ]
