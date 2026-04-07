@@ -89,6 +89,8 @@ def load_director_os_eval_cases(
 ) -> list[WeeklyUpdateEvalCase]:
     """Load the checked-in local evaluation cases for Director OS."""
     eval_path = Path(path)
+    # The repo keeps the eval set in plain JSON so contributors can review test
+    # cases as normal project data instead of opaque fixtures.
     raw_cases = json.loads(eval_path.read_text(encoding="utf-8"))
     return [WeeklyUpdateEvalCase.model_validate(item) for item in raw_cases]
 
@@ -115,6 +117,8 @@ def _build_eval_inputs(case: WeeklyUpdateEvalCase) -> dict[str, Any]:
     """Serialize a case into the input payload used by local and LangSmith evals."""
     payload = case.inputs.model_dump()
     if case.provider_scenario:
+        # Provider scenarios let the eval harness simulate model failures or
+        # weak output without depending on a real Ollama response.
         payload["provider_scenario"] = case.provider_scenario
     return payload
 
@@ -123,6 +127,8 @@ def run_director_os_eval_target(inputs: dict[str, Any]) -> dict[str, Any]:
     """Run the public Director OS workflow entrypoint for LangSmith or local evals."""
     payload = dict(inputs)
     provider_scenario = payload.pop("provider_scenario", None)
+    # The eval target validates inputs through the same request schema the API
+    # would use, then optionally swaps in a fake provider for deterministic tests.
     request = WeeklyUpdateRequest.model_validate(payload)
     with _override_weekly_update_provider(provider_scenario):
         response = build_weekly_update(request)
@@ -313,6 +319,8 @@ def run_local_director_os_evaluations(
     results: list[dict[str, Any]] = []
     with _langsmith_tracing_disabled():
         for case in eval_cases:
+            # Local evals intentionally return full per-case output so a
+            # contributor can inspect what changed before digging into logs.
             outputs = run_director_os_eval_target(_build_eval_inputs(case))
             reference_outputs = case.reference_outputs.model_dump()
             evaluator_results = [

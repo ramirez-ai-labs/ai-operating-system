@@ -185,6 +185,7 @@ The repository now includes a working Phase 1 foundation for `Director OS` and `
 - An explicit provider layer for optional Ollama-backed synthesis
 - Optional `LangSmith` tracing for the `Director OS` graph
 - Small checked-in evaluation sets and CLI runners for `Director OS` and `Brand OS`
+- Operator-facing trace metadata on orchestrated responses so routing and evidence usage are visible without a UI
 - Sample local project and brand data in `data/local_only`
 - Focused tests for orchestration, retrieval, validation, graph behavior, Brand OS behavior, and observability helpers
 
@@ -272,6 +273,7 @@ Phase 1 status:
 - Current endpoint: `POST /director-os/weekly-update`
 - Current support: local markdown retrieval, graph-backed workflow execution, concise structured output, evidence list, validation checks
 - Current multi-domain support: `director_os.weekly_update` and `brand_os.content_draft`
+- Current operator visibility: `/orchestrate` returns selected workflow, rationale, evidence counts, section counts, and fallback metadata
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
 - Implemented: `Director OS` runs through an explicit `LangGraph` state graph while keeping the public API and AI-OS terminology stable
 - Implemented: optional `LangSmith` tracing and a small checked-in `Director OS` evaluation set
@@ -382,6 +384,12 @@ curl -X POST http://127.0.0.1:8000/orchestrate \
     "max_documents": 10
   }'
 ```
+
+The orchestrator response includes:
+
+- the selected workflow and routing rationale
+- a `trace` object with evidence count, source files, section counts, and fallback status
+- the workflow result payload
 
 Call the Brand OS workflow directly through the orchestrator:
 
