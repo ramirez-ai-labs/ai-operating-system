@@ -13,6 +13,7 @@ def test_orchestrator_routes_director_os_prompt() -> None:
         )
     )
     assert response.selected_workflow == "director_os.weekly_update"
+    assert "leadership" in response.rationale.lower()
     assert response.result.wins
     assert response.trace.evidence_count == len(response.result.evidence)
     assert response.trace.section_counts["wins"] == len(response.result.wins)
@@ -43,9 +44,23 @@ def test_orchestrator_routes_brand_os_prompt() -> None:
         )
     )
     assert response.selected_workflow == "brand_os.content_draft"
+    assert "podcast" in response.rationale.lower()
     assert response.result.post_outline
     assert not response.trace.model_supported
     assert response.trace.section_counts["post_outline"] == len(response.result.post_outline)
+
+
+def test_orchestrator_defaults_to_director_when_prompt_is_missing() -> None:
+    """A missing prompt should fall back to the default Director OS workflow."""
+    response = route_request(
+        OrchestratorRequest(
+            prompt=None,
+            data_path="data/local_only/projects",
+            max_documents=5,
+        )
+    )
+    assert response.selected_workflow == "director_os.weekly_update"
+    assert "default workflow" in response.rationale.lower()
 
 
 def test_orchestrator_reports_director_fallback_in_trace(monkeypatch) -> None:
@@ -96,6 +111,7 @@ def test_orchestrator_reports_director_fallback_in_trace(monkeypatch) -> None:
     assert response.trace.model_requested
     assert response.trace.fallback_used
     assert not response.trace.model_used
+
 
 
 def test_orchestrator_rejects_unknown_workflow() -> None:
