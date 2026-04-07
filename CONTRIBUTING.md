@@ -12,6 +12,20 @@ This repository uses a branch-and-PR workflow.
 
 ## Local Checks
 
+Set up a local environment first:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+On Windows, activate the environment with:
+
+```bash
+.venv\Scripts\activate
+```
+
 For Python changes, run:
 
 ```bash

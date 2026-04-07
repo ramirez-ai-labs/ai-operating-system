@@ -77,6 +77,13 @@ Turn the current `Director OS` weekly update slice into a reliable and defensibl
 - CI passes on branch and pull request workflows
 - The MVP can be run locally from documented quickstart steps without guesswork
 
+### Status
+
+- Implemented: docs are largely aligned around AI-OS as the product and the `lang*` stack as infrastructure
+- Implemented: CI/CD workflows, evidence grounding, multi-file retrieval, explicit evidence lineage, and stronger validation
+- Implemented: local sample datasets for `Director OS` and `Brand OS`
+- Remaining work: keep the roadmap and contributor docs current as the repo expands beyond the first workflows
+
 ## Phase 2: LangGraph Workflow Foundation for Director OS
 
 ### Objective
@@ -96,6 +103,11 @@ Complete and stabilize the first explicit `LangGraph` workflow foundation for `D
 - `Director OS` runs through an explicit graph with inspectable state transitions
 - The public API and product language remain AI-OS-centered
 - The refactor improves control and observability without increasing conceptual noise
+
+### Status
+
+- Implemented for `Director OS`: explicit graph nodes for retrieval, draft generation, response assembly, validation, and deterministic fallback
+- Remaining work: decide how much of the same graph-oriented pattern should be reused directly by `Brand OS`
 
 ## Phase 3: Add LangSmith Tracing and Evaluation
 
@@ -147,6 +159,11 @@ Use the shared foundation to support multi-domain routing while keeping workflow
 - AI-OS supports at least two real workflows across different domains on a shared foundation
 - Routing remains explicit, testable, and explainable
 - The multi-domain AI-OS story is supported by actual code instead of docs alone
+
+### Status
+
+- Implemented: Chief of Staff routing and the first `Brand OS` workflow
+- Remaining work: bring more workflows onto the shared foundation and decide where graph-backed execution is worth the extra complexity
 
 ## Phase 5: Improve Model Reliability and Bounded Agentic Behavior
 
@@ -212,12 +229,11 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 The best next sequence from the current repo state is:
 
-1. Commit the CI/CD and SDLC workflow changes currently in progress
-2. Align `README.md`, `AGENTS.md`, and `plan.md` around AI-OS as the product and `LangGraph` / `LangChain` / `LangSmith` as implementation infrastructure
-3. Improve evidence quality, path safety, and evidence lineage in `Director OS`
-4. Stabilize and document the implemented `LangGraph` workflow foundation in `Director OS`
-5. Expand the `Director OS` evaluation set and decide how much of it should run in CI
-6. Expand the shared graph-oriented foundation across the Chief of Staff and `Brand OS`
+1. Keep `README.md`, `AGENTS.md`, `plan.md`, and `CONTRIBUTING.md` aligned with the actual multi-domain implementation
+2. Expand the `Director OS` evaluation set and decide how much of the same quality harness should be reused for `Brand OS`
+3. Strengthen the shared orchestrator and decide which additional workflows deserve explicit graph-backed execution
+4. Add more realistic local sample datasets for both domains
+5. Add operator-facing workflow visibility, either through richer API traces or a lightweight local UI
 
 ## Definition of Success
 

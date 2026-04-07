@@ -21,10 +21,12 @@ The repository now contains both project documentation and an implemented Phase 
 Current implemented areas include:
 
 - a local FastAPI service under `apps/api`
-- a `Director OS` weekly update workflow
-- shared schemas, retrieval, validation, and provider abstractions under `packages/shared`
-- sample local project data under `data/local_only/projects`
-- focused tests for the current workflow
+- a lightweight Chief of Staff orchestrator
+- a graph-backed `Director OS` weekly update workflow
+- a first `Brand OS` content-draft workflow
+- shared schemas, retrieval, validation, provider, observability, and evaluation helpers under `packages/shared`
+- sample local project and brand data under `data/local_only`
+- focused tests for workflow, orchestration, graph, evaluation, and observability behavior
 - lightweight GitHub Actions CI/CD workflows
 
 The broader architecture described in `README.md` is still only partially implemented.

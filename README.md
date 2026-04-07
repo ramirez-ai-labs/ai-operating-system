@@ -175,18 +175,18 @@ Acts as the final quality gate and enforces:
 
 ## Current MVP Status
 
-The repository now includes a minimal Phase 1 slice for `Director OS`:
+The repository now includes a working Phase 1 foundation for `Director OS` and `Brand OS`:
 
 - A local FastAPI service in `apps/api`
 - A lightweight Chief of Staff orchestration endpoint for deterministic routing
-- A graph-backed weekly update workflow in `director_os/workflows` and `packages/shared/graphs`
-- A first Brand OS content-draft workflow in `brand_os/workflows`
-- Shared schemas, retrieval, and validation logic in `packages/shared`
+- A graph-backed `Director OS` weekly update workflow in `director_os/workflows` and `packages/shared/graphs`
+- A first `Brand OS` content-draft workflow in `brand_os/workflows`
+- Shared schemas, retrieval, validation, provider, observability, and evaluation logic in `packages/shared`
 - An explicit provider layer for optional Ollama-backed synthesis
 - Optional `LangSmith` tracing for the `Director OS` graph
 - A small checked-in `Director OS` evaluation set and CLI runner
 - Sample local project and brand data in `data/local_only`
-- Focused tests for retrieval and validation behavior
+- Focused tests for orchestration, retrieval, validation, graph behavior, Brand OS behavior, and observability helpers
 
 The broader system described below is still the target state rather than the full current implementation.
 
@@ -267,7 +267,7 @@ Phase 1:
 
 Phase 1 status:
 
-- Implemented as a minimal local weekly-update endpoint
+- Implemented as a local weekly-update endpoint
 - Implemented as a minimal orchestration endpoint: `POST /orchestrate`
 - Current endpoint: `POST /director-os/weekly-update`
 - Current support: local markdown retrieval, graph-backed workflow execution, concise structured output, evidence list, validation checks
@@ -275,8 +275,8 @@ Phase 1 status:
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
 - Implemented: `Director OS` runs through an explicit `LangGraph` state graph while keeping the public API and AI-OS terminology stable
 - Implemented: optional `LangSmith` tracing and a small checked-in `Director OS` evaluation set
-- Planned next: expand evaluation coverage and reuse the same quality harness across more workflows
-- Not yet implemented: UI trace view, broader multi-workflow orchestration
+- Planned next: expand evaluation coverage across more workflows and expose more operator-facing workflow visibility
+- Not yet implemented: UI trace view, richer multi-workflow orchestration, and broader workflow coverage beyond the first `Director OS` and `Brand OS` slices
 
 Phase 2:
 
