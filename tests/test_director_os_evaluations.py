@@ -1,12 +1,15 @@
 import os
 
+from director_os.workflows.weekly_update import build_weekly_update
 from packages.shared.evaluations.director_os import (
     DEFAULT_DIRECTOR_OS_EVALS_PATH,
     load_director_os_eval_cases,
     run_local_director_os_evaluations,
     score_section_minimums,
+    score_section_prefix_purity,
     score_summary_terms,
 )
+from packages.shared.schemas.director_os import WeeklyUpdateRequest
 
 
 def test_load_director_os_eval_cases_reads_checked_in_dataset() -> None:
@@ -46,3 +49,30 @@ def test_score_section_minimums_reports_thin_sections() -> None:
     assert not result["score"]
     assert "wins" in result["comment"]
     assert "next_steps" in result["comment"]
+
+
+def test_score_section_prefix_purity_reports_cross_section_leaks() -> None:
+    """Section purity scoring should catch prefixed items in the wrong section."""
+    result = score_section_prefix_purity(
+        outputs={
+            "wins": [{"text": "Win: shipped the dashboard refresh."}],
+            "risks": [{"text": "Risk: a vendor approval is still pending."}],
+            "next_steps": [{"text": "Risk: one launch milestone may slip into next week."}],
+        },
+        reference_outputs={},
+    )
+    assert not result["score"]
+    assert "next_steps" in result["comment"]
+
+
+def test_deterministic_weekly_update_keeps_prefixed_items_in_matching_sections() -> None:
+    """The deterministic draft should not leak risk-prefixed lines into next steps."""
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            max_documents=10,
+        )
+    )
+    assert all(item.text.startswith("Win:") for item in result.wins)
+    assert all(item.text.startswith("Risk:") for item in result.risks)
+    assert all(item.text.startswith("Next:") for item in result.next_steps)

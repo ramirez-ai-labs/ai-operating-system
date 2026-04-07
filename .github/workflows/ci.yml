@@ -66,6 +66,9 @@ jobs:
       - name: Run test suite
         run: pytest --cov=. --cov-report=term-missing --cov-report=xml
 
+      - name: Run Director OS local evaluation set
+        run: python scripts/run_director_os_evals.py
+
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:

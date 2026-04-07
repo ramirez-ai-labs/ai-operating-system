@@ -466,9 +466,9 @@ Useful focus areas:
 
 The project uses lightweight GitHub Actions to keep quality checks cheap and fast:
 
-- Repository checks run on pushes to `main` and `mvp-*` branches, plus pull requests
+- Repository checks run on pull requests to `main`, on pushes, and through manual dispatch
 - Python checks automatically run when a `pyproject.toml`-based MVP exists
-- CI installs the project, runs `ruff`, compiles Python sources, and runs `pytest` with coverage output
+- CI installs the project, runs `ruff`, compiles Python sources, runs `pytest` with coverage output, and executes the local `Director OS` eval runner
 - Concurrency cancellation is enabled to avoid wasting minutes on stale branch runs
 - Tag-based release workflows build Python artifacts without introducing paid deployment tooling
 
