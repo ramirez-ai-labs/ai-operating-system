@@ -41,6 +41,30 @@ Use the LangSmith-backed eval path only when you explicitly want remote experime
 python scripts/run_director_os_evals.py --langsmith
 ```
 
+## REST Smoke Tests
+
+Start the API locally first:
+
+```bash
+uvicorn apps.api.main:app --reload
+```
+
+Smoke-check the current endpoints with:
+
+```bash
+curl -X GET http://127.0.0.1:8000/health
+curl -X POST http://127.0.0.1:8000/director-os/weekly-update -H "Content-Type: application/json" -d '{"data_path":"data/local_only/projects","focus":"leadership update","max_documents":5}'
+curl -X POST http://127.0.0.1:8000/brand-os/content-draft -H "Content-Type: application/json" -d '{"data_path":"data/local_only/brand","focus":"podcast discussion theme","max_documents":5}'
+curl -X POST http://127.0.0.1:8000/orchestrate -H "Content-Type: application/json" -d '{"prompt":"Turn this work into a podcast and LinkedIn content draft","data_path":"data/local_only/brand","max_documents":5}'
+```
+
+Inspect these response fields:
+
+- `/health`: `status`
+- `/director-os/weekly-update`: `summary`, `wins`, `next_steps`, `evidence`
+- `/brand-os/content-draft`: `insight_summary`, `post_outline`, `podcast_angles`, `repo_improvements`
+- `/orchestrate`: `selected_workflow`, `rationale`, `trace.section_counts`, `result`
+
 ## Change Expectations
 
 - Keep `README.md`, `AGENTS.md`, and `plan.md` aligned with implementation status
