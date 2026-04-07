@@ -140,7 +140,7 @@ Add workflow visibility and quality measurement so agentic behavior can be intro
   - local evals run in CI through `python scripts/run_director_os_evals.py`
   - Brand OS local evals run in CI through `python scripts/run_brand_os_evals.py`
   - LangSmith-backed evals remain on-demand only
-- Remaining work: broaden the evaluation cases and extend the same pattern to more workflows
+- Remaining work: broaden evaluation coverage in both domains and extend the same pattern to more workflows
 
 ## Phase 4: Expand the Chief of Staff and Brand OS on the Shared Graph Foundation
 

@@ -57,7 +57,7 @@ jobs:
 
       - name: Compile Python sources
         run: |
-          for path in apps director_os packages tests; do
+          for path in apps brand_os director_os packages scripts tests; do
             if [ -d "$path" ]; then
               python -m compileall "$path"
             fi
