@@ -69,5 +69,107 @@
       },
       "expected_min_source_count": 2
     }
+  },
+  {
+    "id": "model-provider-failure-fallback",
+    "description": "A provider failure should fall back to the deterministic weekly update when fallback is enabled.",
+    "provider_scenario": "provider_failure",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership update",
+      "max_documents": 5,
+      "use_model": true,
+      "fallback_to_deterministic": true
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "leadership update"
+      ],
+      "expected_evidence_sources": [
+        "director_week_14.md",
+        "director_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "wins": 1,
+        "next_steps": 1
+      },
+      "expected_min_source_count": 2,
+      "expected_deterministic_summary": true
+    }
+  },
+  {
+    "id": "weak-model-output-fallback",
+    "description": "Weak model output should be rejected and replaced with the deterministic baseline.",
+    "provider_scenario": "weak_model_output",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership update",
+      "max_documents": 5,
+      "use_model": true,
+      "fallback_to_deterministic": true
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "leadership update"
+      ],
+      "expected_evidence_sources": [
+        "director_week_14.md",
+        "director_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "wins": 1,
+        "next_steps": 1
+      },
+      "expected_min_source_count": 2,
+      "expected_deterministic_summary": true
+    }
+  },
+  {
+    "id": "unsupported-claim-fallback",
+    "description": "Unsupported grounded claims from the model path should fail validation and fall back to deterministic output.",
+    "provider_scenario": "unsupported_grounded_claim",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership update",
+      "max_documents": 5,
+      "use_model": true,
+      "fallback_to_deterministic": true
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "leadership update"
+      ],
+      "expected_evidence_sources": [
+        "director_week_14.md",
+        "director_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "wins": 1,
+        "next_steps": 1
+      },
+      "expected_min_source_count": 2,
+      "expected_deterministic_summary": true
+    }
+  },
+  {
+    "id": "sparse-risk-retrieval",
+    "description": "A narrow risk-focused query should still return a grounded risk section even with sparse evidence.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "vendor confirmation delay",
+      "max_documents": 3
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "vendor confirmation delay"
+      ],
+      "expected_evidence_sources": [
+        "director_week_14.md"
+      ],
+      "minimum_section_counts": {
+        "risks": 1
+      },
+      "expected_min_source_count": 1
+    }
   }
 ]

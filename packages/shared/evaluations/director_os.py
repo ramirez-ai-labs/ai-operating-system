@@ -10,13 +10,15 @@ from langsmith import Client, evaluate
 from pydantic import BaseModel, Field
 
 from director_os.workflows.weekly_update import build_weekly_update
-from packages.shared.schemas.director_os import WeeklyUpdateRequest
+from packages.shared.providers.base import WeeklyUpdateProvider
+from packages.shared.schemas.director_os import GroundedItem, WeeklyUpdateDraft, WeeklyUpdateRequest
 
 DEFAULT_DIRECTOR_OS_EVAL_PROJECT = "ai-os"
 DEFAULT_DIRECTOR_OS_EVAL_DATASET = "director-os-weekly-update"
 DEFAULT_DIRECTOR_OS_EVALS_PATH = (
     Path(__file__).resolve().parents[3] / "evaluations" / "director_os" / "weekly_update_cases.json"
 )
+DETERMINISTIC_SUMMARY_PREFIX = "Weekly update synthesized from local project evidence"
 
 
 class MinimumSectionCounts(BaseModel):
@@ -36,6 +38,7 @@ class WeeklyUpdateEvalReference(BaseModel):
         default_factory=MinimumSectionCounts
     )
     expected_min_source_count: int = 1
+    expected_deterministic_summary: bool = False
 
 
 class WeeklyUpdateEvalCase(BaseModel):
@@ -45,6 +48,40 @@ class WeeklyUpdateEvalCase(BaseModel):
     description: str
     inputs: WeeklyUpdateRequest
     reference_outputs: WeeklyUpdateEvalReference
+    provider_scenario: str | None = None
+
+
+class _FailingProvider(WeeklyUpdateProvider):
+    def generate_weekly_update(self, focus, evidence):
+        raise ValueError("Ollama is unavailable")
+
+
+class _WeakProvider(WeeklyUpdateProvider):
+    def generate_weekly_update(self, focus, evidence):
+        return WeeklyUpdateDraft(summary="", wins=[], risks=[], next_steps=[])
+
+
+class _UnsupportedClaimProvider(WeeklyUpdateProvider):
+    def generate_weekly_update(self, focus, evidence):
+        return WeeklyUpdateDraft(
+            summary="Model-assisted weekly update from grounded evidence.",
+            wins=[
+                GroundedItem(
+                    text="Win: created a new hiring plan and budget proposal.",
+                    source=evidence[0].source,
+                    line_number=evidence[0].line_number,
+                )
+            ],
+            risks=[],
+            next_steps=[],
+        )
+
+
+PROVIDER_SCENARIOS: dict[str, type[WeeklyUpdateProvider]] = {
+    "provider_failure": _FailingProvider,
+    "weak_model_output": _WeakProvider,
+    "unsupported_grounded_claim": _UnsupportedClaimProvider,
+}
 
 
 def load_director_os_eval_cases(
@@ -56,10 +93,39 @@ def load_director_os_eval_cases(
     return [WeeklyUpdateEvalCase.model_validate(item) for item in raw_cases]
 
 
+@contextmanager
+def _override_weekly_update_provider(provider_scenario: str | None):
+    """Swap the graph's provider adapter for a deterministic fake scenario when requested."""
+    if not provider_scenario:
+        yield
+        return
+
+    provider_cls = PROVIDER_SCENARIOS[provider_scenario]
+    from packages.shared.graphs import director_os as graph_module
+
+    original_provider = graph_module.OllamaWeeklyUpdateProvider
+    graph_module.OllamaWeeklyUpdateProvider = lambda base_url, model: provider_cls()
+    try:
+        yield
+    finally:
+        graph_module.OllamaWeeklyUpdateProvider = original_provider
+
+
+def _build_eval_inputs(case: WeeklyUpdateEvalCase) -> dict[str, Any]:
+    """Serialize a case into the input payload used by local and LangSmith evals."""
+    payload = case.inputs.model_dump()
+    if case.provider_scenario:
+        payload["provider_scenario"] = case.provider_scenario
+    return payload
+
+
 def run_director_os_eval_target(inputs: dict[str, Any]) -> dict[str, Any]:
     """Run the public Director OS workflow entrypoint for LangSmith or local evals."""
-    request = WeeklyUpdateRequest.model_validate(inputs)
-    response = build_weekly_update(request)
+    payload = dict(inputs)
+    provider_scenario = payload.pop("provider_scenario", None)
+    request = WeeklyUpdateRequest.model_validate(payload)
+    with _override_weekly_update_provider(provider_scenario):
+        response = build_weekly_update(request)
     return response.model_dump()
 
 
@@ -205,12 +271,37 @@ def score_section_prefix_purity(
     }
 
 
+def score_expected_summary_mode(
+    *,
+    outputs: dict[str, Any],
+    reference_outputs: dict[str, Any],
+) -> dict[str, Any]:
+    """Check whether the case produced the deterministic summary shape when expected."""
+    expects_deterministic = bool(reference_outputs.get("expected_deterministic_summary", False))
+    summary = outputs.get("summary", "")
+    is_deterministic = summary.startswith(DETERMINISTIC_SUMMARY_PREFIX)
+    return {
+        "key": "expected_summary_mode",
+        "score": is_deterministic if expects_deterministic else True,
+        "comment": (
+            "Deterministic summary fallback was observed as expected."
+            if expects_deterministic and is_deterministic
+            else (
+                "Case did not require deterministic fallback."
+                if not expects_deterministic
+                else "Expected a deterministic fallback summary but saw a different summary shape."
+            )
+        ),
+    }
+
+
 DIRECTOR_OS_EVALUATORS = [
     score_summary_terms,
     score_expected_sources,
     score_section_minimums,
     score_source_diversity,
     score_section_prefix_purity,
+    score_expected_summary_mode,
 ]
 
 
@@ -222,7 +313,7 @@ def run_local_director_os_evaluations(
     results: list[dict[str, Any]] = []
     with _langsmith_tracing_disabled():
         for case in eval_cases:
-            outputs = run_director_os_eval_target(case.inputs.model_dump())
+            outputs = run_director_os_eval_target(_build_eval_inputs(case))
             reference_outputs = case.reference_outputs.model_dump()
             evaluator_results = [
                 evaluator(outputs=outputs, reference_outputs=reference_outputs)
@@ -232,7 +323,7 @@ def run_local_director_os_evaluations(
                 {
                     "case_id": case.id,
                     "description": case.description,
-                    "inputs": case.inputs.model_dump(),
+                    "inputs": _build_eval_inputs(case),
                     "outputs": outputs,
                     "results": evaluator_results,
                     "passed": all(item["score"] for item in evaluator_results),
@@ -263,7 +354,7 @@ def sync_langsmith_director_os_dataset(
         dataset_id=dataset.id,
         examples=[
             {
-                "inputs": case.inputs.model_dump(),
+                "inputs": _build_eval_inputs(case),
                 "outputs": case.reference_outputs.model_dump(),
                 "metadata": {
                     "case_id": case.id,
@@ -304,6 +395,7 @@ __all__ = [
     "DEFAULT_DIRECTOR_OS_EVAL_DATASET",
     "DEFAULT_DIRECTOR_OS_EVAL_PROJECT",
     "DEFAULT_DIRECTOR_OS_EVALS_PATH",
+    "DETERMINISTIC_SUMMARY_PREFIX",
     "DIRECTOR_OS_EVALUATORS",
     "WeeklyUpdateEvalCase",
     "WeeklyUpdateEvalReference",
@@ -312,6 +404,7 @@ __all__ = [
     "run_langsmith_director_os_evaluations",
     "run_local_director_os_evaluations",
     "score_expected_sources",
+    "score_expected_summary_mode",
     "score_section_minimums",
     "score_section_prefix_purity",
     "score_source_diversity",
