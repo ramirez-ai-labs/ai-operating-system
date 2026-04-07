@@ -154,9 +154,27 @@ def _build_deterministic_draft(
     """Build a predictable draft directly from evidence lines."""
     return WeeklyUpdateDraft(
         summary=_build_summary(focus, evidence),
-        wins=_collect_sentences(evidence, ("win", "shipped", "completed", "launched"), 3),
-        risks=_collect_sentences(evidence, ("risk", "blocked", "delay", "issue"), 3),
-        next_steps=_collect_sentences(evidence, ("next", "follow-up", "plan", "action"), 3),
+        wins=_collect_sentences(
+            evidence,
+            section_name="wins",
+            explicit_prefix="Win:",
+            keywords=("win", "shipped", "completed", "launched"),
+            limit=3,
+        ),
+        risks=_collect_sentences(
+            evidence,
+            section_name="risks",
+            explicit_prefix="Risk:",
+            keywords=("risk", "blocked", "delay", "issue"),
+            limit=3,
+        ),
+        next_steps=_collect_sentences(
+            evidence,
+            section_name="next_steps",
+            explicit_prefix="Next:",
+            keywords=("next", "follow-up", "plan", "action"),
+            limit=3,
+        ),
     )
 
 
@@ -192,6 +210,9 @@ def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:
 
 def _collect_sentences(
     evidence: list[EvidenceItem],
+    *,
+    section_name: str,
+    explicit_prefix: str,
     keywords: tuple[str, ...],
     limit: int,
 ) -> list[GroundedItem]:
@@ -199,7 +220,13 @@ def _collect_sentences(
     results: list[GroundedItem] = []
     for item in evidence:
         lowered = item.excerpt.lower()
-        if any(keyword in lowered for keyword in keywords):
+        if _matches_section(
+            excerpt=item.excerpt,
+            lowered_excerpt=lowered,
+            section_name=section_name,
+            explicit_prefix=explicit_prefix,
+            keywords=keywords,
+        ):
             results.append(
                 GroundedItem(
                     text=item.excerpt,
@@ -210,6 +237,31 @@ def _collect_sentences(
         if len(results) >= limit:
             break
     return results
+
+
+def _matches_section(
+    *,
+    excerpt: str,
+    lowered_excerpt: str,
+    section_name: str,
+    explicit_prefix: str,
+    keywords: tuple[str, ...],
+) -> bool:
+    """Prefer explicit section prefixes before falling back to loose keyword matching."""
+    normalized_prefix = explicit_prefix.lower()
+    if lowered_excerpt.startswith(normalized_prefix):
+        return True
+
+    competing_prefixes = {
+        "wins": "win:",
+        "risks": "risk:",
+        "next_steps": "next:",
+    }
+    for competing_section, competing_prefix in competing_prefixes.items():
+        if competing_section != section_name and lowered_excerpt.startswith(competing_prefix):
+            return False
+
+    return any(keyword in lowered_excerpt for keyword in keywords)
 
 
 def _validate_model_draft(draft: WeeklyUpdateDraft) -> None:

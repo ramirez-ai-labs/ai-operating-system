@@ -177,11 +177,40 @@ def score_source_diversity(
     }
 
 
+def score_section_prefix_purity(
+    *,
+    outputs: dict[str, Any],
+    reference_outputs: dict[str, Any],
+) -> dict[str, Any]:
+    """Check that sectioned items stay in the section their prefix implies."""
+    expected_prefixes = {
+        "wins": "win:",
+        "risks": "risk:",
+        "next_steps": "next:",
+    }
+    mismatches: list[str] = []
+    for section_name, expected_prefix in expected_prefixes.items():
+        for item in outputs.get(section_name, []):
+            text = item.get("text", "").strip().lower()
+            if text and ":" in text and not text.startswith(expected_prefix):
+                mismatches.append(f"{section_name} -> {item.get('text', '')}")
+    return {
+        "key": "section_prefix_purity",
+        "score": not mismatches,
+        "comment": (
+            "Section prefixes stayed aligned with their output sections."
+            if not mismatches
+            else "Misclassified section items: " + "; ".join(mismatches)
+        ),
+    }
+
+
 DIRECTOR_OS_EVALUATORS = [
     score_summary_terms,
     score_expected_sources,
     score_section_minimums,
     score_source_diversity,
+    score_section_prefix_purity,
 ]
 
 
@@ -284,6 +313,7 @@ __all__ = [
     "run_local_director_os_evaluations",
     "score_expected_sources",
     "score_section_minimums",
+    "score_section_prefix_purity",
     "score_source_diversity",
     "score_summary_terms",
     "sync_langsmith_director_os_dataset",
