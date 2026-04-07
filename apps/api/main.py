@@ -20,7 +20,7 @@ from packages.shared.schemas.orchestrator import (
 app = FastAPI(
     title="AI Operating System API",
     version="0.1.0",
-    description="Minimal Director OS MVP for local weekly update generation.",
+    description="Local-first multi-domain AI-OS API for workflow execution and orchestration.",
 )
 
 
