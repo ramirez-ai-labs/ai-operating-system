@@ -270,7 +270,9 @@ Phase 1 status:
 
 - Implemented as a local weekly-update endpoint
 - Implemented as a minimal orchestration endpoint: `POST /orchestrate`
-- Current endpoint: `POST /director-os/weekly-update`
+- Current direct workflow endpoints:
+  - `POST /director-os/weekly-update`
+  - `POST /brand-os/content-draft`
 - Current support: local markdown retrieval, graph-backed workflow execution, concise structured output, evidence list, validation checks
 - Current multi-domain support: `director_os.weekly_update` and `brand_os.content_draft`
 - Current operator visibility: `/orchestrate` returns selected workflow, rationale, evidence counts, section counts, and fallback metadata
