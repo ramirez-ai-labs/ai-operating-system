@@ -3,8 +3,11 @@ import os
 from director_os.workflows.weekly_update import build_weekly_update
 from packages.shared.evaluations.director_os import (
     DEFAULT_DIRECTOR_OS_EVALS_PATH,
+    DETERMINISTIC_SUMMARY_PREFIX,
     load_director_os_eval_cases,
+    run_director_os_eval_target,
     run_local_director_os_evaluations,
+    score_expected_summary_mode,
     score_section_minimums,
     score_section_prefix_purity,
     score_summary_terms,
@@ -17,6 +20,7 @@ def test_load_director_os_eval_cases_reads_checked_in_dataset() -> None:
     cases = load_director_os_eval_cases(DEFAULT_DIRECTOR_OS_EVALS_PATH)
     assert cases
     assert cases[0].id == "leadership-update-baseline"
+    assert any(case.provider_scenario == "provider_failure" for case in cases)
 
 
 def test_local_director_os_evaluations_pass_against_sample_data(monkeypatch) -> None:
@@ -26,6 +30,22 @@ def test_local_director_os_evaluations_pass_against_sample_data(monkeypatch) -> 
     assert results
     assert all(result["passed"] for result in results)
     assert os.getenv("LANGSMITH_TRACING") == "true"
+
+
+def test_eval_target_supports_provider_failure_scenarios() -> None:
+    """The eval target should support deterministic fake-provider scenarios without Ollama."""
+    result = run_director_os_eval_target(
+        {
+            "data_path": "data/local_only/projects",
+            "focus": "leadership update",
+            "max_documents": 5,
+            "use_model": True,
+            "fallback_to_deterministic": True,
+            "provider_scenario": "provider_failure",
+        }
+    )
+    assert result["summary"].startswith(DETERMINISTIC_SUMMARY_PREFIX)
+    assert result["wins"]
 
 
 def test_score_summary_terms_reports_missing_expected_terms() -> None:
@@ -63,6 +83,16 @@ def test_score_section_prefix_purity_reports_cross_section_leaks() -> None:
     )
     assert not result["score"]
     assert "next_steps" in result["comment"]
+
+
+def test_score_expected_summary_mode_detects_missing_fallback() -> None:
+    """Summary-mode scoring should flag cases that expected deterministic fallback."""
+    result = score_expected_summary_mode(
+        outputs={"summary": "Model-assisted weekly update from grounded evidence."},
+        reference_outputs={"expected_deterministic_summary": True},
+    )
+    assert not result["score"]
+    assert "deterministic fallback" in result["comment"].lower()
 
 
 def test_deterministic_weekly_update_keeps_prefixed_items_in_matching_sections() -> None:
