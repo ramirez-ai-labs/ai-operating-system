@@ -114,6 +114,59 @@ def test_orchestrate_routes_to_brand_os() -> None:
     assert body["trace"]["section_counts"]["podcast_angles"] >= 1
 
 
+def test_orchestrate_honors_explicit_director_workflow() -> None:
+    """The orchestrator should bypass keyword routing when Director OS is explicit."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "workflow": "director_os.weekly_update",
+            "prompt": "Turn this into a podcast",
+            "data_path": "data/local_only/projects",
+            "max_documents": 5,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["selected_workflow"] == "director_os.weekly_update"
+    assert "explicitly requested" in body["rationale"].lower()
+
+
+def test_orchestrate_honors_explicit_brand_workflow() -> None:
+    """The orchestrator should bypass keyword routing when Brand OS is explicit."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "workflow": "brand_os.content_draft",
+            "prompt": "Prepare my leadership weekly update",
+            "data_path": "data/local_only/brand",
+            "max_documents": 5,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["selected_workflow"] == "brand_os.content_draft"
+    assert "explicitly requested" in body["rationale"].lower()
+
+
+def test_orchestrate_prefers_brand_keywords_for_ambiguous_prompt() -> None:
+    """Ambiguous prompts currently prefer Brand OS when Brand keywords appear first."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "prompt": "Prepare a leadership podcast update for this week's work",
+            "data_path": "data/local_only/brand",
+            "max_documents": 5,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["selected_workflow"] == "brand_os.content_draft"
+    assert "podcast" in body["rationale"].lower()
+
+
 def test_orchestrate_returns_400_for_unknown_explicit_workflow() -> None:
     """Unsupported explicit workflow ids should fail as client-facing 400 errors."""
     response = client.post(
