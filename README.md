@@ -184,7 +184,7 @@ The repository now includes a minimal Phase 1 slice for `Director OS`:
 - Shared schemas, retrieval, and validation logic in `packages/shared`
 - An explicit provider layer for optional Ollama-backed synthesis
 - Optional `LangSmith` tracing for the `Director OS` graph
-- A small checked-in `Director OS` evaluation set and CLI runner
+- Small checked-in evaluation sets and CLI runners for `Director OS` and `Brand OS`
 - Sample local project and brand data in `data/local_only`
 - Focused tests for retrieval and validation behavior
 
@@ -428,6 +428,12 @@ This local mode is the default quality-check path:
 - it does not require LangSmith
 - it is also the version enforced in CI today
 
+Run the checked-in `Brand OS` evaluation set locally on demand:
+
+```bash
+python scripts/run_brand_os_evals.py
+```
+
 Run the same evaluation set on demand with LangSmith result upload enabled:
 
 ```bash
@@ -468,7 +474,7 @@ The project uses lightweight GitHub Actions to keep quality checks cheap and fas
 
 - Repository checks run on pull requests to `main`, on pushes, and through manual dispatch
 - Python checks automatically run when a `pyproject.toml`-based MVP exists
-- CI installs the project, runs `ruff`, compiles Python sources, runs `pytest` with coverage output, and executes the local `Director OS` eval runner
+- CI installs the project, runs `ruff`, compiles Python sources, runs `pytest` with coverage output, and executes the local `Director OS` and `Brand OS` eval runners
 - Concurrency cancellation is enabled to avoid wasting minutes on stale branch runs
 - Tag-based release workflows build Python artifacts without introducing paid deployment tooling
 

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "local-first-content-baseline",
+    "description": "A local-first workflow query should produce a grounded content draft from the checked-in brand notes.",
+    "inputs": {
+      "data_path": "data/local_only/brand",
+      "focus": "local-first ai workflow",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "local-first ai workflow",
+        "Brand Week 15"
+      ],
+      "expected_evidence_sources": [
+        "brand_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "post_outline": 1,
+        "repo_improvements": 1
+      },
+      "expected_min_source_count": 1
+    }
+  },
+  {
+    "id": "podcast-content-angle",
+    "description": "A podcast-oriented query should surface at least one podcast angle from grounded evidence.",
+    "inputs": {
+      "data_path": "data/local_only/brand",
+      "focus": "podcast discussion theme",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "podcast discussion theme"
+      ],
+      "expected_evidence_sources": [
+        "brand_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "podcast_angles": 1
+      },
+      "expected_min_source_count": 1
+    }
+  }
+]
