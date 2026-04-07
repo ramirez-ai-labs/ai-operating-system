@@ -180,7 +180,7 @@ The repository now includes a working Phase 1 foundation for `Director OS` and `
 - A local FastAPI service in `apps/api`
 - A lightweight Chief of Staff orchestration endpoint for deterministic routing
 - A graph-backed `Director OS` weekly update workflow in `director_os/workflows` and `packages/shared/graphs`
-- A first `Brand OS` content-draft workflow in `brand_os/workflows`
+- A graph-backed `Brand OS` content-draft workflow in `brand_os/workflows` and `packages/shared/graphs`
 - Shared schemas, retrieval, validation, provider, observability, and evaluation logic in `packages/shared`
 - An explicit provider layer for optional Ollama-backed synthesis
 - Optional `LangSmith` tracing for the `Director OS` graph
