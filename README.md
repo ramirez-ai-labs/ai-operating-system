@@ -426,7 +426,7 @@ This local mode is the default quality-check path:
 
 - it runs fully on demand
 - it does not require LangSmith
-- it is the version we can safely add to CI later
+- it is also the version enforced in CI today
 
 Run the same evaluation set on demand with LangSmith result upload enabled:
 
