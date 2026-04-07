@@ -1,4 +1,5 @@
 from packages.shared.orchestration.chief_of_staff import route_request
+from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateResponse
 from packages.shared.schemas.orchestrator import OrchestratorRequest
 
 
@@ -13,6 +14,9 @@ def test_orchestrator_routes_director_os_prompt() -> None:
     )
     assert response.selected_workflow == "director_os.weekly_update"
     assert response.result.wins
+    assert response.trace.evidence_count == len(response.result.evidence)
+    assert response.trace.section_counts["wins"] == len(response.result.wins)
+    assert not response.trace.fallback_used
 
 
 def test_orchestrator_supports_explicit_workflow_override() -> None:
@@ -26,6 +30,7 @@ def test_orchestrator_supports_explicit_workflow_override() -> None:
     )
     assert response.selected_workflow == "director_os.weekly_update"
     assert "explicitly requested" in response.rationale.lower()
+    assert response.trace.focus_used == "Ignore the prompt and use the explicit workflow"
 
 
 def test_orchestrator_routes_brand_os_prompt() -> None:
@@ -39,6 +44,58 @@ def test_orchestrator_routes_brand_os_prompt() -> None:
     )
     assert response.selected_workflow == "brand_os.content_draft"
     assert response.result.post_outline
+    assert not response.trace.model_supported
+    assert response.trace.section_counts["post_outline"] == len(response.result.post_outline)
+
+
+def test_orchestrator_reports_director_fallback_in_trace(monkeypatch) -> None:
+    """The trace should make deterministic fallback visible to the operator."""
+    from packages.shared.orchestration import chief_of_staff as orchestration_module
+
+    def fake_weekly_update(_request):
+        return WeeklyUpdateResponse(
+            summary=(
+                "Weekly update synthesized from local project evidence about leadership update. "
+                "Primary supporting context came from Director Week 14."
+            ),
+            wins=[
+                GroundedItem(
+                    text=(
+                        "Win: shipped the internal status dashboard refresh "
+                        "for leadership review."
+                    ),
+                    source="director_week_14.md",
+                    line_number=3,
+                )
+            ],
+            risks=[],
+            next_steps=[],
+            evidence=[
+                EvidenceItem(
+                    source="director_week_14.md",
+                    line_number=3,
+                    title="Director Week 14",
+                    excerpt=(
+                        "Win: shipped the internal status dashboard refresh "
+                        "for leadership review."
+                    ),
+                )
+            ],
+        )
+
+    monkeypatch.setattr(orchestration_module, "build_weekly_update", fake_weekly_update)
+
+    response = route_request(
+        OrchestratorRequest(
+            workflow="director_os.weekly_update",
+            data_path="data/local_only/projects",
+            focus="leadership update",
+            use_model=True,
+        )
+    )
+    assert response.trace.model_requested
+    assert response.trace.fallback_used
+    assert not response.trace.model_used
 
 
 def test_orchestrator_rejects_unknown_workflow() -> None:

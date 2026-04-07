@@ -31,6 +31,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    # This script supports both fully local checks and optional LangSmith-backed
+    # runs, but the local path stays the default so normal SDLC remains cheap.
     cases = load_director_os_eval_cases(Path(args.cases_path))
     if args.langsmith:
         experiment = run_langsmith_director_os_evaluations(cases=cases)

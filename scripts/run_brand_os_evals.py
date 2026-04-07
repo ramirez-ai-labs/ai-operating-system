@@ -25,6 +25,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    # The CLI keeps the workflow simple: load the checked-in cases, run them,
+    # print structured results, and fail the process if any case regresses.
     cases = load_brand_os_eval_cases(Path(args.cases_path))
     results = run_local_brand_os_evaluations(cases)
     print(json.dumps(results, indent=2))

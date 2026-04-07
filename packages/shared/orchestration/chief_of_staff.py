@@ -5,7 +5,10 @@ from packages.shared.schemas.director_os import WeeklyUpdateRequest
 from packages.shared.schemas.orchestrator import (
     OrchestratorRequest,
     OrchestratorResponse,
+    WorkflowTrace,
 )
+
+DETERMINISTIC_SUMMARY_PREFIX = "Weekly update synthesized from local project evidence"
 
 
 def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
@@ -45,6 +48,7 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
     return OrchestratorResponse(
         selected_workflow=workflow,
         rationale=_build_rationale(request, workflow),
+        trace=_build_trace(request, workflow, result),
         result=result,
     )
 
@@ -69,3 +73,50 @@ def _build_rationale(request: OrchestratorRequest, workflow: str) -> str:
     if request.workflow:
         return f"Workflow explicitly requested: {workflow}."
     return f"Selected {workflow} from request intent and focus."
+
+
+def _build_trace(
+    request: OrchestratorRequest,
+    workflow: str,
+    result,
+) -> WorkflowTrace:
+    """Summarize the execution path in a shape that operators can inspect easily."""
+    evidence_sources = list(dict.fromkeys(item.source for item in result.evidence))
+    focus_used = request.focus or request.prompt
+
+    if workflow == "director_os.weekly_update":
+        fallback_used = request.use_model and result.summary.startswith(
+            DETERMINISTIC_SUMMARY_PREFIX
+        )
+        section_counts = {
+            "wins": len(result.wins),
+            "risks": len(result.risks),
+            "next_steps": len(result.next_steps),
+        }
+        model_supported = True
+        model_used = request.use_model and not fallback_used
+    else:
+        fallback_used = False
+        section_counts = {
+            "post_outline": len(result.post_outline),
+            "podcast_angles": len(result.podcast_angles),
+            "repo_improvements": len(result.repo_improvements),
+        }
+        model_supported = False
+        model_used = False
+
+    return WorkflowTrace(
+        data_path=request.data_path,
+        focus_used=focus_used,
+        evidence_count=len(result.evidence),
+        evidence_sources=evidence_sources,
+        model_requested=request.use_model,
+        model_supported=model_supported,
+        model_used=model_used,
+        fallback_used=fallback_used,
+        section_counts=section_counts,
+        validation_summary=(
+            f"Grounded output assembled from {len(result.evidence)} evidence items "
+            f"across {len(evidence_sources)} source files."
+        ),
+    )

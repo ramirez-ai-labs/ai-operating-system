@@ -47,12 +47,17 @@ def load_brand_os_eval_cases(
 ) -> list[BrandContentDraftEvalCase]:
     """Load the checked-in local evaluation cases for Brand OS."""
     eval_path = Path(path)
+    # The eval data lives in JSON so it stays easy to review and edit without
+    # learning a separate dataset tool or service.
     raw_cases = json.loads(eval_path.read_text(encoding="utf-8"))
     return [BrandContentDraftEvalCase.model_validate(item) for item in raw_cases]
 
 
 def run_brand_os_eval_target(inputs: dict[str, Any]) -> dict[str, Any]:
     """Run the public Brand OS workflow entrypoint for local evaluations."""
+    # The eval target goes through the same public request model as normal app
+    # code. That keeps evals honest: they exercise the same input boundary a
+    # real caller would use.
     request = BrandContentDraftRequest.model_validate(inputs)
     response = build_content_draft(request)
     return response.model_dump()
@@ -173,6 +178,8 @@ def run_local_brand_os_evaluations(
     eval_cases = cases or load_brand_os_eval_cases()
     results: list[dict[str, Any]] = []
     for case in eval_cases:
+        # Each case is run independently and scored by a small set of explicit
+        # evaluators. This keeps failures easy to explain during development.
         outputs = run_brand_os_eval_target(case.inputs.model_dump())
         reference_outputs = case.reference_outputs.model_dump()
         evaluator_results = [

@@ -47,9 +47,27 @@ class OrchestratorRequest(BaseModel):
     )
 
 
+class WorkflowTrace(BaseModel):
+    """Operator-facing execution metadata for a routed workflow run."""
+
+    # These fields are intentionally simple so they can be rendered directly in
+    # an API response or future UI without extra transformation logic.
+    data_path: str
+    focus_used: str | None
+    evidence_count: int
+    evidence_sources: list[str]
+    model_requested: bool
+    model_supported: bool
+    model_used: bool
+    fallback_used: bool
+    section_counts: dict[str, int]
+    validation_summary: str
+
+
 class OrchestratorResponse(BaseModel):
     """Response returned from the lightweight Chief of Staff routing layer."""
 
     selected_workflow: str
     rationale: str
+    trace: WorkflowTrace
     result: WeeklyUpdateResponse | BrandContentDraftResponse
