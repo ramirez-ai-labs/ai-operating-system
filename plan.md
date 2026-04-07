@@ -132,11 +132,13 @@ Add workflow visibility and quality measurement so agentic behavior can be intro
 ### Status
 
 - Implemented for `Director OS`: optional LangSmith tracing, a checked-in evaluation set, and a CLI runner
+- Implemented for `Brand OS`: a checked-in local evaluation set and a CLI runner
 - Current run modes:
   - on-demand local evals with `python scripts/run_director_os_evals.py`
   - on-demand LangSmith evals with `python scripts/run_director_os_evals.py --langsmith`
 - Current enforcement:
   - local evals run in CI through `python scripts/run_director_os_evals.py`
+  - Brand OS local evals run in CI through `python scripts/run_brand_os_evals.py`
   - LangSmith-backed evals remain on-demand only
 - Remaining work: broaden the evaluation cases and extend the same pattern to more workflows
 
