@@ -31,6 +31,7 @@ class BrandContentDraftEvalReference(BaseModel):
         default_factory=MinimumBrandSectionCounts
     )
     expected_min_source_count: int = 1
+    expected_empty_sections: list[str] = Field(default_factory=list)
 
 
 class BrandContentDraftEvalCase(BaseModel):
@@ -47,17 +48,12 @@ def load_brand_os_eval_cases(
 ) -> list[BrandContentDraftEvalCase]:
     """Load the checked-in local evaluation cases for Brand OS."""
     eval_path = Path(path)
-    # The eval data lives in JSON so it stays easy to review and edit without
-    # learning a separate dataset tool or service.
     raw_cases = json.loads(eval_path.read_text(encoding="utf-8"))
     return [BrandContentDraftEvalCase.model_validate(item) for item in raw_cases]
 
 
 def run_brand_os_eval_target(inputs: dict[str, Any]) -> dict[str, Any]:
     """Run the public Brand OS workflow entrypoint for local evaluations."""
-    # The eval target goes through the same public request model as normal app
-    # code. That keeps evals honest: they exercise the same input boundary a
-    # real caller would use.
     request = BrandContentDraftRequest.model_validate(inputs)
     response = build_content_draft(request)
     return response.model_dump()
@@ -163,11 +159,63 @@ def score_brand_source_diversity(
     }
 
 
+def score_brand_section_prefix_purity(
+    *,
+    outputs: dict[str, Any],
+    reference_outputs: dict[str, Any],
+) -> dict[str, Any]:
+    """Check that Brand OS items stay in sections that match their prefixes."""
+    allowed_prefixes = {
+        "post_outline": ("insight:", "workflow:"),
+        "podcast_angles": ("podcast:",),
+        "repo_improvements": ("improve:", "next:"),
+    }
+    mismatches: list[str] = []
+    for section_name, prefixes in allowed_prefixes.items():
+        for item in outputs.get(section_name, []):
+            text = item.get("text", "").strip().lower()
+            if text and ":" in text and not any(text.startswith(prefix) for prefix in prefixes):
+                mismatches.append(f"{section_name} -> {item.get('text', '')}")
+    return {
+        "key": "section_prefix_purity",
+        "score": not mismatches,
+        "comment": (
+            "Brand OS section prefixes stayed aligned with their output sections."
+            if not mismatches
+            else "Misclassified Brand OS items: " + "; ".join(mismatches)
+        ),
+    }
+
+
+def score_brand_expected_empty_sections(
+    *,
+    outputs: dict[str, Any],
+    reference_outputs: dict[str, Any],
+) -> dict[str, Any]:
+    """Check that cases expecting sparse sections keep unrelated sections empty."""
+    expected_empty_sections = reference_outputs.get("expected_empty_sections", [])
+    unexpected_content = [
+        section_name for section_name in expected_empty_sections if outputs.get(section_name)
+    ]
+    return {
+        "key": "expected_empty_sections",
+        "score": not unexpected_content,
+        "comment": (
+            "Expected sparse sections stayed empty."
+            if not unexpected_content
+            else "Sections expected to be empty contained output: "
+            + ", ".join(unexpected_content)
+        ),
+    }
+
+
 BRAND_OS_EVALUATORS = [
     score_brand_summary_terms,
     score_brand_expected_sources,
     score_brand_section_minimums,
     score_brand_source_diversity,
+    score_brand_section_prefix_purity,
+    score_brand_expected_empty_sections,
 ]
 
 
@@ -178,8 +226,6 @@ def run_local_brand_os_evaluations(
     eval_cases = cases or load_brand_os_eval_cases()
     results: list[dict[str, Any]] = []
     for case in eval_cases:
-        # Each case is run independently and scored by a small set of explicit
-        # evaluators. This keeps failures easy to explain during development.
         outputs = run_brand_os_eval_target(case.inputs.model_dump())
         reference_outputs = case.reference_outputs.model_dump()
         evaluator_results = [
@@ -207,8 +253,10 @@ __all__ = [
     "load_brand_os_eval_cases",
     "run_brand_os_eval_target",
     "run_local_brand_os_evaluations",
+    "score_brand_expected_empty_sections",
     "score_brand_expected_sources",
     "score_brand_section_minimums",
+    "score_brand_section_prefix_purity",
     "score_brand_source_diversity",
     "score_brand_summary_terms",
 ]

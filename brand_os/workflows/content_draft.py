@@ -28,18 +28,24 @@ def build_content_draft(request: BrandContentDraftRequest) -> BrandContentDraftR
         insight_summary=_build_summary(request.focus, evidence),
         post_outline=_collect_items(
             evidence,
-            ("insight", "win", "retrieval", "evaluation", "workflow"),
-            3,
+            section_name="post_outline",
+            allowed_prefixes=("Insight:", "Workflow:"),
+            keywords=("insight", "win", "retrieval", "evaluation", "workflow"),
+            limit=3,
         ),
         podcast_angles=_collect_items(
             evidence,
-            ("podcast", "theme", "discussion", "leadership", "operating"),
-            2,
+            section_name="podcast_angles",
+            allowed_prefixes=("Podcast:",),
+            keywords=("podcast", "theme", "discussion", "leadership", "operating"),
+            limit=2,
         ),
         repo_improvements=_collect_items(
             evidence,
-            ("improve", "next", "validation", "filtering", "workflow"),
-            3,
+            section_name="repo_improvements",
+            allowed_prefixes=("Improve:", "Next:"),
+            keywords=("improve", "next", "validation", "filtering"),
+            limit=3,
         ),
         evidence=evidence,
     )
@@ -57,6 +63,9 @@ def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:
 
 def _collect_items(
     evidence: list[EvidenceItem],
+    *,
+    section_name: str,
+    allowed_prefixes: tuple[str, ...],
     keywords: tuple[str, ...],
     limit: int,
 ) -> list[GroundedItem]:
@@ -64,7 +73,12 @@ def _collect_items(
     results: list[GroundedItem] = []
     for item in evidence:
         lowered = item.excerpt.lower()
-        if any(keyword in lowered for keyword in keywords):
+        if _matches_brand_section(
+            lowered_excerpt=lowered,
+            section_name=section_name,
+            allowed_prefixes=allowed_prefixes,
+            keywords=keywords,
+        ):
             # Instead of rewriting the evidence, the MVP returns the original
             # grounded line so a beginner can always trace the output back to
             # exactly what was retrieved from local files.
@@ -78,3 +92,29 @@ def _collect_items(
         if len(results) >= limit:
             break
     return results
+
+
+def _matches_brand_section(
+    *,
+    lowered_excerpt: str,
+    section_name: str,
+    allowed_prefixes: tuple[str, ...],
+    keywords: tuple[str, ...],
+) -> bool:
+    """Prefer explicit Brand OS prefixes before falling back to looser keywords."""
+    normalized_prefixes = tuple(prefix.lower() for prefix in allowed_prefixes)
+    if any(lowered_excerpt.startswith(prefix) for prefix in normalized_prefixes):
+        return True
+
+    competing_prefixes = {
+        "post_outline": ("podcast:", "improve:", "next:"),
+        "podcast_angles": ("insight:", "workflow:", "improve:", "next:"),
+        "repo_improvements": ("insight:", "podcast:"),
+    }
+    if any(
+        lowered_excerpt.startswith(prefix)
+        for prefix in competing_prefixes.get(section_name, ())
+    ):
+        return False
+
+    return any(keyword in lowered_excerpt for keyword in keywords)
