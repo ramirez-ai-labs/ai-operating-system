@@ -107,7 +107,7 @@ Complete and stabilize the first explicit `LangGraph` workflow foundation for `D
 ### Status
 
 - Implemented for `Director OS`: explicit graph nodes for retrieval, draft generation, response assembly, validation, and deterministic fallback
-- Remaining work: decide how much of the same graph-oriented pattern should be reused directly by `Brand OS`
+- Implemented: the first `Brand OS` workflow now uses the same shared graph-oriented pattern
 
 ## Phase 3: Add LangSmith Tracing and Evaluation
 
@@ -164,7 +164,7 @@ Use the shared foundation to support multi-domain routing while keeping workflow
 
 ### Status
 
-- Implemented: Chief of Staff routing and the first `Brand OS` workflow
+- Implemented: Chief of Staff routing plus graph-backed `Director OS` and `Brand OS` workflows
 - Remaining work: bring more workflows onto the shared foundation and decide where graph-backed execution is worth the extra complexity
 
 ## Phase 5: Improve Model Reliability and Bounded Agentic Behavior
