@@ -45,6 +45,39 @@ def test_director_os_weekly_update_endpoint_returns_400_for_missing_data_path() 
     assert "data path does not exist" in response.json()["detail"].lower()
 
 
+def test_brand_os_content_draft_endpoint_returns_grounded_response() -> None:
+    """The Brand OS endpoint should return the public content-draft shape."""
+    response = client.post(
+        "/brand-os/content-draft",
+        json={
+            "data_path": "data/local_only/brand",
+            "focus": "podcast discussion theme",
+            "max_documents": 5,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["insight_summary"]
+    assert body["post_outline"]
+    assert body["evidence"]
+
+
+def test_brand_os_content_draft_endpoint_returns_400_for_missing_data_path() -> None:
+    """The Brand OS endpoint should surface retrieval failures as HTTP 400 errors."""
+    response = client.post(
+        "/brand-os/content-draft",
+        json={
+            "data_path": "data/local_only/missing-brand",
+            "focus": "podcast discussion theme",
+            "max_documents": 5,
+        },
+    )
+
+    assert response.status_code == 400
+    assert "data path does not exist" in response.json()["detail"].lower()
+
+
 def test_orchestrate_routes_to_director_os() -> None:
     """The orchestrator endpoint should route leadership prompts into Director OS."""
     response = client.post(

@@ -1,7 +1,12 @@
 from fastapi import FastAPI, HTTPException
 
+from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
 from packages.shared.orchestration.chief_of_staff import route_request
+from packages.shared.schemas.brand_os import (
+    BrandContentDraftRequest,
+    BrandContentDraftResponse,
+)
 from packages.shared.schemas.director_os import (
     ErrorResponse,
     WeeklyUpdateRequest,
@@ -40,6 +45,21 @@ def create_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
         return build_weekly_update(request)
     except ValueError as exc:
         # Validation and retrieval failures are returned as client-facing 400 errors.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post(
+    "/brand-os/content-draft",
+    response_model=BrandContentDraftResponse,
+    responses={400: {"model": ErrorResponse}},
+)
+def create_brand_content_draft(
+    request: BrandContentDraftRequest,
+) -> BrandContentDraftResponse:
+    """Run the Brand OS content-draft workflow against local brand notes."""
+    try:
+        return build_content_draft(request)
+    except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
