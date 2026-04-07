@@ -150,11 +150,10 @@ Use the shared foundation to support multi-domain routing while keeping workflow
 
 ### Deliverables
 
-- Refactor the Chief of Staff routing layer so it can select between graph-backed workflows
-- Bring `Brand OS` onto the same shared graph-oriented architecture where practical
+- Refactor the Chief of Staff routing layer so it selects between graph-backed workflows with clearer rationale and traceability
 - Reuse shared retrieval, schemas, validation, and provider logic across domains
+- Add more workflow-specific tests around routing decisions and failure behavior
 - Add more realistic sample datasets for both `Director OS` and `Brand OS`
-- Expand tests for routing, domain selection, and domain-specific failure behavior
 
 ### Exit Criteria
 
