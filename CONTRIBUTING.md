@@ -32,6 +32,7 @@ For Python changes, run:
 python -m ruff check .
 python -m pytest -q
 python scripts/run_director_os_evals.py
+python scripts/run_brand_os_evals.py
 ```
 
 Use the LangSmith-backed eval path only when you explicitly want remote experiment tracking:
