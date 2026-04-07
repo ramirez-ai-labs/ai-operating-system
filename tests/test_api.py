@@ -45,6 +45,36 @@ def test_director_os_weekly_update_endpoint_returns_400_for_missing_data_path() 
     assert "data path does not exist" in response.json()["detail"].lower()
 
 
+def test_director_os_weekly_update_endpoint_returns_422_for_invalid_max_documents() -> None:
+    """FastAPI should reject Director OS requests that violate schema bounds."""
+    response = client.post(
+        "/director-os/weekly-update",
+        json={
+            "data_path": "data/local_only/projects",
+            "focus": "leadership update",
+            "max_documents": 0,
+        },
+    )
+
+    assert response.status_code == 422
+    assert "max_documents" in str(response.json()["detail"]).lower()
+
+
+def test_director_os_weekly_update_endpoint_returns_422_for_wrong_field_type() -> None:
+    """FastAPI should reject Director OS payloads with invalid field types."""
+    response = client.post(
+        "/director-os/weekly-update",
+        json={
+            "data_path": "data/local_only/projects",
+            "focus": "leadership update",
+            "max_documents": "five",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "max_documents" in str(response.json()["detail"]).lower()
+
+
 def test_brand_os_content_draft_endpoint_returns_grounded_response() -> None:
     """The Brand OS endpoint should return the public content-draft shape."""
     response = client.post(
@@ -76,6 +106,36 @@ def test_brand_os_content_draft_endpoint_returns_400_for_missing_data_path() -> 
 
     assert response.status_code == 400
     assert "data path does not exist" in response.json()["detail"].lower()
+
+
+def test_brand_os_content_draft_endpoint_returns_422_for_invalid_max_documents() -> None:
+    """FastAPI should reject Brand OS requests that violate schema bounds."""
+    response = client.post(
+        "/brand-os/content-draft",
+        json={
+            "data_path": "data/local_only/brand",
+            "focus": "podcast discussion theme",
+            "max_documents": 0,
+        },
+    )
+
+    assert response.status_code == 422
+    assert "max_documents" in str(response.json()["detail"]).lower()
+
+
+def test_brand_os_content_draft_endpoint_returns_422_for_wrong_field_type() -> None:
+    """FastAPI should reject Brand OS payloads with invalid field types."""
+    response = client.post(
+        "/brand-os/content-draft",
+        json={
+            "data_path": "data/local_only/brand",
+            "focus": "podcast discussion theme",
+            "max_documents": "five",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "max_documents" in str(response.json()["detail"]).lower()
 
 
 def test_orchestrate_routes_to_director_os() -> None:
@@ -194,3 +254,33 @@ def test_orchestrate_returns_400_for_brand_request_with_missing_data_path() -> N
 
     assert response.status_code == 400
     assert "data path does not exist" in response.json()["detail"].lower()
+
+
+def test_orchestrate_returns_422_for_invalid_max_documents() -> None:
+    """FastAPI should reject orchestrator requests that violate schema bounds."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "prompt": "Prepare my leadership weekly update",
+            "data_path": "data/local_only/projects",
+            "max_documents": 0,
+        },
+    )
+
+    assert response.status_code == 422
+    assert "max_documents" in str(response.json()["detail"]).lower()
+
+
+def test_orchestrate_returns_422_for_wrong_field_type() -> None:
+    """FastAPI should reject orchestrator payloads with invalid field types."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "prompt": "Prepare my leadership weekly update",
+            "data_path": "data/local_only/projects",
+            "max_documents": "five",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "max_documents" in str(response.json()["detail"]).lower()
