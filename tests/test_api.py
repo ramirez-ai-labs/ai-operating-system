@@ -6,6 +6,15 @@ from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, Week
 client = TestClient(app)
 
 
+def test_operator_console_page_returns_html() -> None:
+    """The local operator console should render as an HTML page."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"].lower()
+    assert "AI-OS Operator Console" in response.text
+    assert "/orchestrate" in response.text
+
+
 def test_health_endpoint_returns_ok() -> None:
     """The API should expose a minimal health check for local smoke tests."""
     response = client.get("/health")

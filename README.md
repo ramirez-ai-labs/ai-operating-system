@@ -185,6 +185,7 @@ The repository now includes a working Phase 1 foundation for `Director OS` and `
 - An explicit provider layer for optional Ollama-backed synthesis
 - Optional `LangSmith` tracing for the `Director OS` graph
 - Small checked-in evaluation sets and CLI runners for `Director OS` and `Brand OS`
+- A minimal operator console at `/` for trace-first local workflow inspection
 - Operator-facing trace metadata on orchestrated responses so routing and evidence usage are visible without a UI
 - Sample local project and brand data in `data/local_only`
 - Focused tests for orchestration, retrieval, validation, graph behavior, Brand OS behavior, and observability helpers
@@ -279,8 +280,8 @@ Phase 1 status:
 - Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
 - Implemented: `Director OS` runs through an explicit `LangGraph` state graph while keeping the public API and AI-OS terminology stable
 - Implemented: optional `LangSmith` tracing and a small checked-in `Director OS` evaluation set
-- Planned next: expand evaluation coverage across more workflows and expose more operator-facing workflow visibility
-- Not yet implemented: UI trace view, richer multi-workflow orchestration, and broader workflow coverage beyond the first `Director OS` and `Brand OS` slices
+- Planned next: expand evaluation coverage across more workflows and deepen the operator-facing trace experience
+- Not yet implemented: richer multi-workflow orchestration and broader workflow coverage beyond the first `Director OS` and `Brand OS` slices
 
 Phase 2:
 
