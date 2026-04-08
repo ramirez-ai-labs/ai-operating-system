@@ -17,6 +17,8 @@ def test_load_brand_os_eval_cases_reads_checked_in_dataset() -> None:
     assert cases
     assert cases[0].id == "local-first-content-baseline"
     assert any(case.id == "repo-improvement-focus" for case in cases)
+    assert any(case.id == "operator-visibility-multifile" for case in cases)
+    assert any(case.reference_outputs.expected_empty_sections for case in cases)
 
 
 def test_local_brand_os_evaluations_pass_against_sample_data() -> None:
@@ -93,3 +95,17 @@ def test_brand_content_draft_keeps_prefixed_items_in_matching_sections() -> None
     assert all(item.text.startswith(("Insight:", "Workflow:")) for item in result.post_outline)
     assert all(item.text.startswith("Podcast:") for item in result.podcast_angles)
     assert all(item.text.startswith(("Improve:", "Next:")) for item in result.repo_improvements)
+
+
+def test_brand_content_draft_can_return_sparse_sections_for_narrow_queries() -> None:
+    """Tight evidence limits should allow Brand OS to keep unrelated sections empty."""
+    result = build_content_draft(
+        BrandContentDraftRequest(
+            data_path="data/local_only/brand",
+            focus="podcast discussion theme",
+            max_documents=1,
+        )
+    )
+    assert not result.post_outline
+    assert result.podcast_angles
+    assert not result.repo_improvements

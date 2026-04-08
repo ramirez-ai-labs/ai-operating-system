@@ -28,13 +28,14 @@ The repository currently includes:
 - optional Ollama provider support
 - optional `LangSmith` tracing for the `Director OS` graph
 - a small checked-in local evaluation set for `Director OS`
+- a minimal local operator console served from `apps/api`
 - sample local project data
 - tests for core weekly-update, orchestration, and Brand OS behavior
 - GitHub Actions CI and release workflows
 
 The repository does not yet include:
 
-- a local UI
+- a dedicated frontend app under `apps/web`
 - broader evaluation coverage
 - a stable visual demo layer
 
@@ -206,6 +207,11 @@ Expose workflow execution in a way that supports both usability and project cred
 - The UI improves traceability and operator control
 - Any Langflow usage supports demos and prototyping without displacing the core codebase
 
+### Status
+
+- Implemented: a minimal local operator console is available at `/` through `apps/api`
+- Remaining work: decide whether a dedicated `apps/web` experience is worth the extra surface area beyond the current trace-first console
+
 ## Phase 7: Harden the Project for Ongoing Growth
 
 ### Objective
@@ -234,7 +240,7 @@ The best next sequence from the current repo state is:
 2. Expand the `Director OS` evaluation set and decide how much of the same quality harness should be reused for `Brand OS`
 3. Strengthen the shared orchestrator and decide which additional workflows deserve explicit graph-backed execution
 4. Add more realistic local sample datasets for both domains
-5. Add operator-facing workflow visibility, either through richer API traces or a lightweight local UI
+5. Deepen the operator experience beyond the current console only where it materially improves usability or debugging
 
 ## Definition of Success
 
