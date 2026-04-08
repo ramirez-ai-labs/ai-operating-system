@@ -364,6 +364,30 @@ Run the local API:
 uvicorn apps.api.main:app --reload
 ```
 
+Open the operator console:
+
+```text
+http://127.0.0.1:8000/
+```
+
+What the operator console is:
+
+- A local inspection UI for the AI-OS orchestrator
+- A simple way to see which workflow was selected and why
+- A readable trace view for evidence sources, section counts, model flags, and fallback state
+
+How to use it:
+
+1. Enter a prompt that describes the work you want done.
+2. Leave `Workflow` on `Auto-select` to test routing, or pick a workflow explicitly.
+3. Set `Data Path` to the local project or brand notes you want searched.
+4. Run the request and inspect the trace panels on the right.
+
+Useful first tests:
+
+- `Prepare my leadership weekly update` with `data/local_only/projects`
+- `Turn this work into a podcast and LinkedIn content draft` with `data/local_only/brand`
+
 Call the Phase 1 MVP endpoint:
 
 ```bash

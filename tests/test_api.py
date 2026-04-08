@@ -13,6 +13,8 @@ def test_operator_console_page_returns_html() -> None:
     assert "text/html" in response.headers["content-type"].lower()
     assert "AI-OS Operator Console" in response.text
     assert "/orchestrate" in response.text
+    assert "What This Page Is" in response.text
+    assert "How To Use It" in response.text
 
 
 def test_health_endpoint_returns_ok() -> None:
