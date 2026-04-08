@@ -1,7 +1,7 @@
 [
   {
     "id": "local-first-content-baseline",
-    "description": "A local-first workflow query should produce a grounded content draft from the checked-in brand notes.",
+    "description": "A local-first query should produce a grounded draft from the checked-in notes.",
     "inputs": {
       "data_path": "data/local_only/brand",
       "focus": "local-first ai workflow",
@@ -24,8 +24,34 @@
     }
   },
   {
+    "id": "operator-visibility-multifile",
+    "description": "A broader operator visibility query should use more than one brand note.",
+    "inputs": {
+      "data_path": "data/local_only/brand",
+      "focus": "operator visibility local-first workflow",
+      "max_documents": 6
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "operator visibility local-first workflow",
+        "Brand Week 15"
+      ],
+      "expected_evidence_sources": [
+        "brand_week_15.md",
+        "brand_week_16.md"
+      ],
+      "minimum_section_counts": {
+        "post_outline": 1,
+        "podcast_angles": 1,
+        "repo_improvements": 1
+      },
+      "expected_min_source_count": 2,
+      "expected_empty_sections": []
+    }
+  },
+  {
     "id": "podcast-content-angle",
-    "description": "A podcast-oriented query should surface at least one podcast angle from grounded evidence.",
+    "description": "A podcast-oriented query should surface at least one grounded podcast angle.",
     "inputs": {
       "data_path": "data/local_only/brand",
       "focus": "podcast discussion theme",
@@ -46,8 +72,33 @@
     }
   },
   {
+    "id": "podcast-angle-sparse",
+    "description": "A narrow podcast query with a tight limit should keep other sections empty.",
+    "inputs": {
+      "data_path": "data/local_only/brand",
+      "focus": "podcast discussion theme",
+      "max_documents": 1
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "podcast discussion theme"
+      ],
+      "expected_evidence_sources": [
+        "brand_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "podcast_angles": 1
+      },
+      "expected_min_source_count": 1,
+      "expected_empty_sections": [
+        "post_outline",
+        "repo_improvements"
+      ]
+    }
+  },
+  {
     "id": "workflow-outline-focus",
-    "description": "A workflow-focused query should surface post-outline items without leaking podcast content into the draft.",
+    "description": "A workflow-focused query should surface post-outline items without leakage.",
     "inputs": {
       "data_path": "data/local_only/brand",
       "focus": "grounded content drafts workflow",
@@ -69,7 +120,7 @@
   },
   {
     "id": "repo-improvement-focus",
-    "description": "A trace-view improvement query should surface repo-improvement items while keeping unrelated podcast output empty.",
+    "description": "A trace-view improvement query should surface repo-improvement items.",
     "inputs": {
       "data_path": "data/local_only/brand",
       "focus": "trace view validation",
@@ -87,6 +138,31 @@
       },
       "expected_min_source_count": 1,
       "expected_empty_sections": []
+    }
+  },
+  {
+    "id": "repo-improvement-sparse",
+    "description": "A narrow trace-view query with a tight limit should keep other sections empty.",
+    "inputs": {
+      "data_path": "data/local_only/brand",
+      "focus": "trace view validation",
+      "max_documents": 1
+    },
+    "reference_outputs": {
+      "required_summary_terms": [
+        "trace view validation"
+      ],
+      "expected_evidence_sources": [
+        "brand_week_15.md"
+      ],
+      "minimum_section_counts": {
+        "repo_improvements": 1
+      },
+      "expected_min_source_count": 1,
+      "expected_empty_sections": [
+        "post_outline",
+        "podcast_angles"
+      ]
     }
   }
 ]
