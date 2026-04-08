@@ -284,9 +284,9 @@ Phase 1 status:
 
 Phase 2:
 
-- Reuse the same shared core for one `Brand OS` workflow
-- Turn real work artifacts into grounded content drafts
-- Expose workflow state and evidence in a simple local UI
+- Implemented: reuse the same shared core for one `Brand OS` workflow
+- Implemented: turn real work artifacts into grounded content drafts
+- Planned next: expose workflow state and evidence in a simple local UI
 
 Phase 3:
 

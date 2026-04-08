@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from apps.api.main import app
+from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateResponse
 
 client = TestClient(app)
 
@@ -208,6 +209,84 @@ def test_orchestrate_honors_explicit_brand_workflow() -> None:
     body = response.json()
     assert body["selected_workflow"] == "brand_os.content_draft"
     assert "explicitly requested" in body["rationale"].lower()
+
+
+def test_orchestrate_reports_brand_model_request_as_unsupported() -> None:
+    """Brand OS should report model requests without claiming model support."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "workflow": "brand_os.content_draft",
+            "prompt": "Turn this work into a podcast and LinkedIn content draft",
+            "data_path": "data/local_only/brand",
+            "max_documents": 5,
+            "use_model": True,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["selected_workflow"] == "brand_os.content_draft"
+    assert body["trace"]["model_requested"] is True
+    assert body["trace"]["model_supported"] is False
+    assert body["trace"]["model_used"] is False
+    assert body["trace"]["fallback_used"] is False
+
+
+def test_orchestrate_reports_director_fallback_in_api_trace(monkeypatch) -> None:
+    """Director fallback should remain visible through the orchestrator API trace."""
+    from packages.shared.orchestration import chief_of_staff as orchestration_module
+
+    def fake_weekly_update(_request):
+        return WeeklyUpdateResponse(
+            summary=(
+                "Weekly update synthesized from local project evidence about leadership update. "
+                "Primary supporting context came from Director Week 14."
+            ),
+            wins=[
+                GroundedItem(
+                    text=(
+                        "Win: shipped the internal status dashboard refresh "
+                        "for leadership review."
+                    ),
+                    source="director_week_14.md",
+                    line_number=3,
+                )
+            ],
+            risks=[],
+            next_steps=[],
+            evidence=[
+                EvidenceItem(
+                    source="director_week_14.md",
+                    line_number=3,
+                    title="Director Week 14",
+                    excerpt=(
+                        "Win: shipped the internal status dashboard refresh "
+                        "for leadership review."
+                    ),
+                )
+            ],
+        )
+
+    monkeypatch.setattr(orchestration_module, "build_weekly_update", fake_weekly_update)
+
+    response = client.post(
+        "/orchestrate",
+        json={
+            "workflow": "director_os.weekly_update",
+            "data_path": "data/local_only/projects",
+            "focus": "leadership update",
+            "use_model": True,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["selected_workflow"] == "director_os.weekly_update"
+    assert body["trace"]["model_requested"] is True
+    assert body["trace"]["model_supported"] is True
+    assert body["trace"]["model_used"] is False
+    assert body["trace"]["fallback_used"] is True
 
 
 def test_orchestrate_prefers_brand_keywords_for_ambiguous_prompt() -> None:
