@@ -110,6 +110,12 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
       grid-template-columns: 360px 1fr;
       gap: 18px;
     }
+    .guide {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
     .panel-header {
       padding: 18px 20px 0;
       display: flex;
@@ -241,8 +247,29 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
+    .guide-card {
+      padding: 20px;
+    }
+    .guide-card h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+    .guide-card p,
+    .guide-card li {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .guide-card ul,
+    .guide-card ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .guide-card li + li {
+      margin-top: 8px;
+    }
     @media (max-width: 960px) {
       .hero, .workspace { grid-template-columns: 1fr; }
+      .guide,
       .trace-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
@@ -275,6 +302,33 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           <strong>Default Mode</strong>
           <span>Local-first orchestration with explicit workflow contracts.</span>
         </div>
+      </div>
+    </section>
+
+    <section class="guide">
+      <div class="card guide-card">
+        <h2>What This Page Is</h2>
+        <p>
+          This console is a local inspection view for AI-OS. It lets you send one
+          request through the orchestrator and then inspect what happened:
+          which workflow ran, why it was selected, which files grounded the
+          result, and whether the system used or skipped model-assisted synthesis.
+        </p>
+      </div>
+      <div class="card guide-card">
+        <h2>How To Use It</h2>
+        <ol>
+          <li>Start with a prompt that describes the work you want done.</li>
+          <li>
+            Leave <strong>Workflow</strong> on <strong>Auto-select</strong> to
+            test routing, or choose a workflow explicitly to test a single domain.
+          </li>
+          <li>
+            Use <strong>Data Path</strong> to point at the local notes or files
+            you want the workflow to search, then run the request and inspect the
+            trace cards on the right.
+          </li>
+        </ol>
       </div>
     </section>
 
@@ -357,22 +411,26 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           </div>
           <div class="result-card">
             <h3>Section Counts</h3>
+            <p>Shows how much structured output the selected workflow produced.</p>
             <ul id="section-counts">
               <li>Run a request to populate section counts.</li>
             </ul>
           </div>
           <div class="result-card">
             <h3>Evidence Sources</h3>
+            <p>Lists the local files that grounded the result.</p>
             <ul id="evidence-sources">
               <li>Run a request to inspect evidence sources.</li>
             </ul>
           </div>
           <div class="result-card">
             <h3>Result Summary</h3>
+            <p>A readable summary of the workflow result.</p>
             <pre id="result-summary">No workflow run yet.</pre>
           </div>
           <div class="raw-card">
             <h3>Raw Response</h3>
+            <p>The full JSON payload returned by <code>/orchestrate</code>.</p>
             <pre id="raw-response">No workflow run yet.</pre>
           </div>
         </div>
