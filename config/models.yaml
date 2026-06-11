@@ -1,0 +1,83 @@
+# AI-OS Model Configuration
+#
+# Declares the layered model architecture for AI-OS workflows.
+# Provider selection is controlled per-request via the `provider` field
+# on WeeklyUpdateRequest (and equivalent domain request schemas).
+# These values document the intended defaults and available options —
+# update them here when adding new models or changing tier defaults.
+
+# ---------------------------------------------------------------------------
+# Default provider
+# ---------------------------------------------------------------------------
+# The provider used when no explicit `provider` field is passed in a request.
+# "ollama" keeps the system fully local with no API key required.
+# Switch to "claude" to make Claude Haiku the default synthesis path.
+default_provider: ollama
+
+# ---------------------------------------------------------------------------
+# Provider tiers
+# ---------------------------------------------------------------------------
+providers:
+  ollama:
+    description: Local on-device inference via Ollama. No API key required.
+    default_model: llama3.2
+    base_url: http://127.0.0.1:11434
+    use_cases:
+      - Routing and intent classification
+      - Low-stakes synthesis
+      - Local development without API credentials
+    cost: free
+
+  claude:
+    description: >
+      Anthropic Claude via the Anthropic SDK. Requires ANTHROPIC_API_KEY.
+      Uses tool use for structured output — grounded items with source citations
+      are enforced at the API level, not just by prompt instruction.
+    default_model: claude-haiku-4-5-20251001
+    use_cases:
+      - Structured weekly update synthesis
+      - Evidence-grounded content drafts
+      - High-fidelity outputs for leadership or public-facing use
+    cost: api-key-required
+    env_var: ANTHROPIC_API_KEY
+
+# ---------------------------------------------------------------------------
+# Model registry
+# ---------------------------------------------------------------------------
+# Reference list of tested models per provider.
+# The code reads `provider` and `claude_model` / `ollama_model` from the
+# request — these entries document what has been validated against the
+# Director OS and Brand OS eval sets.
+models:
+  ollama:
+    - id: llama3.2
+      tier: local
+      status: default
+      notes: Default local model. Fast and sufficient for deterministic routing.
+
+  claude:
+    - id: claude-haiku-4-5-20251001
+      tier: synthesis
+      status: default
+      notes: Cost-effective default. Validated against Director OS eval set.
+    - id: claude-sonnet-4-6
+      tier: premium
+      status: available
+      notes: Higher quality for complex or high-stakes synthesis. On-demand only.
+    - id: claude-opus-4-8
+      tier: premium
+      status: available
+      notes: Maximum quality. Reserve for evaluation baselines or critical runs.
+
+# ---------------------------------------------------------------------------
+# Fallback behavior
+# ---------------------------------------------------------------------------
+fallback:
+  enabled: true
+  strategy: deterministic
+  description: >
+    When model synthesis fails or returns weak output, the workflow falls back
+    to the deterministic extraction path. This is controlled by
+    `fallback_to_deterministic` on the request schema and is true by default.
+    The fallback does not call any model — it extracts grounded items directly
+    from retrieved evidence using keyword and prefix matching.
