@@ -10,16 +10,16 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5b
 
-| Step | Status | Notes |
-|---|---|---|
-| `packages/shared/providers/claude.py` | ✅ Done | Implements `WeeklyUpdateProvider` via Anthropic SDK tool use |
-| `ANTHROPIC_API_KEY` in `.env.example` | ✅ Done | Documented alongside `OLLAMA_*` and `LANGSMITH_*` vars |
-| `anthropic` in `pyproject.toml` | ✅ Done | `anthropic>=0.40.0` is a core dependency |
-| `--provider claude` flag on eval runner | ✅ Done | `scripts/run_director_os_evals.py --provider claude` |
-| Run live eval and commit results | ❌ Pending | Requires `ANTHROPIC_API_KEY`; commit output as `evaluations/director_os/results_claude.json` |
-| `config/models.yaml` | ❌ Pending | Directory and file don't exist yet; README target structure references it |
+**Status: Complete — all items merged or pending final PR merge**
 
-**Commit target:** `feat: add Claude provider with live eval results`
+| Step | Status | PR |
+|---|---|---|
+| `packages/shared/providers/claude.py` | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
+| `ANTHROPIC_API_KEY` in `.env.example` | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
+| `anthropic` in `pyproject.toml` | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
+| `--provider claude` flag on eval runner | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
+| `config/models.yaml` | Done | [#42](https://github.com/ramirez-ai-labs/ai-operating-system/pull/42) |
+| `evaluations/director_os/results_claude.json` | Open PR | [#44](https://github.com/ramirez-ai-labs/ai-operating-system/pull/44) |
 
 ---
 
@@ -29,17 +29,17 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5c
 
-| Step | Status | Notes |
-|---|---|---|
-| `packages/shared/mcp/filesystem_server.py` | ❌ Pending | MCP server using the `mcp` Python SDK |
-| `packages/shared/mcp/orchestrator_integration.py` | ❌ Pending | Wires MCP tool calls into the orchestrator |
-| `mcp` SDK added to `pyproject.toml` | ❌ Pending | |
-| Wire `orchestrator_integration` into `/orchestrate` endpoint | ❌ Pending | `trace.mcp_tool_calls` should appear in response |
-| `tests/test_claude_mcp.py` | ❌ Pending | Stub tests for tool registration, schema correctness, round-trip invocation |
-| `claude_desktop_config.json` example | ❌ Pending | One-step wiring to Claude Desktop |
-| All MCP stub tests passing | ❌ Pending | Must pass in CI without a live Claude connection |
+**Status: Not started**
 
-**Commit target:** `feat: add filesystem MCP server with orchestrator integration`
+| Step | Status | PR |
+|---|---|---|
+| `packages/shared/mcp/filesystem_server.py` | Pending | — |
+| `packages/shared/mcp/orchestrator_integration.py` | Pending | — |
+| `mcp` SDK added to `pyproject.toml` | Pending | — |
+| Wire `orchestrator_integration` into `/orchestrate` endpoint | Pending | — |
+| `tests/test_claude_mcp.py` | Pending | — |
+| `claude_desktop_config.json` example | Pending | — |
+| All MCP stub tests passing | Pending | — |
 
 ---
 
@@ -49,15 +49,15 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 7 (hardening) and Phase 5c (MCP docs)
 
-| Step | Status | Notes |
-|---|---|---|
-| `docs/DEPLOYMENT.md` | ❌ Pending | Enterprise deployment guide |
-| Update `README.md` with MCP section and v1.0 framing | ❌ Pending | Drop in `README_new.md` content |
-| GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | ❌ Pending | GitHub UI task |
-| Archive or unpin `openai-foundations` from org page | ❌ Pending | GitHub UI task |
-| Cut `v1.0` release tag with description | ❌ Pending | `git tag v1.0 && git push origin v1.0` |
+**Status: Not started**
 
-**Commit target:** `docs: enterprise deployment guide and updated README`
+| Step | Status | PR |
+|---|---|---|
+| `docs/DEPLOYMENT.md` | Pending | — |
+| Update `README.md` with MCP section and v1.0 framing | Pending | — |
+| GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Pending | — |
+| Archive or unpin `openai-foundations` from org page | Pending | — |
+| Cut `v1.0` release tag with description | Pending | — |
 
 ---
 
@@ -65,4 +65,4 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 - Sprint 2 files (`filesystem_server.py`, `orchestrator_integration.py`, `test_claude_mcp.py`, `claude_desktop_config.json`) are ready to drop in from the working zip — the repo structure and provider/graph patterns are fully compatible.
 - Sprint 3 README update should land after Sprint 2 is merged so the MCP section reflects real, working code.
-- `config/models.yaml` (Sprint 1 remainder) should be created before Sprint 2 ships since it's referenced in the README target structure.
+- `config/models.yaml` (Sprint 1 remainder) was created before Sprint 2 ships since it is referenced in the README target structure.
