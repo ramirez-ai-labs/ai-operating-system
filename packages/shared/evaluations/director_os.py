@@ -97,7 +97,7 @@ def load_director_os_eval_cases(
 
 @contextmanager
 def _override_weekly_update_provider(provider_scenario: str | None):
-    """Swap the graph's provider adapter for a deterministic fake scenario when requested."""
+    """Swap the graph's provider factory for a deterministic fake scenario when requested."""
     if not provider_scenario:
         yield
         return
@@ -105,12 +105,12 @@ def _override_weekly_update_provider(provider_scenario: str | None):
     provider_cls = PROVIDER_SCENARIOS[provider_scenario]
     from packages.shared.graphs import director_os as graph_module
 
-    original_provider = graph_module.OllamaWeeklyUpdateProvider
-    graph_module.OllamaWeeklyUpdateProvider = lambda base_url, model: provider_cls()
+    original_fn = graph_module._build_provider
+    graph_module._build_provider = lambda request: provider_cls()
     try:
         yield
     finally:
-        graph_module.OllamaWeeklyUpdateProvider = original_provider
+        graph_module._build_provider = original_fn
 
 
 def _build_eval_inputs(case: WeeklyUpdateEvalCase) -> dict[str, Any]:
@@ -311,6 +311,27 @@ DIRECTOR_OS_EVALUATORS = [
 ]
 
 
+def apply_provider_override(
+    cases: list[WeeklyUpdateEvalCase],
+    provider: str,
+) -> list[WeeklyUpdateEvalCase]:
+    """Return cases with use_model=True and the given provider set, skipping fake-provider cases."""
+    overridden = []
+    for case in cases:
+        if case.provider_scenario:
+            continue
+        overridden.append(
+            case.model_copy(
+                update={
+                    "inputs": case.inputs.model_copy(
+                        update={"use_model": True, "provider": provider}
+                    )
+                }
+            )
+        )
+    return overridden
+
+
 def run_local_director_os_evaluations(
     cases: list[WeeklyUpdateEvalCase] | None = None,
 ) -> list[dict[str, Any]]:
@@ -407,6 +428,7 @@ __all__ = [
     "DIRECTOR_OS_EVALUATORS",
     "WeeklyUpdateEvalCase",
     "WeeklyUpdateEvalReference",
+    "apply_provider_override",
     "load_director_os_eval_cases",
     "run_director_os_eval_target",
     "run_langsmith_director_os_evaluations",
