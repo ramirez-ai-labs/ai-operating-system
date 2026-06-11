@@ -135,9 +135,15 @@ Specialized agents with strict roles, such as:
 
 ### Model Provider Layer
 
-- Ollama as the default local model runtime
-- External providers are optional and explicitly opt-in
-- Abstracted provider interface so local-first remains the default execution mode
+Layered by cost and locality:
+
+| Layer | Model | Purpose |
+| --- | --- | --- |
+| Local inference | Ollama (`llama3.2`) | Free, on-device, default for routing and low-stakes synthesis |
+| Cloud synthesis | Claude Haiku 4.5 | Cost-effective structured output via Anthropic SDK tool use |
+| Premium synthesis | Claude Sonnet / Opus | On-demand for complex or high-stakes runs |
+
+All providers implement the same `WeeklyUpdateProvider` interface. Switching providers is a single field change in the request — no workflow logic changes required. Cloud providers are opt-in and require `ANTHROPIC_API_KEY`.
 
 ### Validator Agent
 
@@ -173,26 +179,22 @@ Acts as the final quality gate and enforces:
 
 - The user retains final judgment and control
 
-## Current MVP Status
+## Current Status
 
-The repository now includes a working Phase 1 foundation for `Director OS` and `Brand OS`:
+Both `Director OS` and `Brand OS` workflows are implemented and running:
 
-- A local FastAPI service in `apps/api`
-- A lightweight Chief of Staff orchestration endpoint for deterministic routing
-- A graph-backed `Director OS` weekly update workflow in `director_os/workflows` and `packages/shared/graphs`
-- A graph-backed `Brand OS` content-draft workflow in `brand_os/workflows` and `packages/shared/graphs`
-- Shared schemas, retrieval, validation, provider, observability, and evaluation logic in `packages/shared`
-- An explicit provider layer for optional Ollama-backed synthesis
-- Optional `LangSmith` tracing for the `Director OS` graph
-- Small checked-in evaluation sets and CLI runners for `Director OS` and `Brand OS`
-- A minimal operator console at `/` for trace-first local workflow inspection
-- Operator-facing trace metadata on orchestrated responses so routing and evidence usage are visible without a UI
-- Sample local project and brand data in `data/local_only`
-- Focused tests for orchestration, retrieval, validation, graph behavior, Brand OS behavior, and observability helpers
+- FastAPI service in `apps/api` with endpoints for both domains and a Chief of Staff orchestrator
+- Operator console at `/` — trace-first local UI showing routing decisions, evidence sources, section counts, and model flags
+- LangGraph-backed workflow graphs for `Director OS` (weekly update) and `Brand OS` (content draft)
+- Layered model provider support: Ollama (local) and Claude Haiku 4.5 (Anthropic SDK, opt-in)
+- Deterministic fallback when model synthesis fails or returns weak output
+- LangSmith tracing and evaluation runners for both domains (`scripts/run_director_os_evals.py`, `scripts/run_brand_os_evals.py`)
+- Checked-in evaluation sets under `evaluations/` with CI enforcement
+- Shared provider, retrieval, validation, schema, and observability packages under `packages/shared`
+- Sample local data under `data/local_only` for both project and brand workflows
+- 69 tests across orchestration, graph behavior, evaluation scoring, API surface, and observability
 
-The broader system described below is still the target state rather than the full current implementation.
-
-The phased execution roadmap for closing that gap is documented in [plan.md](plan.md).
+The phased execution roadmap is documented in [plan.md](plan.md).
 
 ## Repository Structure (Target State)
 
@@ -232,68 +234,26 @@ The structure below reflects intended direction as the MVP grows:
     routing.yaml
 ```
 
-## MVP Technology Stack
+## Technology Stack
 
-The intended initial stack is:
+| Layer | Tool | Role |
+| --- | --- | --- |
+| Language | Python 3.11+ | All orchestration, workflow, and API logic |
+| API | FastAPI + Pydantic | Request validation, typed contracts, operator console |
+| Workflow orchestration | LangGraph | Explicit state graphs with inspectable node transitions |
+| Model provider (local) | Ollama | On-device inference, no API key required |
+| Model provider (cloud) | Anthropic SDK — Claude Haiku 4.5 | Cost-effective structured output via tool use |
+| Observability | LangSmith | Workflow tracing, eval experiments, cost tracking |
+| Evaluation | Custom eval harness | Checked-in cases, local and LangSmith-backed runners |
+| Retrieval | Local file retrieval (current) | Markdown-based evidence grounding |
+| Retrieval (planned) | ChromaDB + sentence-transformers | Semantic vector search over local documents |
+| CI/CD | GitHub Actions | Lint, test, eval enforcement on every PR |
 
-- `Ollama` for cost-conscious local inference
-- `Python` for orchestration and backend logic
-- `FastAPI` for a local API layer
-- `Pydantic` for schemas and validation contracts
-- `LangGraph` for explicit workflow orchestration and state transitions
-- `LangChain` for model and tool abstractions where those abstractions reduce boilerplate without defining the product
-- `LangSmith` for traces, debugging, and evaluation as workflows become more agentic
-- Start with simple local file-based retrieval
-- Introduce `FAISS` or `Chroma` only if retrieval complexity justifies it
-- `Markdown`, `CSV`, and `JSON` as common local input formats
+The `lang*` frameworks are implementation infrastructure, not the product identity. AI-OS presents workflows, retrieval, validation, and operator control as its core concepts.
 
-These framework choices are implementation infrastructure, not the product identity. AI-OS should present operating domains, workflows, retrieval, validation, and operator control as the primary concepts. The repo should not read like a `lang*` demo.
+## Roadmap
 
-The frontend is optional in the first slice. If added, it should focus on workflow traceability rather than chat-style interaction:
-
-- `Next.js` or `React` for a local UI
-- Execution trace and validation state over animated "agent chat"
-- `Langflow` can be useful later for visual prototyping and demo support, but it should not become the system of record for workflow definitions
-
-## Implementation Plan
-
-The initial build should stay narrow and prove the system with one end-to-end local workflow before expanding.
-
-Phase 1:
-
-- Build a single `Director OS` workflow
-- Accept local project notes or exports as input
-- Retrieve evidence from local files
-- Route through the orchestrator
-- Produce structured output with validator checks
-
-Phase 1 status:
-
-- Implemented as a local weekly-update endpoint
-- Implemented as a minimal orchestration endpoint: `POST /orchestrate`
-- Current direct workflow endpoints:
-  - `POST /director-os/weekly-update`
-  - `POST /brand-os/content-draft`
-- Current support: local markdown retrieval, graph-backed workflow execution, concise structured output, evidence list, validation checks
-- Current multi-domain support: `director_os.weekly_update` and `brand_os.content_draft`
-- Current operator visibility: `/orchestrate` returns selected workflow, rationale, evidence counts, section counts, and fallback metadata
-- Optional next-phase support: local Ollama-backed synthesis with deterministic fallback
-- Implemented: `Director OS` runs through an explicit `LangGraph` state graph while keeping the public API and AI-OS terminology stable
-- Implemented: optional `LangSmith` tracing and a small checked-in `Director OS` evaluation set
-- Planned next: expand evaluation coverage across more workflows and deepen the operator-facing trace experience
-- Not yet implemented: richer multi-workflow orchestration and broader workflow coverage beyond the first `Director OS` and `Brand OS` slices
-
-Phase 2:
-
-- Implemented: reuse the same shared core for one `Brand OS` workflow
-- Implemented: turn real work artifacts into grounded content drafts
-- Planned next: expose workflow state and evidence in a simple local UI
-
-Phase 3:
-
-- Add stronger retrieval infrastructure if plain file retrieval becomes limiting
-- Expand provider support only if local-first constraints remain intact
-- Add more domain agents without weakening determinism or validation
+The phased execution plan — including completed phases, in-progress work, and upcoming additions like an MCP server and ChromaDB semantic retrieval — is documented in [plan.md](plan.md).
 
 ## Non-Goals
 
@@ -302,7 +262,7 @@ This project intentionally does not aim to:
 - Build fully autonomous agents
 - Replace human decision-making
 - Maximize agent complexity or parallelism for its own sake
-- Depend on cloud APIs for core functionality
+- Require cloud APIs for core functionality (cloud providers are opt-in, not required)
 
 The focus is on clarity, reliability, grounded reasoning, and operator control.
 
@@ -348,20 +308,23 @@ Install dependencies:
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate          # macOS / Linux
+# .venv\Scripts\activate           # Windows
 pip install -e ".[dev]"
 ```
 
-On macOS or Linux, use:
+Configure environment variables:
 
 ```bash
-source .venv/bin/activate
+cp .env.example .env
+# Fill in ANTHROPIC_API_KEY and/or LANGSMITH_API_KEY as needed.
+# The system runs fully without either — both are opt-in.
 ```
 
 Run the local API:
 
 ```bash
-uvicorn apps.api.main:app --reload
+uvicorn apps.api.main:app --reload --env-file .env
 ```
 
 Open the operator console:
@@ -430,7 +393,7 @@ curl -X POST http://127.0.0.1:8000/orchestrate \
   }'
 ```
 
-Call the optional Ollama-backed path:
+Call with Ollama-backed synthesis (local model, no API key required):
 
 ```bash
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
@@ -440,9 +403,31 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
     "focus": "leadership update",
     "max_documents": 5,
     "use_model": true,
+    "provider": "ollama",
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_model": "llama3.2"
   }'
+```
+
+Call with Claude Haiku synthesis (requires `ANTHROPIC_API_KEY`):
+
+```bash
+curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data_path": "data/local_only/projects",
+    "focus": "leadership update",
+    "max_documents": 5,
+    "use_model": true,
+    "provider": "claude",
+    "claude_model": "claude-haiku-4-5-20251001"
+  }'
+```
+
+Run the eval set against the Claude provider (requires `ANTHROPIC_API_KEY`):
+
+```bash
+python scripts/run_director_os_evals.py --provider claude
 ```
 
 Run tests:
