@@ -6,7 +6,7 @@ from pathlib import Path
 
 from packages.shared.evaluations.director_os import (
     DEFAULT_DIRECTOR_OS_EVALS_PATH,
-    WeeklyUpdateEvalCase,
+    apply_provider_override,
     load_director_os_eval_cases,
     run_langsmith_director_os_evaluations,
     run_local_director_os_evaluations,
@@ -40,33 +40,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _apply_provider_override(
-    cases: list[WeeklyUpdateEvalCase],
-    provider: str,
-) -> list[WeeklyUpdateEvalCase]:
-    """Return cases with use_model=True and the given provider set, skipping fake-provider cases."""
-    overridden = []
-    for case in cases:
-        if case.provider_scenario:
-            continue
-        overridden.append(
-            case.model_copy(
-                update={
-                    "inputs": case.inputs.model_copy(
-                        update={"use_model": True, "provider": provider}
-                    )
-                }
-            )
-        )
-    return overridden
-
-
 def main() -> None:
     args = parse_args()
     cases = load_director_os_eval_cases(Path(args.cases_path))
 
     if args.provider:
-        cases = _apply_provider_override(cases, args.provider)
+        cases = apply_provider_override(cases, args.provider)
         if not cases:
             raise SystemExit("No eligible cases after applying provider override.")
 

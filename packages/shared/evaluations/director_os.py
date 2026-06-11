@@ -311,6 +311,27 @@ DIRECTOR_OS_EVALUATORS = [
 ]
 
 
+def apply_provider_override(
+    cases: list[WeeklyUpdateEvalCase],
+    provider: str,
+) -> list[WeeklyUpdateEvalCase]:
+    """Return cases with use_model=True and the given provider set, skipping fake-provider cases."""
+    overridden = []
+    for case in cases:
+        if case.provider_scenario:
+            continue
+        overridden.append(
+            case.model_copy(
+                update={
+                    "inputs": case.inputs.model_copy(
+                        update={"use_model": True, "provider": provider}
+                    )
+                }
+            )
+        )
+    return overridden
+
+
 def run_local_director_os_evaluations(
     cases: list[WeeklyUpdateEvalCase] | None = None,
 ) -> list[dict[str, Any]]:
@@ -407,6 +428,7 @@ __all__ = [
     "DIRECTOR_OS_EVALUATORS",
     "WeeklyUpdateEvalCase",
     "WeeklyUpdateEvalReference",
+    "apply_provider_override",
     "load_director_os_eval_cases",
     "run_director_os_eval_target",
     "run_langsmith_director_os_evaluations",

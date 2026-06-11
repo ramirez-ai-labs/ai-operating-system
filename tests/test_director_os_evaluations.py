@@ -6,6 +6,7 @@ from director_os.workflows.weekly_update import build_weekly_update
 from packages.shared.evaluations.director_os import (
     DEFAULT_DIRECTOR_OS_EVALS_PATH,
     DETERMINISTIC_SUMMARY_PREFIX,
+    apply_provider_override,
     load_director_os_eval_cases,
     run_director_os_eval_target,
     run_local_director_os_evaluations,
@@ -15,7 +16,6 @@ from packages.shared.evaluations.director_os import (
     score_summary_terms,
 )
 from packages.shared.schemas.director_os import WeeklyUpdateRequest
-from scripts.run_director_os_evals import _apply_provider_override
 
 
 def test_load_director_os_eval_cases_reads_checked_in_dataset() -> None:
@@ -159,7 +159,7 @@ def test_claude_provider_citations_stay_within_retrieved_evidence() -> None:
 def test_claude_provider_eval_cases_pass_existing_scorers() -> None:
     """Eval cases run through the Claude provider should satisfy the checked-in scorers."""
     all_cases = load_director_os_eval_cases()
-    claude_cases = _apply_provider_override(all_cases, "claude")
+    claude_cases = apply_provider_override(all_cases, "claude")
     assert claude_cases, "Expected at least one non-scenario case for the Claude provider run"
     results = run_local_director_os_evaluations(claude_cases)
     failed = [r["case_id"] for r in results if not r["passed"]]
