@@ -298,6 +298,48 @@ Output:
 - Potential podcast topic
 - Repository improvement suggestions
 
+### Chief of Staff (Orchestrator)
+
+The orchestrator accepts any prompt and auto-routes to the right workflow. Use this when you do not want to specify a domain explicitly.
+
+Input:
+
+```text
+Prepare my leadership weekly update
+```
+
+Output:
+
+- Selected workflow and routing rationale
+- Trace object: evidence count, source files, section counts, fallback status
+- Full workflow result payload from the routed domain
+
+Example — route to Director OS automatically:
+
+```bash
+curl -X POST http://127.0.0.1:8000/orchestrate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Prepare my leadership weekly update",
+    "data_path": "data/local_only/projects",
+    "max_documents": 10
+  }'
+```
+
+Example — route to Brand OS automatically:
+
+```bash
+curl -X POST http://127.0.0.1:8000/orchestrate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Turn this work into a podcast and LinkedIn content draft",
+    "data_path": "data/local_only/brand",
+    "max_documents": 5
+  }'
+```
+
+You can also use the operator console at `http://127.0.0.1:8000/` — leave `Workflow` on `Auto-select` to let the orchestrator route, or pick a domain explicitly to bypass routing.
+
 ## Quickstart
 
 Requirements:
