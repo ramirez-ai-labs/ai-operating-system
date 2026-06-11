@@ -6,6 +6,7 @@ from pathlib import Path
 
 from packages.shared.evaluations.director_os import (
     DEFAULT_DIRECTOR_OS_EVALS_PATH,
+    WeeklyUpdateEvalCase,
     load_director_os_eval_cases,
     run_langsmith_director_os_evaluations,
     run_local_director_os_evaluations,
@@ -26,14 +27,49 @@ def parse_args() -> argparse.Namespace:
         default=str(DEFAULT_DIRECTOR_OS_EVALS_PATH),
         help="Path to the local JSON evaluation cases file.",
     )
+    parser.add_argument(
+        "--provider",
+        choices=["ollama", "claude"],
+        default=None,
+        help=(
+            "Override the model provider for all evaluation cases. "
+            "'claude' requires ANTHROPIC_API_KEY. "
+            "Skips cases that use a provider_scenario (fake-provider tests)."
+        ),
+    )
     return parser.parse_args()
+
+
+def _apply_provider_override(
+    cases: list[WeeklyUpdateEvalCase],
+    provider: str,
+) -> list[WeeklyUpdateEvalCase]:
+    """Return cases with use_model=True and the given provider set, skipping fake-provider cases."""
+    overridden = []
+    for case in cases:
+        if case.provider_scenario:
+            continue
+        overridden.append(
+            case.model_copy(
+                update={
+                    "inputs": case.inputs.model_copy(
+                        update={"use_model": True, "provider": provider}
+                    )
+                }
+            )
+        )
+    return overridden
 
 
 def main() -> None:
     args = parse_args()
-    # This script supports both fully local checks and optional LangSmith-backed
-    # runs, but the local path stays the default so normal SDLC remains cheap.
     cases = load_director_os_eval_cases(Path(args.cases_path))
+
+    if args.provider:
+        cases = _apply_provider_override(cases, args.provider)
+        if not cases:
+            raise SystemExit("No eligible cases after applying provider override.")
+
     if args.langsmith:
         experiment = run_langsmith_director_os_evaluations(cases=cases)
         print(experiment)

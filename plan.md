@@ -187,6 +187,120 @@ Make model-assisted and selectively agentic behavior more reliable without weake
 - Agentic branches remain bounded, observable, and easy to disable
 - The validator meaningfully improves output trustworthiness
 
+### Status
+
+- Implemented: deterministic fallback when Ollama is unavailable
+- Implemented: provider error handling in both Ollama and Claude adapters
+- Implemented: structured output validation via the shared validator
+- Remaining: bounded agentic steps beyond the current graph nodes
+- Remaining: broader eval coverage for weak retrieval and malformed model output
+
+## Phase 5b: Claude Provider and Layered LLM Architecture
+
+### Objective
+
+Introduce Anthropic Claude as a first-class provider alongside Ollama, and establish a layered LLM architecture where local models handle routing and cost-sensitive tasks while Claude handles synthesis and structured output.
+
+### Deliverables
+
+- Add `ClaudeWeeklyUpdateProvider` implementing the existing `WeeklyUpdateProvider` interface via Anthropic SDK tool use
+- Add `provider` field to `WeeklyUpdateRequest` with `"ollama"` and `"claude"` options
+- Add `claude_model` field to `WeeklyUpdateRequest`, defaulting to `claude-haiku-4-5-20251001` for cost-conscious operation
+- Extract `_build_provider` factory in the Director OS graph to support clean provider injection and test patching
+- Add `--provider claude` flag to the eval runner to run the full eval set against the Claude provider
+- Add Claude-specific eval tests that skip cleanly when `ANTHROPIC_API_KEY` is not set
+- Add `.env.example` documenting all required environment variables for local setup
+- Wire `ANTHROPIC_API_KEY` and `LANGSMITH_API_KEY` through `.env` for local development
+
+### Layered LLM Design
+
+| Layer | Model | Purpose |
+| --- | --- | --- |
+| Routing and classification | Ollama (local) | Free, fast, good enough for intent routing |
+| Synthesis and structured output | Claude Haiku 4.5 | Cost-effective, strong tool use and grounding |
+| Optional premium synthesis | Claude Sonnet / Opus | On-demand for high-stakes or complex runs |
+
+### Exit Criteria
+
+- Claude and Ollama are interchangeable providers behind the same `WeeklyUpdateProvider` interface
+- The operator console exposes provider selection so the layered architecture is visible and demonstrable
+- Claude evals pass the same scorers as the deterministic baseline
+- Local setup requires only filling in `.env` from `.env.example` — no undocumented steps
+
+### Status
+
+- Implemented: `packages/shared/providers/claude.py` with Anthropic SDK tool use for structured output
+- Implemented: `provider` and `claude_model` fields on `WeeklyUpdateRequest`
+- Implemented: `_build_provider` factory in `packages/shared/graphs/director_os.py`
+- Implemented: `--provider claude` flag on `scripts/run_director_os_evals.py`
+- Implemented: Claude-specific tests in `tests/test_director_os_evaluations.py`
+- Implemented: `.env.example` with all required keys
+- Remaining: operator console provider dropdown (UI toggle for Ollama vs Claude)
+- Remaining: wire Ollama into Chief of Staff routing so classification uses the local model and Claude handles synthesis only
+
+## Phase 5c: MCP Server — Expose AI-OS Workflows as Tools
+
+### Objective
+
+Build an MCP (Model Context Protocol) server that exposes Director OS and Brand OS workflows as callable tools, making AI-OS composable with any MCP-compatible host including Claude Desktop, Claude Code, and enterprise integrations.
+
+### Background
+
+MCP is Anthropic's open standard for connecting AI models to external tools and data sources. An FDE deliverable in the field is exactly this: an MCP server a customer team can drop into their environment and immediately wire to Claude. Building one here proves the pattern end-to-end.
+
+### Deliverables
+
+- Add `apps/mcp/server.py` implementing an MCP server using the `mcp` Python SDK
+- Expose `director_os_weekly_update` as an MCP tool backed by the existing `build_weekly_update` workflow
+- Expose `brand_os_content_draft` as an MCP tool backed by the existing `build_content_draft` workflow
+- Keep tool input schemas derived from the existing Pydantic request models — no parallel schema definitions
+- Add `claude_desktop_config.json` example so the server can be wired to Claude Desktop in one step
+- Add tests covering tool registration, schema correctness, and round-trip tool invocation
+- Document the MCP server in `README.md` alongside the existing API entry points
+
+### Exit Criteria
+
+- The MCP server starts and registers both tools without errors
+- A Claude Desktop or Claude Code session can invoke `director_os_weekly_update` and receive a grounded structured response
+- Tool schemas match the Pydantic request contracts — no drift
+- Tests pass in CI without requiring a live Claude connection
+
+### Status
+
+- Planned
+
+## Phase 5d: ChromaDB — Upgrade Retrieval to Semantic Vector Search
+
+### Objective
+
+Replace the current flat-file keyword retrieval in `packages/shared/retrieval/local_files.py` with ChromaDB-backed semantic search, making evidence retrieval more accurate and the RAG story credible for enterprise use cases.
+
+### Context
+
+The current retrieval layer reads markdown files and filters by keyword match. This works for the MVP but breaks down with larger or noisier document sets — exactly the kind of data an enterprise customer brings. ChromaDB with sentence embeddings gives semantic similarity search without requiring a cloud vector database, preserving the local-first posture.
+
+### Deliverables
+
+- Add `packages/shared/retrieval/chroma.py` implementing the same retrieval interface as `local_files.py`
+- Use ChromaDB with a local persistent store under `data/chroma/` (gitignored)
+- Use a lightweight embedding model (e.g. `sentence-transformers/all-MiniLM-L6-v2`) as the default
+- Add an ingestion script `scripts/ingest_local_data.py` that indexes `data/local_only/` into ChromaDB
+- Keep the existing flat-file retrieval as a fallback when no ChromaDB index exists
+- Add `chromadb` and `sentence-transformers` to `pyproject.toml` dependencies
+- Add tests for semantic retrieval quality against the existing sample data
+- Update `.env.example` with a `RETRIEVAL_BACKEND` variable (`local_files` or `chroma`)
+
+### Exit Criteria
+
+- Running `python scripts/ingest_local_data.py` indexes local documents into ChromaDB
+- The Director OS workflow uses ChromaDB retrieval when `RETRIEVAL_BACKEND=chroma` is set
+- Semantic search returns more relevant evidence than keyword matching for the existing eval cases
+- CI passes with the flat-file backend as the default (no ChromaDB dependency for basic tests)
+
+### Status
+
+- Planned
+
 ## Phase 6: Add a Lightweight Local UI and Optional Langflow Demo Layer
 
 ### Objective

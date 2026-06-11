@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -31,13 +33,23 @@ class WeeklyUpdateRequest(BaseModel):
             "deterministic workflow instead of raising an error."
         ),
     )
+    provider: Literal["ollama", "claude"] = Field(
+        default="ollama",
+        description=(
+            "Model provider for synthesis. 'claude' requires ANTHROPIC_API_KEY to be set."
+        ),
+    )
     ollama_url: str = Field(
         default="http://127.0.0.1:11434",
-        description="Base URL for the local Ollama server when model synthesis is enabled.",
+        description="Base URL for the local Ollama server when provider is 'ollama'.",
     )
     ollama_model: str = Field(
         default="llama3.2",
-        description="Ollama model name used when model synthesis is enabled.",
+        description="Ollama model name used when provider is 'ollama'.",
+    )
+    claude_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Claude model ID used when provider is 'claude'.",
     )
 
 

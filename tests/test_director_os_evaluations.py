@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from director_os.workflows.weekly_update import build_weekly_update
 from packages.shared.evaluations.director_os import (
     DEFAULT_DIRECTOR_OS_EVALS_PATH,
@@ -106,3 +108,63 @@ def test_deterministic_weekly_update_keeps_prefixed_items_in_matching_sections()
     assert all(item.text.startswith("Win:") for item in result.wins)
     assert all(item.text.startswith("Risk:") for item in result.risks)
     assert all(item.text.startswith("Next:") for item in result.next_steps)
+
+
+# --- Claude provider tests (require ANTHROPIC_API_KEY) ---
+
+_claude_key_available = pytest.mark.skipif(
+    not os.environ.get("ANTHROPIC_API_KEY"),
+    reason="ANTHROPIC_API_KEY not set — skipping live Claude tests",
+)
+
+
+@_claude_key_available
+def test_claude_provider_returns_grounded_weekly_update() -> None:
+    """Claude should produce a non-empty structured update grounded in local evidence."""
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            focus="leadership update",
+            max_documents=5,
+            use_model=True,
+            provider="claude",
+        )
+    )
+    assert result.summary
+    assert result.evidence
+    assert any((result.wins, result.risks, result.next_steps))
+
+
+@_claude_key_available
+def test_claude_provider_citations_stay_within_retrieved_evidence() -> None:
+    """Every grounded item Claude returns must cite a source that was in the evidence."""
+    result = build_weekly_update(
+        WeeklyUpdateRequest(
+            data_path="data/local_only/projects",
+            max_documents=5,
+            use_model=True,
+            provider="claude",
+        )
+    )
+    evidence_locations = {(e.source, e.line_number) for e in result.evidence}
+    all_items = result.wins + result.risks + result.next_steps
+    for item in all_items:
+        assert (item.source, item.line_number) in evidence_locations, (
+            f"Claude cited {item.source}:{item.line_number} which is not in the retrieved evidence"
+        )
+
+
+@_claude_key_available
+def test_claude_provider_eval_cases_pass_existing_scorers() -> None:
+    """Eval cases run through the Claude provider should satisfy the checked-in scorers."""
+    from scripts.run_director_os_evals import _apply_provider_override
+    from packages.shared.evaluations.director_os import (
+        load_director_os_eval_cases,
+        run_local_director_os_evaluations,
+    )
+    all_cases = load_director_os_eval_cases()
+    claude_cases = _apply_provider_override(all_cases, "claude")
+    assert claude_cases, "Expected at least one non-scenario case for the Claude provider run"
+    results = run_local_director_os_evaluations(claude_cases)
+    failed = [r["case_id"] for r in results if not r["passed"]]
+    assert not failed, f"Claude provider eval cases failed: {failed}"

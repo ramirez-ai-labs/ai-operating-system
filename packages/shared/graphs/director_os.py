@@ -8,6 +8,7 @@ from packages.shared.observability.langsmith import (
     get_langsmith_tracing_context,
     traceable,
 )
+from packages.shared.providers.base import WeeklyUpdateProvider
 from packages.shared.providers.ollama import OllamaWeeklyUpdateProvider
 from packages.shared.retrieval.local_files import retrieve_relevant_documents
 from packages.shared.schemas.director_os import (
@@ -178,15 +179,20 @@ def _build_deterministic_draft(
     )
 
 
+def _build_provider(request: WeeklyUpdateRequest) -> WeeklyUpdateProvider:
+    """Select the synthesis provider from the request. Patchable in tests and evals."""
+    if request.provider == "claude":
+        from packages.shared.providers.claude import ClaudeWeeklyUpdateProvider
+        return ClaudeWeeklyUpdateProvider(model=request.claude_model)
+    return OllamaWeeklyUpdateProvider(base_url=request.ollama_url, model=request.ollama_model)
+
+
 def _build_model_draft(
     request: WeeklyUpdateRequest,
     evidence: list[EvidenceItem],
 ) -> WeeklyUpdateDraft:
-    """Use the configured local provider to synthesize a structured draft."""
-    provider = OllamaWeeklyUpdateProvider(
-        base_url=request.ollama_url,
-        model=request.ollama_model,
-    )
+    """Use the configured provider to synthesize a structured draft."""
+    provider = _build_provider(request)
     try:
         draft = provider.generate_weekly_update(request.focus, evidence)
         _validate_model_draft(draft)
