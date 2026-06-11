@@ -11,24 +11,21 @@ Run with live Claude calls (requires ANTHROPIC_API_KEY):
     ANTHROPIC_API_KEY=sk-ant-... pytest tests/test_claude_mcp.py -v
 """
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 
 import pytest
 
+from packages.shared.mcp.filesystem_server import (
+    FilesystemMCPServer,
+    build_tool_result_message,
+    get_tool_definitions,
+)
 from packages.shared.providers.claude_provider import (
     ClaudeProvider,
     ProviderResponse,
     get_provider,
 )
-from packages.shared.mcp.filesystem_server import (
-    FilesystemMCPServer,
-    get_tool_definitions,
-    build_tool_result_message,
-)
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

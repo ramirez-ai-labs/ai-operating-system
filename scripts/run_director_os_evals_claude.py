@@ -222,7 +222,7 @@ def _upload_to_langsmith(results: dict) -> None:
     """Upload results to LangSmith. Requires LANGSMITH_API_KEY in environment."""
     try:
         from langsmith import Client
-        client = Client()
+        Client()
         dataset_name = "director-os-claude-evals"
         logger.info("Uploading results to LangSmith dataset: %s", dataset_name)
         # TODO: implement dataset creation and example upload via client API

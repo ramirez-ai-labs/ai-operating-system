@@ -333,9 +333,8 @@ def build_tool_result_message(
 
 
 if __name__ == "__main__":
-    import sys
-
     import logging as _logging
+    import sys
     _logging.basicConfig(level=_logging.INFO)
 
     root = sys.argv[1] if len(sys.argv) > 1 else "data/local_only"

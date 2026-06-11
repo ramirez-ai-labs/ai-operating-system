@@ -22,12 +22,12 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from packages.shared.providers.claude_provider import ClaudeProvider, ProviderResponse
 from packages.shared.mcp.filesystem_server import (
     FilesystemMCPServer,
-    get_tool_definitions,
     build_tool_result_message,
+    get_tool_definitions,
 )
+from packages.shared.providers.claude_provider import ClaudeProvider, ProviderResponse
 
 logger = logging.getLogger(__name__)
 
