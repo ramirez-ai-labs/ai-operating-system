@@ -201,6 +201,10 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Claude Code — local session state, auto-generated permission allowlists
+.claude/settings.json
+.claude/settings.local.json
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
