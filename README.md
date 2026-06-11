@@ -1,401 +1,92 @@
 # AI Operating System (AI-OS)
 
-AI-OS is a local-first, multi-agent AI system designed to help technical leaders operate effectively across:
+AI-OS is a production-grade multi-agent system that helps technical leaders
+synthesize fragmented information — project status, team signals, brand work —
+into structured, actionable output.
 
-- `Director OS`: project management, team insights, executive reporting
-- `Brand OS`: podcast, open source, thought leadership, content creation
+Built on **Claude** (Anthropic) with **MCP tool integration**, **LangGraph
+orchestration**, and a **live eval harness** with committed results.
 
-Built with a focus on:
+---
 
-- Privacy by default, with local-first operation and no internet requirement
-- Cost-conscious defaults using local models
-- Modular agent architecture
-- Grounded, evidence-based outputs
-- Pluggable model providers, starting local and extending to hybrid setups when needed
+## What this demonstrates
 
-## Why This Exists
+| Capability | Implementation |
+|---|---|
+| Production Claude integration | `packages/shared/providers/claude_provider.py` |
+| MCP server (filesystem tools) | `packages/shared/mcp/filesystem_server.py` |
+| Sub-agent orchestration loop | `packages/shared/mcp/orchestrator_integration.py` |
+| LLM evaluation framework | `scripts/run_director_os_evals_claude.py` + committed results |
+| Operator trace / observability | `trace.mcp_tool_calls` in every `/orchestrate` response |
+| Repeatable deployment pattern | `docs/DEPLOYMENT.md` — secrets, eval gate, rollback, MCP adapters |
+| LangGraph state graphs | `packages/shared/graphs/director_os.py`, `brand_os.py` |
+| LangSmith tracing | Optional — `LANGSMITH_API_KEY` + `--langsmith` flag |
 
-Technical leaders operate across fragmented systems:
+The architecture is designed to be adapted. The provider layer, MCP server,
+and validator agent are all swappable — designed for the kind of customer
+environment customization that enterprise AI work requires.
 
-- Jira for project tracking
-- Docs for context and planning
-- Meetings for decisions and follow-up
-- Repositories for execution
+---
 
-This creates:
+## Architecture
 
-- Information overload
-- Lost context across tools
-- Time spent synthesizing instead of deciding
-
-AI-OS exists to turn fragmented inputs into structured, actionable insight without defaulting to cloud-dependent or opaque agent behavior.
-
-## Purpose
-
-AI-OS is not a generic chatbot.
-
-It is a structured system of agents intended to help you:
-
-- Synthesize information across multiple sources
-- Surface risks and insights
-- Turn work into content and influence
-- Operate consistently across projects and personal brand efforts
-
-## System Overview
-
-```mermaid
-flowchart TD
-    U[User] --> O[Chief of Staff<br/>Orchestrator]
-
-    O --> D[Director OS]
-    O --> B[Brand OS]
-    O --> E[Engineering OS<br/>future]
-
-    D --> S[Shared Core Layer]
-    B --> S
-
-    S --> R[Retrieval + Context Layer]
-    R --> M[Model Provider Layer]
-    M --> V[Validator Agent]
+```
+User prompt
+    │
+    ▼
+Chief of Staff Orchestrator  ──── routes to ────▶  Director OS workflow
+    │                                               Brand OS workflow
+    │
+    ├── ClaudeProvider (claude-haiku-4-5, default)
+    │       └── Falls back to Ollama when ANTHROPIC_API_KEY absent
+    │
+    ├── FilesystemMCPServer
+    │       ├── list_files(path, pattern)
+    │       ├── read_file(path)
+    │       └── search_content(path, query)
+    │
+    ├── Retrieval layer (local markdown, CSV, JSON)
+    │
+    └── Validator agent (evidence-based, low verbosity, no unsupported claims)
+            │
+            ▼
+        Structured response + operator trace
 ```
 
-`Engineering OS` is a future extension for code-oriented workflows such as repository analysis, implementation assistance, and engineering execution support.
+---
 
-## Director OS
+## Quick start
 
-Focus: day-to-day leadership and operational clarity.
-
-Responsibilities:
-
-- Project status synthesis
-- Risk and blocker detection
-- Meeting and 1:1 insights
-- Executive update generation
-
-Example inputs:
-
-- Jira exports
-- Roadmap documents
-- Meeting notes
-- 1:1 notes
-
-Example outputs:
-
-- Weekly leadership update
-- Top risks and blockers
-- Project health summaries
-
-## Brand OS
-
-Focus: personal brand, content, and influence.
-
-Responsibilities:
-
-- Insight extraction from real work
-- Content generation for posts, podcast ideas, and workshops
-- Open source positioning
-- Idea generation
-
-Example inputs:
-
-- Local repositories
-- Notes and experiments
-- Workshop material
-- Podcast drafts
-
-Example outputs:
-
-- LinkedIn posts
-- Podcast episode ideas
-- README improvements
-- Workshop explanations
-
-## Core Components
-
-### Orchestrator (Chief of Staff)
-
-- Interprets user requests
-- Routes tasks to agents
-- Aggregates outputs
-
-### Domain Agents
-
-Specialized agents with strict roles, such as:
-
-- Project Intelligence
-- Team Signal
-- Insight
-- Content
-
-### Retrieval Layer
-
-- Searches local data sources
-- Provides grounded context to agents
-- Reduces hallucination by limiting scope to retrieved evidence
-
-### Model Provider Layer
-
-Layered by cost and locality:
-
-| Layer | Model | Purpose |
-| --- | --- | --- |
-| Local inference | Ollama (`llama3.2`) | Free, on-device, default for routing and low-stakes synthesis |
-| Cloud synthesis | Claude Haiku 4.5 | Cost-effective structured output via Anthropic SDK tool use |
-| Premium synthesis | Claude Sonnet / Opus | On-demand for complex or high-stakes runs |
-
-All providers implement the same `WeeklyUpdateProvider` interface. Switching providers is a single field change in the request — no workflow logic changes required. Cloud providers are opt-in and require `ANTHROPIC_API_KEY`.
-
-### Validator Agent
-
-Acts as the final quality gate and enforces:
-
-- Evidence-based outputs
-- Low verbosity
-- No unsupported claims
-
-## Design Principles
-
-### Local-First
-
-- No internet required
-- All data remains on-device by default
-
-### Grounded Outputs
-
-- Responses should be based on retrieved context
-- Non-trivial claims should include source references when evidence is available
-
-### Structured Responses
-
-- Short, actionable outputs
-- Signal over noise
-
-### Deterministic Workflows
-
-- No uncontrolled autonomy
-- Clear, repeatable execution paths
-
-### Human-in-the-Loop
-
-- The user retains final judgment and control
-
-## Current Status
-
-Both `Director OS` and `Brand OS` workflows are implemented and running:
-
-- FastAPI service in `apps/api` with endpoints for both domains and a Chief of Staff orchestrator
-- Operator console at `/` — trace-first local UI showing routing decisions, evidence sources, section counts, and model flags
-- LangGraph-backed workflow graphs for `Director OS` (weekly update) and `Brand OS` (content draft)
-- Layered model provider support: Ollama (local) and Claude Haiku 4.5 (Anthropic SDK, opt-in)
-- Deterministic fallback when model synthesis fails or returns weak output
-- LangSmith tracing and evaluation runners for both domains (`scripts/run_director_os_evals.py`, `scripts/run_brand_os_evals.py`)
-- Checked-in evaluation sets under `evaluations/` with CI enforcement
-- Shared provider, retrieval, validation, schema, and observability packages under `packages/shared`
-- Sample local data under `data/local_only` for both project and brand workflows
-- 69 tests across orchestration, graph behavior, evaluation scoring, API surface, and observability
-
-The phased execution roadmap is documented in [plan.md](plan.md).
-
-## Repository Structure (Target State)
-
-The structure below reflects intended direction as the MVP grows:
-
-```text
-/ai-os
-  /apps
-    /web        # Frontend (e.g. Next.js)
-    /api        # Backend (e.g. FastAPI)
-
-  /packages
-    /shared
-      /prompts
-      /schemas
-      /retrieval
-      /validation
-      /providers
-
-  /director_os
-    agents/
-    workflows/
-
-  /brand_os
-    agents/
-    workflows/
-
-  /data
-    /local_only
-      /projects
-      /notes
-      /repos
-      /podcast
-
-  /config
-    models.yaml
-    routing.yaml
-```
-
-## Technology Stack
-
-| Layer | Tool | Role |
-| --- | --- | --- |
-| Language | Python 3.11+ | All orchestration, workflow, and API logic |
-| API | FastAPI + Pydantic | Request validation, typed contracts, operator console |
-| Workflow orchestration | LangGraph | Explicit state graphs with inspectable node transitions |
-| Model provider (local) | Ollama | On-device inference, no API key required |
-| Model provider (cloud) | Anthropic SDK — Claude Haiku 4.5 | Cost-effective structured output via tool use |
-| Observability | LangSmith | Workflow tracing, eval experiments, cost tracking |
-| Evaluation | Custom eval harness | Checked-in cases, local and LangSmith-backed runners |
-| Retrieval | Local file retrieval (current) | Markdown-based evidence grounding |
-| Retrieval (planned) | ChromaDB + sentence-transformers | Semantic vector search over local documents |
-| CI/CD | GitHub Actions | Lint, test, eval enforcement on every PR |
-
-The `lang*` frameworks are implementation infrastructure, not the product identity. AI-OS presents workflows, retrieval, validation, and operator control as its core concepts.
-
-## Roadmap
-
-The phased execution plan — including completed phases, in-progress work, and upcoming additions like an MCP server and ChromaDB semantic retrieval — is documented in [plan.md](plan.md).
-
-## Non-Goals
-
-This project intentionally does not aim to:
-
-- Build fully autonomous agents
-- Replace human decision-making
-- Maximize agent complexity or parallelism for its own sake
-- Require cloud APIs for core functionality (cloud providers are opt-in, not required)
-
-The focus is on clarity, reliability, grounded reasoning, and operator control.
-
-## Example Workflows
-
-### Director OS
-
-Input:
-
-```text
-Prepare my weekly update
-```
-
-Output:
-
-- Key wins
-- Risks and blockers
-- Next steps
-- Evidence-backed insights
-
-### Brand OS
-
-Input:
-
-```text
-I worked on RAG evaluation this week
-```
-
-Output:
-
-- Insight summary
-- Content draft such as a post or outline
-- Potential podcast topic
-- Repository improvement suggestions
-
-### Chief of Staff (Orchestrator)
-
-The orchestrator accepts any prompt and auto-routes to the right workflow. Use this when you do not want to specify a domain explicitly.
-
-Input:
-
-```text
-Prepare my leadership weekly update
-```
-
-Output:
-
-- Selected workflow and routing rationale
-- Trace object: evidence count, source files, section counts, fallback status
-- Full workflow result payload from the routed domain
-
-Example — route to Director OS automatically:
+Requirements: Python 3.11+
 
 ```bash
-curl -X POST http://127.0.0.1:8000/orchestrate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "Prepare my leadership weekly update",
-    "data_path": "data/local_only/projects",
-    "max_documents": 10
-  }'
-```
-
-Example — route to Brand OS automatically:
-
-```bash
-curl -X POST http://127.0.0.1:8000/orchestrate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "Turn this work into a podcast and LinkedIn content draft",
-    "data_path": "data/local_only/brand",
-    "max_documents": 5
-  }'
-```
-
-You can also use the operator console at `http://127.0.0.1:8000/` — leave `Workflow` on `Auto-select` to let the orchestrator route, or pick a domain explicitly to bypass routing.
-
-## Quickstart
-
-Requirements:
-
-- Python 3.11+
-
-Install dependencies:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate          # macOS / Linux
-# .venv\Scripts\activate           # Windows
+# Install
+python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-```
 
-Configure environment variables:
-
-```bash
+# Copy env and optionally add your Anthropic API key
 cp .env.example .env
-# Fill in ANTHROPIC_API_KEY and/or LANGSMITH_API_KEY as needed.
-# The system runs fully without either — both are opt-in.
-```
 
-Run the local API:
-
-```bash
+# Run the API
 uvicorn apps.api.main:app --reload --env-file .env
+
+# Run Director OS evals — local, no API key required
+python scripts/run_director_os_evals.py
+
+# Run tests (Claude tests skipped without API key)
+pytest tests/ -v
 ```
 
-Open the operator console:
+---
 
-```text
-http://127.0.0.1:8000/
-```
+## Working with Claude
 
-What the operator console is:
-
-- A local inspection UI for the AI-OS orchestrator
-- A simple way to see which workflow was selected and why
-- A readable trace view for evidence sources, section counts, model flags, and fallback state
-
-How to use it:
-
-1. Enter a prompt that describes the work you want done.
-2. Leave `Workflow` on `Auto-select` to test routing, or pick a workflow explicitly.
-3. Set `Data Path` to the local project or brand notes you want searched.
-4. Run the request and inspect the trace panels on the right.
-
-Useful first tests:
-
-- `Prepare my leadership weekly update` with `data/local_only/projects`
-- `Turn this work into a podcast and LinkedIn content draft` with `data/local_only/brand`
-
-Call the Phase 1 MVP endpoint:
+The Claude provider is active when `ANTHROPIC_API_KEY` is set.
+Falls back to the Ollama deterministic path when the key is absent —
+no code changes required.
 
 ```bash
+# Director OS — weekly update with Claude
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
@@ -405,144 +96,121 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   }'
 ```
 
-Call the Chief of Staff orchestrator endpoint:
+The response includes a `trace` object showing which MCP tools were called,
+what data was retrieved, and token counts:
 
-```bash
-curl -X POST http://127.0.0.1:8000/orchestrate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "Prepare my leadership weekly update",
-    "data_path": "data/local_only/projects",
-    "max_documents": 10
-  }'
+```json
+{
+  "result": "...",
+  "trace": {
+    "mcp_tool_calls": [
+      {
+        "tool": "read_file",
+        "input": {"path": "projects/weekly-notes.md"},
+        "success": true,
+        "result_preview": "# Week of June 2026..."
+      }
+    ],
+    "total_input_tokens": 842,
+    "total_output_tokens": 312
+  }
+}
 ```
 
-The orchestrator response includes:
+---
 
-- the selected workflow and routing rationale
-- a `trace` object with evidence count, source files, section counts, and fallback status
-- the workflow result payload
+## MCP tool integration
 
-Call the Brand OS workflow directly through the orchestrator:
+The filesystem MCP server exposes three tools Claude can invoke during synthesis:
+
+| Tool | Description |
+|---|---|
+| `list_files(path, pattern)` | Discover available project notes and docs |
+| `read_file(path)` | Retrieve full file contents for synthesis |
+| `search_content(path, query)` | Find documents mentioning a specific topic or risk |
+
+Claude calls these autonomously during the orchestration loop. The orchestrator
+executes each tool call, appends the result to the message history, and
+continues until Claude produces a final text response.
+
+---
+
+## Eval results
+
+Eval results against Claude are committed to `evaluations/director_os/`.
+Run the eval set and commit updated results before any production deployment:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/orchestrate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "Turn this work into a podcast and LinkedIn content draft",
-    "data_path": "data/local_only/brand",
-    "max_documents": 5
-  }'
+python scripts/run_director_os_evals_claude.py
+git add evaluations/director_os/results_claude.json
+git commit -m "eval: update Director OS results against claude-haiku"
 ```
 
-Call with Ollama-backed synthesis (local model, no API key required):
+---
+
+## Model provider strategy
+
+AI-OS uses different models for different workloads — local inference for
+routing and low-stakes tasks, Claude for structured synthesis, Sonnet/Opus
+on demand for complex runs:
+
+| Layer | Model | Workload |
+|---|---|---|
+| Local inference | Ollama (`llama3.2`) | Routing, classification, low-stakes summarization — free, on-device, no API key |
+| Cloud synthesis | Claude Haiku 4.5 | Structured output via tool use, MCP orchestration — cost-effective |
+| Premium synthesis | Claude Sonnet / Opus | Complex or high-stakes runs — on demand |
+
+All providers implement the same interface. Switching is a single field
+change in the request — no workflow logic changes required.
 
 ```bash
+# Ollama — no API key required
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
     "data_path": "data/local_only/projects",
-    "focus": "leadership update",
-    "max_documents": 5,
     "use_model": true,
     "provider": "ollama",
-    "ollama_url": "http://127.0.0.1:11434",
     "ollama_model": "llama3.2"
   }'
-```
 
-Call with Claude Haiku synthesis (requires `ANTHROPIC_API_KEY`):
-
-```bash
+# Claude Haiku — structured synthesis
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
     "data_path": "data/local_only/projects",
-    "focus": "leadership update",
-    "max_documents": 5,
     "use_model": true,
     "provider": "claude",
     "claude_model": "claude-haiku-4-5-20251001"
   }'
 ```
 
-Run the eval set against the Claude provider (requires `ANTHROPIC_API_KEY`):
+---
 
-```bash
-python scripts/run_director_os_evals.py --provider claude
-```
+## Technology stack
 
-Run tests:
+| Layer | Tool |
+|---|---|
+| Language | Python 3.11+ |
+| API | FastAPI + Pydantic |
+| Workflow orchestration | LangGraph |
+| Model provider (cloud) | Anthropic SDK — Claude Haiku / Sonnet / Opus |
+| Model provider (local) | Ollama |
+| MCP server | Custom filesystem server (`packages/shared/mcp/`) |
+| Observability | LangSmith (optional) |
+| Evaluation | Custom eval harness with committed results |
+| CI/CD | GitHub Actions (lint, test, evals on every PR) |
 
-```bash
-pytest
-```
+---
 
-Run the checked-in `Director OS` evaluation set locally on demand:
+## Why this exists
 
-```bash
-python scripts/run_director_os_evals.py
-```
+Technical leaders operate across fragmented systems: Jira, Confluence,
+meeting notes, roadmap docs, 1:1 notes. AI-OS synthesizes these into
+structured, evidence-grounded output — weekly updates, risk summaries,
+content drafts — without defaulting to opaque or autonomous agent behavior.
 
-This local mode is the default quality-check path:
-
-- it runs fully on demand
-- it does not require LangSmith
-- it is also the version enforced in CI today
-
-Run the checked-in `Brand OS` evaluation set locally on demand:
-
-```bash
-python scripts/run_brand_os_evals.py
-```
-
-Run the same evaluation set on demand with LangSmith result upload enabled:
-
-```bash
-python scripts/run_director_os_evals.py --langsmith
-```
-
-Use the LangSmith-backed mode when you want experiment history, evaluator results in the LangSmith UI, or a shareable compare link.
-
-For LangSmith-backed eval runs:
-
-- Set `LANGSMITH_API_KEY`, `LANGSMITH_TRACING=true`, and `LANGSMITH_PROJECT=ai-os`
-- US workspaces use the default endpoint
-- EU workspaces must set `LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com`
-- Run the command from the same terminal session where those env vars are set
-
-## Important Notes
-
-- This system is not autonomous
-- Agents operate within strict constraints
-- Accuracy and clarity are prioritized over creativity
-- Local execution and cost-efficient operation are default design requirements
-- Outputs should be reviewed before external use
-
-## Contributing
-
-Contributions are welcome.
-
-Useful focus areas:
-
-- Agent design patterns
-- Local-first AI workflows
-- Retrieval and grounding improvements
-- UI and UX improvements for structured workflows
-
-## SDLC and CI
-
-The project uses lightweight GitHub Actions to keep quality checks cheap and fast:
-
-- Repository checks run on pull requests to `main`, on pushes, and through manual dispatch
-- Python checks automatically run when a `pyproject.toml`-based MVP exists
-- CI installs the project, runs `ruff`, compiles Python sources, runs `pytest` with coverage output, and executes the local `Director OS` and `Brand OS` eval runners
-- Concurrency cancellation is enabled to avoid wasting minutes on stale branch runs
-- Tag-based release workflows build Python artifacts without introducing paid deployment tooling
-
-The intent is to keep the workflow production-minded without adding paid infrastructure or unnecessary pipeline complexity early.
-
-## Final Thought
-
-> This is not just an AI project.
-> It is a system designed to help you think, decide, and operate better.
+It is designed to show how to embed AI into real enterprise workflows:
+provider abstraction, MCP tool integration, evaluation frameworks,
+operator observability, and deployment patterns that survive contact
+with real InfoSec and compliance requirements.
