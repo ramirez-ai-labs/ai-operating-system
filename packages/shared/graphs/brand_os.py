@@ -138,12 +138,13 @@ def _matches_brand_section(
     if any(lowered_excerpt.startswith(prefix) for prefix in normalized_prefixes):
         return True
 
+    # Director OS prefixes (win:, risk:, decision:) are excluded from all Brand OS
+    # sections — they belong to project notes, not brand content classification.
+    _dos = ("win:", "risk:", "decision:")
     competing_prefixes = {
-        # Director OS prefixes (win:, risk:, decision:) are excluded from all Brand OS
-        # sections — they belong to project notes, not brand content classification.
-        "post_outline": ("podcast:", "improve:", "next:", "win:", "risk:", "decision:"),
-        "podcast_angles": ("insight:", "workflow:", "improve:", "next:", "win:", "risk:", "decision:"),
-        "repo_improvements": ("insight:", "podcast:", "win:", "risk:", "decision:"),
+        "post_outline": ("podcast:", "improve:", "next:") + _dos,
+        "podcast_angles": ("insight:", "workflow:", "improve:", "next:") + _dos,
+        "repo_improvements": ("insight:", "podcast:") + _dos,
     }
     if any(
         lowered_excerpt.startswith(prefix)
