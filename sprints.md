@@ -10,9 +10,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5b
 
-**Status: Mostly complete — live Claude eval re-run is the only remaining action**
-
-> **Blocker for JD requirements #1 and #4:** `results_claude.json` was committed in PR #44 but contains deterministic fallback output (summaries match the `DETERMINISTIC_SUMMARY_PREFIX` template). A reviewer looking at the file will see no model ID, no token counts, and no content that differs from the keyword-scorer path. Running `scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` set will replace the file with real Claude API output — signal/safety scores, actual response text, token counts, model ID. That single commit closes both gaps.
+**Status: Complete — live Claude eval results committed in [#56](https://github.com/ramirez-ai-labs/ai-operating-system/pull/56), all 5 JD requirements satisfied**
 
 | Step | Status | PR |
 |---|---|---|
@@ -21,8 +19,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | `anthropic` in `pyproject.toml` | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
 | `--provider claude` flag on eval runner | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
 | `config/models.yaml` | Done | [#42](https://github.com/ramirez-ai-labs/ai-operating-system/pull/42) |
-| `evaluations/director_os/results_claude.json` committed | Done | [#44](https://github.com/ramirez-ai-labs/ai-operating-system/pull/44) |
-| Re-run `scripts/run_director_os_evals_claude.py` with live API key and commit real Claude output | **Pending** | — |
+| `evaluations/director_os/results_claude.json` — real Claude API output, 3/3 cases 100% | Done | [#56](https://github.com/ramirez-ai-labs/ai-operating-system/pull/56) |
 
 ---
 
@@ -95,17 +92,19 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5d
 
-**Status:** Planned — not yet started
+**Status: In progress — all implementation shipped locally, PR pending**
 
 | Step | Status | PR |
 |---|---|---|
-| `packages/shared/retrieval/chroma.py` — ChromaDB retrieval matching `local_files.py` interface | Pending | — |
-| `scripts/ingest_local_data.py` — index `data/local_only/` into ChromaDB via Ollama `nomic-embed-text` | Pending | — |
-| `data/chroma/` added to `.gitignore` | Pending | — |
-| `chromadb` added to `pyproject.toml` (no `sentence-transformers`) | Pending | — |
-| `RETRIEVAL_BACKEND` env var in `.env.example` (`local_files` or `chroma`) | Pending | — |
-| Flat-file fallback when ChromaDB index absent or Ollama unavailable | Pending | — |
-| Tests for semantic retrieval quality against existing sample data | Pending | — |
+| `packages/shared/retrieval/backend.py` — env-driven dispatcher (new single import point) | Done | local |
+| `packages/shared/retrieval/chroma.py` — ChromaDB semantic retrieval matching `local_files.py` interface | Done | local |
+| `scripts/ingest_local_data.py` — index `data/local_only/` into ChromaDB via Ollama `nomic-embed-text` | Done | local |
+| `data/chroma/` added to `.gitignore` | Done | local |
+| `chromadb>=0.5.0` added to `pyproject.toml` | Done | local |
+| `RETRIEVAL_BACKEND` env var in `.env.example` (`local_files` or `chroma`) | Done | local |
+| Flat-file fallback when ChromaDB index absent or Ollama unavailable | Done | local |
+| `tests/test_chroma_retrieval.py` — 11 tests, all passing, no Ollama required | Done | local |
+| Update `director_os.py` and `brand_os.py` imports to use `backend.py` | Done | local |
 
 ---
 
@@ -189,7 +188,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ## Coordination notes
 
-- **Sprint 1 live eval re-run is the only hard blocker for JD showcase readiness.** All five JD requirements are met in code; the only gap is that the committed `results_claude.json` shows deterministic fallback output instead of real Claude API responses. Run `python scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` and commit the result.
+- Sprint 1 is complete. Live Claude eval results committed in PR #56 — 3/3 cases, 100% signal and safety. All five JD requirements are now satisfied in the repo.
 - Sprint 2 is complete. The standalone MCP server shipped in PR #50 with both workflow tools registered, tests passing, and Claude Desktop config included.
 - Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint 9.
 - Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint 9.

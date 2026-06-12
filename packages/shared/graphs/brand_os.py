@@ -4,7 +4,7 @@ from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from packages.shared.retrieval.local_files import retrieve_relevant_documents
+from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.brand_os import (
     BrandContentDraftRequest,
     BrandContentDraftResponse,
