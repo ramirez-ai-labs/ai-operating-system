@@ -29,6 +29,7 @@ The repository currently includes:
 - optional `LangSmith` tracing for the `Director OS` graph
 - a small checked-in local evaluation set for `Director OS`
 - a minimal local operator console served from `apps/api`
+- an in-process Claude filesystem tool loop for MCP-style local retrieval traces
 - sample local project data
 - tests for core weekly-update, orchestration, and Brand OS behavior
 - GitHub Actions CI and release workflows
@@ -36,6 +37,7 @@ The repository currently includes:
 The repository does not yet include:
 
 - a dedicated frontend app under `apps/web`
+- a standalone MCP server under `apps/mcp`
 - broader evaluation coverage
 - a stable visual demo layer
 
@@ -236,7 +238,7 @@ Introduce Anthropic Claude as a first-class provider alongside Ollama, and estab
 - Implemented: Claude-specific tests in `tests/test_director_os_evaluations.py`
 - Implemented: `.env.example` with all required keys
 - Remaining: operator console provider dropdown (UI toggle for Ollama vs Claude)
-- Remaining: wire Ollama into Chief of Staff routing so classification uses the local model and Claude handles synthesis only
+- Remaining: wire provider selection through the Chief of Staff orchestrator so routing can remain local while Director OS synthesis can explicitly use Ollama or Claude
 
 ## Phase 5c: MCP Server — Expose AI-OS Workflows as Tools
 
@@ -267,7 +269,10 @@ MCP is Anthropic's open standard for connecting AI models to external tools and 
 
 ### Status
 
-- Planned
+- Partially implemented: `packages/shared/mcp/filesystem_server.py` exposes read-only local filesystem tools
+- Partially implemented: `packages/shared/mcp/orchestrator_integration.py` runs a bounded Claude tool-use loop and surfaces `mcp_tool_calls` in `/orchestrate` traces
+- Partially implemented: `tests/test_claude_mcp.py` covers provider stubs, filesystem tool behavior, path traversal blocking, and tool-result message shape
+- Remaining: this is not yet a standalone MCP server. `apps/mcp/server.py`, `mcp` SDK packaging, workflow tools, Claude Desktop config, and server-level tests are still planned
 
 ## Phase 5d: ChromaDB — Upgrade Retrieval to Semantic Vector Search
 

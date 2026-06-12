@@ -25,21 +25,24 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ## Sprint 2 — MCP Server
 
-**Objective:** Expose Director OS and Brand OS workflows as MCP tools so any MCP-compatible host (Claude Desktop, Claude Code, enterprise integrations) can invoke them.
+**Objective:** Complete the standalone MCP server path so Director OS and Brand OS workflows can be invoked as tools from MCP-compatible hosts.
 
 **Maps to:** plan.md Phase 5c
 
-**Status: Not started**
+**Status: Partially implemented — filesystem tool loop is present; standalone workflow server remains**
 
 | Step | Status | PR |
 |---|---|---|
-| `packages/shared/mcp/filesystem_server.py` | Pending | — |
-| `packages/shared/mcp/orchestrator_integration.py` | Pending | — |
+| `packages/shared/mcp/filesystem_server.py` | Done | local |
+| `packages/shared/mcp/orchestrator_integration.py` | Done | local |
+| Wire `orchestrator_integration` into `/orchestrate` endpoint | Done | local |
+| `tests/test_claude_mcp.py` | Done | local |
+| `apps/mcp/server.py` standalone workflow MCP server | Pending | — |
+| Expose `director_os_weekly_update` as MCP tool | Pending | — |
+| Expose `brand_os_content_draft` as MCP tool | Pending | — |
 | `mcp` SDK added to `pyproject.toml` | Pending | — |
-| Wire `orchestrator_integration` into `/orchestrate` endpoint | Pending | — |
-| `tests/test_claude_mcp.py` | Pending | — |
 | `claude_desktop_config.json` example | Pending | — |
-| All MCP stub tests passing | Pending | — |
+| Standalone MCP server tests passing | Pending | — |
 
 ---
 
@@ -49,11 +52,11 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 7 (hardening) and Phase 5c (MCP docs)
 
-**Status: Not started**
+**Status: Partially started — deployment guide exists; release framing remains**
 
 | Step | Status | PR |
 |---|---|---|
-| `docs/DEPLOYMENT.md` | Pending | — |
+| `docs/DEPLOYMENT.md` | Done | local |
 | Update `README.md` with MCP section and v1.0 framing | Pending | — |
 | GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Pending | — |
 | Archive or unpin `openai-foundations` from org page | Pending | — |
@@ -63,6 +66,6 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ## Coordination notes
 
-- Sprint 2 files (`filesystem_server.py`, `orchestrator_integration.py`, `test_claude_mcp.py`, `claude_desktop_config.json`) are ready to drop in from the working zip — the repo structure and provider/graph patterns are fully compatible.
-- Sprint 3 README update should land after Sprint 2 is merged so the MCP section reflects real, working code.
+- Sprint 2 should now focus on the actual MCP server contract, not the already-implemented in-process Claude filesystem tool loop.
+- Sprint 3 README update should land after the standalone MCP server exists so the MCP section reflects real, working code.
 - `config/models.yaml` (Sprint 1 remainder) was created before Sprint 2 ships since it is referenced in the README target structure.

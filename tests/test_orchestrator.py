@@ -113,6 +113,55 @@ def test_orchestrator_reports_director_fallback_in_trace(monkeypatch) -> None:
     assert not response.trace.model_used
 
 
+def test_orchestrator_forwards_director_provider_selection(monkeypatch) -> None:
+    """Director OS routing should preserve the caller's explicit synthesis provider."""
+    from packages.shared.orchestration import chief_of_staff as orchestration_module
+
+    captured_request = None
+
+    def fake_weekly_update(request):
+        nonlocal captured_request
+        captured_request = request
+        return WeeklyUpdateResponse(
+            summary="Model-assisted weekly update.",
+            wins=[
+                GroundedItem(
+                    text="Win: Claude provider selection reached the workflow.",
+                    source="director_week_15.md",
+                    line_number=3,
+                )
+            ],
+            risks=[],
+            next_steps=[],
+            evidence=[
+                EvidenceItem(
+                    source="director_week_15.md",
+                    line_number=3,
+                    title="Director Week 15",
+                    excerpt="Win: Claude provider selection reached the workflow.",
+                )
+            ],
+        )
+
+    monkeypatch.setattr(orchestration_module, "build_weekly_update", fake_weekly_update)
+
+    response = route_request(
+        OrchestratorRequest(
+            workflow="director_os.weekly_update",
+            data_path="data/local_only/projects",
+            focus="leadership update",
+            use_model=True,
+            provider="claude",
+            claude_model="claude-sonnet-4-5-20250929",
+        )
+    )
+
+    assert response.selected_workflow == "director_os.weekly_update"
+    assert captured_request is not None
+    assert captured_request.provider == "claude"
+    assert captured_request.claude_model == "claude-sonnet-4-5-20250929"
+    assert captured_request.use_model
+
 
 def test_orchestrator_rejects_unknown_workflow() -> None:
     """Unsupported workflow ids should fail fast instead of silently routing elsewhere."""
