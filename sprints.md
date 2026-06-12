@@ -61,8 +61,8 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | Add unit tests for `packages/shared/providers/ollama.py` | Done | local |
 | Add tests for `packages/shared/providers/claude_provider.py` fallback and tool-use paths | Done | local |
 | Add tests for `packages/shared/mcp/orchestrator_integration.py` | Done | local |
-| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Pending | — |
-| Measure and track coverage trend in CI | Pending | — |
+| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Rolled into Sprint 9 | — |
+| Measure and track coverage trend in CI | Done — `pytest --cov` runs in CI with coverage artifact upload | — |
 
 ---
 
@@ -72,13 +72,13 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 7 (hardening) and Phase 5c (MCP docs)
 
-**Status: Partially complete — deployment guide shipped; README and release tag remain**
+**Status: Mostly complete — README and release tag remain; topics done**
 
 | Step | Status | PR |
 |---|---|---|
 | `docs/DEPLOYMENT.md` | Done | main |
-| Update `README.md` with MCP section and v1.0 framing | Pending | — |
-| GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Pending | — |
+| Update `README.md` with MCP section, Mermaid diagram, Why Claude | Done | [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) |
+| GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Done | — |
 | Archive or unpin `openai-foundations` from org page | Pending | — |
 | Cut `v1.0` release tag with description | Pending | — |
 
@@ -176,18 +176,19 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 6 (UI), Phase 7 (hardening)
 
-**Status: In progress — on `feat/sprint-9-console-polish`**
+**Status: In progress — FastAPI compatibility fixed; v1.0 tag and filesystem edge cases remain**
 
 | Step | Status | PR |
 |---|---|---|
-| Operator console: add Provider selector and Target Audience dropdown | Done | feat/sprint-9-console-polish |
-| Operator console: cache hit metrics in Execution Trace card | Done | feat/sprint-9-console-polish |
-| Operator console: agent pipeline card (researcher → writer with token counts) | Done | feat/sprint-9-console-polish |
-| Operator console: formatted content card (writer output) | Done | feat/sprint-9-console-polish |
-| Update `plan.md` Current State section to reflect actual repo | Done | feat/sprint-9-console-polish |
-| GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Pending | — |
+| Operator console: add Provider selector and Target Audience dropdown | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
+| Operator console: cache hit metrics in Execution Trace card | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
+| Operator console: agent pipeline card (researcher → writer with token counts) | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
+| Operator console: formatted content card (writer output) | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
+| Update `plan.md` Current State section to reflect actual repo | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
+| Fix FastAPI / Starlette version incompatibility (test_api.py, test_import_integrity.py) | Done | docs/sprints-status-update |
+| GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Done | — |
 | Cut `v1.0` release tag with description | Pending | — |
-| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Pending | — |
+| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Done | docs/sprints-status-update |
 
 ---
 
