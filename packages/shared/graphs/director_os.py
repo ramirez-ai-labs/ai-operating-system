@@ -10,7 +10,7 @@ from packages.shared.observability.langsmith import (
 )
 from packages.shared.providers.base import WeeklyUpdateProvider
 from packages.shared.providers.ollama import OllamaWeeklyUpdateProvider
-from packages.shared.retrieval.local_files import retrieve_relevant_documents
+from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.director_os import (
     EvidenceItem,
     GroundedItem,

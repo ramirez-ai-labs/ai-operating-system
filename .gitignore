@@ -201,6 +201,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# ChromaDB local vector index — rebuilt from source data via ingest_local_data.py
+data/chroma/
+
 # Claude Code — local session state, auto-generated permission allowlists
 .claude/settings.json
 .claude/settings.local.json
