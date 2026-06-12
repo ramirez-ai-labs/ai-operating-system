@@ -37,6 +37,7 @@ packages = [
   "packages.shared.evaluations",
   "packages.shared.graphs",
   "packages.shared.observability",
+  "packages.shared.mcp",
   "packages.shared.orchestration",
   "packages.shared.providers",
   "packages.shared.retrieval",

@@ -1,5 +1,6 @@
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
+from packages.shared.mcp.orchestrator_integration import run_with_mcp_tools
 from packages.shared.schemas.brand_os import BrandContentDraftRequest
 from packages.shared.schemas.director_os import WeeklyUpdateRequest
 from packages.shared.schemas.orchestrator import (
@@ -30,10 +31,23 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
         workflow, rationale = _select_workflow(request.prompt)
 
     result = _run_workflow(request, workflow)
+
+    # When use_mcp=True, run the MCP retrieval loop so Claude reads project
+    # files via tool calls. The tool call log is surfaced in the trace so
+    # operators can see exactly what the agent read before synthesizing.
+    mcp_tool_calls: list[dict] = []
+    if request.use_mcp:
+        mcp_response = run_with_mcp_tools(
+            prompt=request.prompt or request.focus or "Synthesize project status",
+            data_path=request.data_path,
+            model=request.claude_model,
+        )
+        mcp_tool_calls = mcp_response.trace.get("mcp_tool_calls", [])
+
     return OrchestratorResponse(
         selected_workflow=workflow,
         rationale=rationale,
-        trace=_build_trace(request, workflow, result),
+        trace=_build_trace(request, workflow, result, mcp_tool_calls=mcp_tool_calls),
         result=result,
     )
 
@@ -92,6 +106,7 @@ def _build_trace(
     request: OrchestratorRequest,
     workflow: str,
     result,
+    mcp_tool_calls: list[dict] | None = None,
 ) -> WorkflowTrace:
     """Summarize the execution path in a shape that operators can inspect easily."""
     evidence_sources = list(dict.fromkeys(item.source for item in result.evidence))
@@ -132,4 +147,5 @@ def _build_trace(
             f"Grounded output assembled from {len(result.evidence)} evidence items "
             f"across {len(evidence_sources)} source files."
         ),
+        mcp_tool_calls=mcp_tool_calls or [],
     )

@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from packages.shared.schemas.brand_os import BrandContentDraftResponse
@@ -45,6 +47,19 @@ class OrchestratorRequest(BaseModel):
         default="llama3.2",
         description="Ollama model name used when model synthesis is enabled.",
     )
+    use_mcp: bool = Field(
+        default=False,
+        description=(
+            "Run the filesystem MCP retrieval loop alongside the workflow. "
+            "When True, Claude reads project files via tool calls and the "
+            "mcp_tool_calls trace is populated in the response. "
+            "Requires ANTHROPIC_API_KEY."
+        ),
+    )
+    claude_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Claude model ID used for MCP-backed synthesis when use_mcp is True.",
+    )
 
 
 class WorkflowTrace(BaseModel):
@@ -62,6 +77,10 @@ class WorkflowTrace(BaseModel):
     fallback_used: bool
     section_counts: dict[str, int]
     validation_summary: str
+    # Populated when use_mcp=True. Each entry records the tool name, input,
+    # success flag, and a preview of what was retrieved — gives operators
+    # full visibility into what the agent read before synthesizing.
+    mcp_tool_calls: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class OrchestratorResponse(BaseModel):
