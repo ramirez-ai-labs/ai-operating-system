@@ -92,19 +92,22 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5d
 
-**Status: In progress — all implementation shipped locally, PR pending**
+**Status: Complete — all items shipped in [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57)**
 
 | Step | Status | PR |
 |---|---|---|
-| `packages/shared/retrieval/backend.py` — env-driven dispatcher (new single import point) | Done | local |
-| `packages/shared/retrieval/chroma.py` — ChromaDB semantic retrieval matching `local_files.py` interface | Done | local |
-| `scripts/ingest_local_data.py` — index `data/local_only/` into ChromaDB via Ollama `nomic-embed-text` | Done | local |
-| `data/chroma/` added to `.gitignore` | Done | local |
-| `chromadb>=0.5.0` added to `pyproject.toml` | Done | local |
-| `RETRIEVAL_BACKEND` env var in `.env.example` (`local_files` or `chroma`) | Done | local |
-| Flat-file fallback when ChromaDB index absent or Ollama unavailable | Done | local |
-| `tests/test_chroma_retrieval.py` — 11 tests, all passing, no Ollama required | Done | local |
-| Update `director_os.py` and `brand_os.py` imports to use `backend.py` | Done | local |
+| `packages/shared/retrieval/backend.py` — env-driven dispatcher (new single import point) | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| `packages/shared/retrieval/chroma.py` — ChromaDB semantic retrieval matching `local_files.py` interface | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| `packages/shared/retrieval/ingest.py` — indexing logic in the package tree (testable, CLI-independent) | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| `scripts/ingest_local_data.py` — thin CLI wrapper calling `ingest.run()` | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| `data/chroma/` added to `.gitignore` | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| `chromadb>=0.5.0` added to `pyproject.toml` | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| `RETRIEVAL_BACKEND` env var in `.env.example` (`local_files` or `chroma`) | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| Flat-file fallback when ChromaDB index absent or Ollama unavailable | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| `tests/test_chroma_retrieval.py` — 11 tests, all passing, no Ollama required | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+| Update `director_os.py` and `brand_os.py` imports to use `backend.py` | Done | [#57](https://github.com/ramirez-ai-labs/ai-operating-system/pull/57) |
+
+> **To activate:** `ollama pull nomic-embed-text` → `python scripts/ingest_local_data.py` → set `RETRIEVAL_BACKEND=chroma` in `.env`. Semantic search becomes meaningfully better than keyword matching after Sprint 8 replaces the toy sample data with a realistic enterprise scenario.
 
 ---
 
@@ -192,6 +195,6 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 2 is complete. The standalone MCP server shipped in PR #50 with both workflow tools registered, tests passing, and Claude Desktop config included.
 - Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint 9.
 - Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint 9.
-- Sprint 5 is the prerequisite for Sprints 6 and 7 — do not start either until ChromaDB retrieval is in place.
+- Sprint 5 is complete (PR #57). ChromaDB + Ollama embedding infrastructure is in place. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script. Semantic search becomes demonstrably better than keyword matching after Sprint 8 replaces the toy sample data.
 - Sprint 6 and Sprint 7 can be sequenced or parallelized after Sprint 5 ships.
 - Sprint 8 and Sprint 9 have no hard dependencies and can run alongside any showcase sprint.
