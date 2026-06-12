@@ -40,10 +40,13 @@ class OrchestratorRequest(BaseModel):
         description="Allow deterministic fallback if model generation is unavailable or weak.",
     )
     provider: Literal["ollama", "claude"] = Field(
-        default="ollama",
+        # Claude is the default synthesis provider. The workflow automatically
+        # falls back to deterministic output when ANTHROPIC_API_KEY is absent,
+        # so no code change is required when the key is not available.
+        default="claude",
         description=(
             "Model provider for Director OS synthesis when use_model is enabled. "
-            "Claude requires ANTHROPIC_API_KEY and remains opt-in."
+            "Falls back to deterministic output when ANTHROPIC_API_KEY is absent."
         ),
     )
     ollama_url: str = Field(
@@ -67,16 +70,35 @@ class OrchestratorRequest(BaseModel):
         default="claude-haiku-4-5-20251001",
         description=(
             "Claude model ID used for Director OS synthesis when provider is "
-            "'claude' and for MCP-backed synthesis when use_mcp is True."
+            "'claude', for MCP-backed synthesis when use_mcp is True, and for "
+            "researcher and writer agents when target_audience is set."
         ),
     )
+    target_audience: str | None = Field(
+        default=None,
+        description=(
+            "When set, triggers the researcher → writer multi-agent pipeline after "
+            "the normal workflow. The researcher synthesizes evidence into structured "
+            "findings; the writer formats them for the audience. "
+            "Supported values: 'linkedin_post', 'executive_brief', 'team_update'."
+        ),
+    )
+
+
+class AgentCall(BaseModel):
+    """Token-level record of a single agent invocation in a multi-agent run."""
+
+    agent: str
+    model: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_read_input_tokens: int = 0
+    cache_creation_input_tokens: int = 0
 
 
 class WorkflowTrace(BaseModel):
     """Operator-facing execution metadata for a routed workflow run."""
 
-    # These fields are intentionally simple so they can be rendered directly in
-    # an API response or future UI without extra transformation logic.
     data_path: str
     focus_used: str | None
     evidence_count: int
@@ -89,10 +111,17 @@ class WorkflowTrace(BaseModel):
     fallback_used: bool
     section_counts: dict[str, int]
     validation_summary: str
+    # "keyword-match" until Ollama classification replaces the keyword router.
+    routing_model: str = "keyword-match"
+    # Prompt-caching fields — populated when Claude provider is used.
+    cache_read_input_tokens: int = 0
+    cache_creation_input_tokens: int = 0
     # Populated when use_mcp=True. Each entry records the tool name, input,
-    # success flag, and a preview of what was retrieved — gives operators
-    # full visibility into what the agent read before synthesizing.
+    # success flag, and a preview of what was retrieved.
     mcp_tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    # Populated when target_audience is set. Records researcher and writer
+    # agent invocations with token counts for operator visibility.
+    agent_calls: list[AgentCall] = Field(default_factory=list)
 
 
 class OrchestratorResponse(BaseModel):
@@ -102,3 +131,6 @@ class OrchestratorResponse(BaseModel):
     rationale: str
     trace: WorkflowTrace
     result: WeeklyUpdateResponse | BrandContentDraftResponse
+    # Populated when target_audience is set — the writer agent's audience-
+    # formatted output alongside the structured workflow result.
+    formatted_content: str | None = None

@@ -7,6 +7,17 @@ from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, Week
 
 _TOOL_NAME = "generate_weekly_update"
 
+# The system prompt is stable across all calls for the same model. Marking it
+# with cache_control lets Anthropic's prompt caching layer reuse the KV cache
+# across requests, reducing latency and cost on repeated weekly update runs
+# against the same data set.
+_SYSTEM_PROMPT = (
+    "You are a technical leadership assistant. "
+    "Your job is to synthesize project evidence into structured, grounded weekly updates. "
+    "Every output item must cite an exact source filename and line_number from the evidence. "
+    "Do not invent wins, risks, or next steps that are not directly supported by the evidence."
+)
+
 _GROUNDED_ITEM_SCHEMA: dict[str, object] = {
     "type": "object",
     "properties": {
@@ -57,6 +68,11 @@ class ClaudeWeeklyUpdateProvider(WeeklyUpdateProvider):
 
     def __init__(self, model: str) -> None:
         self.model = model
+        self._last_usage: dict[str, int] = {}
+
+    def get_last_usage(self) -> dict[str, int]:
+        """Return token counts from the most recent call, including cache fields."""
+        return self._last_usage
 
     def generate_weekly_update(
         self,
@@ -78,10 +94,30 @@ class ClaudeWeeklyUpdateProvider(WeeklyUpdateProvider):
         response = client.messages.create(
             model=self.model,
             max_tokens=1024,
+            # The system prompt is cached so repeated calls within the same
+            # 5-minute cache window reuse the KV representation without
+            # re-processing the instructions on every request.
+            system=[
+                {
+                    "type": "text",
+                    "text": _SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             tools=[_TOOL_SCHEMA],
             tool_choice={"type": "tool", "name": _TOOL_NAME},
             messages=[{"role": "user", "content": prompt}],
         )
+
+        # Record usage so the orchestration layer can surface cache savings
+        # in the WorkflowTrace without needing to know about this provider.
+        usage = response.usage
+        self._last_usage = {
+            "input_tokens": usage.input_tokens,
+            "output_tokens": usage.output_tokens,
+            "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0) or 0,
+            "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0) or 0,
+        }
 
         tool_use_block = next(
             (block for block in response.content if block.type == "tool_use"),

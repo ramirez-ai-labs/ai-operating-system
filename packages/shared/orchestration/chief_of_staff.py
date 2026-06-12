@@ -1,9 +1,12 @@
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
+from packages.shared.agents.researcher import ResearcherAgent
+from packages.shared.agents.writer import WriterAgent
 from packages.shared.mcp.orchestrator_integration import run_with_mcp_tools
 from packages.shared.schemas.brand_os import BrandContentDraftRequest
 from packages.shared.schemas.director_os import WeeklyUpdateRequest
 from packages.shared.schemas.orchestrator import (
+    AgentCall,
     OrchestratorRequest,
     OrchestratorResponse,
     WorkflowTrace,
@@ -44,11 +47,39 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
         )
         mcp_tool_calls = mcp_response.trace.get("mcp_tool_calls", [])
 
+    # Researcher → writer multi-agent pipeline. Only runs when target_audience
+    # is set. Both agents require ANTHROPIC_API_KEY — the ValueError raised by
+    # each agent if the key is absent propagates to the caller, which is the
+    # correct behavior since this path is explicitly opt-in.
+    formatted_content: str | None = None
+    agent_calls: list[AgentCall] = []
+    if request.target_audience:
+        researcher = ResearcherAgent(model=request.claude_model)
+        synthesis, researcher_call = researcher.synthesize(
+            focus=request.focus or request.prompt,
+            evidence=result.evidence,
+        )
+        agent_calls.append(researcher_call)
+
+        writer = WriterAgent(model=request.claude_model)
+        formatted_content, writer_call = writer.format(
+            synthesis=synthesis,
+            target_audience=request.target_audience,
+        )
+        agent_calls.append(writer_call)
+
     return OrchestratorResponse(
         selected_workflow=workflow,
         rationale=rationale,
-        trace=_build_trace(request, workflow, result, mcp_tool_calls=mcp_tool_calls),
+        trace=_build_trace(
+            request,
+            workflow,
+            result,
+            mcp_tool_calls=mcp_tool_calls,
+            agent_calls=agent_calls,
+        ),
         result=result,
+        formatted_content=formatted_content,
     )
 
 
@@ -111,6 +142,7 @@ def _build_trace(
     workflow: str,
     result,
     mcp_tool_calls: list[dict] | None = None,
+    agent_calls: list[AgentCall] | None = None,
 ) -> WorkflowTrace:
     """Summarize the execution path in a shape that operators can inspect easily."""
     evidence_sources = list(dict.fromkeys(item.source for item in result.evidence))
@@ -136,6 +168,11 @@ def _build_trace(
         else:
             provider_used = None
             model_id_used = None
+
+        # Surface prompt-cache savings when the Claude provider was used.
+        usage = getattr(result, "provider_usage", {})
+        cache_read = usage.get("cache_read_input_tokens", 0)
+        cache_creation = usage.get("cache_creation_input_tokens", 0)
     else:
         fallback_used = False
         section_counts = {
@@ -147,6 +184,8 @@ def _build_trace(
         model_used = False
         provider_used = None
         model_id_used = None
+        cache_read = 0
+        cache_creation = 0
 
     return WorkflowTrace(
         data_path=request.data_path,
@@ -165,4 +204,7 @@ def _build_trace(
             f"across {len(evidence_sources)} source files."
         ),
         mcp_tool_calls=mcp_tool_calls or [],
+        cache_read_input_tokens=cache_read,
+        cache_creation_input_tokens=cache_creation,
+        agent_calls=agent_calls or [],
     )

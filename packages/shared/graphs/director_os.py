@@ -30,6 +30,7 @@ class DirectorOSState(TypedDict, total=False):
     response: WeeklyUpdateResponse
     used_model: bool
     fallback_attempted: bool
+    provider_usage: dict[str, int]
 
 
 @traceable(name="director_os.run_weekly_update_graph", run_type="chain")
@@ -70,8 +71,8 @@ def build_draft(state: DirectorOSState) -> DirectorOSState:
     request = state["request"]
     evidence = state["evidence"]
     if request.use_model and not state.get("fallback_attempted", False):
-        draft = _build_model_draft(request, evidence)
-        return {"draft": draft, "used_model": True}
+        draft, usage = _build_model_draft(request, evidence)
+        return {"draft": draft, "used_model": True, "provider_usage": usage}
 
     draft = _build_deterministic_draft(request.focus, evidence)
     return {"draft": draft, "used_model": False}
@@ -88,6 +89,7 @@ def assemble_response(state: DirectorOSState) -> DirectorOSState:
         risks=draft.risks,
         next_steps=draft.next_steps,
         evidence=evidence,
+        provider_usage=state.get("provider_usage", {}),
     )
     return {"response": response}
 
@@ -190,17 +192,22 @@ def _build_provider(request: WeeklyUpdateRequest) -> WeeklyUpdateProvider:
 def _build_model_draft(
     request: WeeklyUpdateRequest,
     evidence: list[EvidenceItem],
-) -> WeeklyUpdateDraft:
-    """Use the configured provider to synthesize a structured draft."""
+) -> tuple[WeeklyUpdateDraft, dict[str, int]]:
+    """Use the configured provider to synthesize a structured draft.
+
+    Returns (draft, provider_usage) so cache token metrics flow through the
+    graph state and surface in WorkflowTrace without exposing provider internals
+    to the orchestration layer.
+    """
     provider = _build_provider(request)
     try:
         draft = provider.generate_weekly_update(request.focus, evidence)
         _validate_model_draft(draft)
-        return draft
+        return draft, provider.get_last_usage()
     except ValueError:
         if not request.fallback_to_deterministic:
             raise
-    return _build_deterministic_draft(request.focus, evidence)
+    return _build_deterministic_draft(request.focus, evidence), {}
 
 
 def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:

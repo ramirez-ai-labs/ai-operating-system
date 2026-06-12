@@ -75,6 +75,11 @@ class WeeklyUpdateResponse(BaseModel):
     risks: list[GroundedItem]
     next_steps: list[GroundedItem]
     evidence: list[EvidenceItem]
+    # Populated by the Claude provider when use_model=True and provider="claude".
+    # Carries cache_read_input_tokens and cache_creation_input_tokens so the
+    # orchestration layer can surface them in WorkflowTrace without coupling to
+    # provider internals.
+    provider_usage: dict[str, int] = Field(default_factory=dict)
 
 
 class WeeklyUpdateDraft(BaseModel):
