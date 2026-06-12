@@ -159,12 +159,12 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5h
 
-**Status:** Planned — not yet started
+**Status: In progress — data files shipped locally, README framing pending**
 
 | Step | Status | PR |
 |---|---|---|
-| Replace `data/local_only/projects/` with realistic quarterly planning scenario (platform migration, cross-team dependencies, open risks) | Pending | — |
-| Replace `data/local_only/brand/` with realistic brand scenario (conference talk, podcast pipeline, LinkedIn backlog) | Pending | — |
+| Replace `data/local_only/projects/` with realistic quarterly planning scenario | Done | local |
+| Replace `data/local_only/brand/` with realistic brand scenario | Done | local |
 | Add "Why Claude" section to `README.md` | Pending | — |
 | Update `README.md` architecture diagram to show tiered model layers | Pending | — |
 
