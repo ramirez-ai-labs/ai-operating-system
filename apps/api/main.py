@@ -334,11 +334,11 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         </div>
         <div class="stat">
           <strong>What To Inspect</strong>
-          <span>Workflow rationale, section counts, evidence sources, model flags.</span>
+          <span>Routing rationale, cache hit metrics, agent pipeline, evidence sources.</span>
         </div>
         <div class="stat">
-          <strong>Default Mode</strong>
-          <span>Local-first orchestration with explicit workflow contracts.</span>
+          <strong>Multi-Agent</strong>
+          <span>Set Target Audience to run ResearcherAgent → WriterAgent via Claude.</span>
         </div>
       </div>
     </section>
@@ -416,6 +416,24 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
             <input id="use_model" name="use_model" type="checkbox" />
             Request model-assisted synthesis when supported
           </label>
+          <div class="row">
+            <label>
+              Provider
+              <select id="provider" name="provider">
+                <option value="claude">Claude Haiku (default)</option>
+                <option value="ollama">Ollama (local)</option>
+              </select>
+            </label>
+            <label>
+              Target Audience
+              <select id="target_audience" name="target_audience">
+                <option value="">None — structured output only</option>
+                <option value="linkedin_post">LinkedIn Post</option>
+                <option value="executive_brief">Executive Brief</option>
+                <option value="team_update">Team Update</option>
+              </select>
+            </label>
+          </div>
           <button type="submit">Run /orchestrate</button>
         </form>
         <div class="results">
@@ -458,6 +476,14 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
             <ul id="evidence-sources">
               <li style="color:var(--muted)">Run a request to inspect evidence sources.</li>
             </ul>
+          </div>
+          <div class="result-card" id="agent-calls-card" style="display:none">
+            <h3>Agent Pipeline</h3>
+            <div id="agent-calls-detail"></div>
+          </div>
+          <div class="result-card" id="formatted-content-card" style="display:none">
+            <h3>Formatted Content</h3>
+            <div id="formatted-content-detail"></div>
           </div>
           <div class="result-card">
             <h3>Result</h3>
@@ -525,6 +551,8 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         data_path: document.getElementById("data_path").value,
         max_documents: Number(document.getElementById("max_documents").value),
         use_model: document.getElementById("use_model").checked,
+        provider: document.getElementById("provider").value || "claude",
+        target_audience: document.getElementById("target_audience").value || null,
       };
 
       try {
@@ -553,9 +581,22 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           ? "<dt>Provider</dt><dd>" + body.trace.provider_used + "</dd>" +
             "<dt>Model</dt><dd>" + (body.trace.model_id_used || "—") + "</dd>"
           : "<dt>Provider</dt><dd style='color:var(--muted)'>deterministic (no model)</dd>";
+
+        const cacheRead = body.trace.cache_read_input_tokens || 0;
+        const cacheCreate = body.trace.cache_creation_input_tokens || 0;
+        const cacheHitHtml =
+          "<dt>Cache hit</dt><dd class='flag-true'>"
+          + cacheRead.toLocaleString() + " tokens saved</dd>";
+        const cachePrimedHtml =
+          "<dt>Cache primed</dt><dd>"
+          + cacheCreate.toLocaleString() + " tokens stored</dd>";
+        const cacheRow = cacheRead > 0 ? cacheHitHtml
+          : cacheCreate > 0 ? cachePrimedHtml : "";
+
         traceMeta.innerHTML =
           "<dt>Evidence</dt><dd>" + body.trace.evidence_count + " items</dd>" +
           providerRow +
+          cacheRow +
           "<dt>Model used</dt><dd>" + flag(body.trace.model_used) + "</dd>" +
           "<dt>Fallback</dt><dd>" + flag(body.trace.fallback_used) + "</dd>" +
           "<dt>Data Path</dt><dd>" + body.trace.data_path + "</dd>";
@@ -585,6 +626,44 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         const emptyMsg = "<p class='result-summary-text' "
           + "style='color:var(--muted)'>No result content returned.</p>";
         resultDetail.innerHTML = detailHtml || emptyMsg;
+
+        // Agent pipeline card — show researcher → writer invocations with token counts.
+        const agentCallsCard = document.getElementById("agent-calls-card");
+        const agentCallsDetail = document.getElementById("agent-calls-detail");
+        const calls = (body.trace.agent_calls || []);
+        if (calls.length > 0) {
+          agentCallsCard.style.display = "";
+          agentCallsDetail.innerHTML = calls.map((c, i) => {
+            const cacheNote = c.cache_read_input_tokens > 0
+              ? " &nbsp;<span style='color:var(--accent);font-size:0.8rem'>cache hit: "
+                + c.cache_read_input_tokens.toLocaleString() + " tokens</span>"
+              : "";
+            const arrow = i < calls.length - 1
+              ? "<div style='color:var(--muted);padding:4px 0 4px 12px'>↓</div>" : "";
+            return "<div class='result-item'>"
+              + "<strong>" + c.agent + "</strong>"
+              + " &nbsp;<span style='color:var(--muted);font-size:0.85rem'>" + c.model + "</span>"
+              + " &nbsp;in:" + c.input_tokens + " out:" + c.output_tokens
+              + cacheNote
+              + "</div>" + arrow;
+          }).join("");
+        } else {
+          agentCallsCard.style.display = "none";
+        }
+
+        // Formatted content card — writer output for the selected target audience.
+        const formattedCard = document.getElementById("formatted-content-card");
+        const formattedDetail = document.getElementById("formatted-content-detail");
+        if (body.formatted_content) {
+          formattedCard.style.display = "";
+          const preStyle =
+            "white-space:pre-wrap;font-family:Georgia,serif;"
+            + "font-size:0.97rem;line-height:1.6";
+          formattedDetail.innerHTML =
+            "<pre style='" + preStyle + "'>" + body.formatted_content + "</pre>";
+        } else {
+          formattedCard.style.display = "none";
+        }
 
         rawResponse.textContent = JSON.stringify(body, null, 2);
       } catch (error) {

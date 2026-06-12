@@ -170,22 +170,24 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
-## Sprint 9 — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag)
+## Sprint 9 — Console Polish + Plan Alignment + Release Hygiene
 
-**Objective:** Close out the two remaining Sprint 3 test gaps and complete the Sprint 4 docs and release framing. Runs in parallel with Sprint 7 and D.
+**Objective:** Make all Sprint 6+7+8 capabilities visible in the operator console, align plan.md with current reality, set GitHub topics, and cut a v1.0 release tag.
 
-**Maps to:** plan.md Phase 5 (test coverage), Phase 5c (MCP docs), Phase 7 (hardening)
+**Maps to:** plan.md Phase 6 (UI), Phase 7 (hardening)
 
-**Status:** Planned — not yet started
+**Status: In progress — on `feat/sprint-9-console-polish`**
 
 | Step | Status | PR |
 |---|---|---|
-| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Pending | — |
-| Measure and track coverage trend in CI | Pending | — |
-| Update `README.md` with MCP section and v1.0 framing | Pending | — |
+| Operator console: add Provider selector and Target Audience dropdown | Done | feat/sprint-9-console-polish |
+| Operator console: cache hit metrics in Execution Trace card | Done | feat/sprint-9-console-polish |
+| Operator console: agent pipeline card (researcher → writer with token counts) | Done | feat/sprint-9-console-polish |
+| Operator console: formatted content card (writer output) | Done | feat/sprint-9-console-polish |
+| Update `plan.md` Current State section to reflect actual repo | Done | feat/sprint-9-console-polish |
 | GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Pending | — |
-| Archive or unpin `openai-foundations` from org page | Pending | — |
 | Cut `v1.0` release tag with description | Pending | — |
+| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Pending | — |
 
 ---
 
