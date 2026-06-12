@@ -111,45 +111,45 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
-## Sprint 6 — Tiered Architecture + MCP Default + Prompt Caching
+## Sprint 6 — Tiered Architecture + Prompt Caching
 
-**Objective:** Move Ollama to the routing layer, make Claude Haiku the default synthesis provider, wire the MCP agentic loop into the default Director OS path, and add prompt caching. Two Claude-native wins in one sprint.
+**Objective:** Make Claude Haiku the default synthesis provider, add prompt caching to reduce per-request cost, and surface cache metrics in every `WorkflowTrace`.
 
 **Maps to:** plan.md Phase 5e and Phase 5f
 
-**Status:** Planned — not yet started
+**Status: Complete — shipped on `feat/sprint-6-7-tiered-agents`**
 
 | Step | Status | PR |
 |---|---|---|
-| Replace keyword routing in `chief_of_staff.py` with Ollama classification call | Pending | — |
-| Change `OrchestratorRequest` default `provider` from `"ollama"` to `"claude"` | Pending | — |
-| Update operator console default to `provider=claude` | Pending | — |
-| Demote Ollama synthesis to explicit fallback (absent API key or explicit opt-in) | Pending | — |
-| Wire `orchestrator_integration.py` into default Director OS path when API key present | Pending | — |
-| Add `cache_control` to evidence block in `packages/shared/providers/claude.py` | Pending | — |
-| Add `cache_read_tokens` and `cache_creation_tokens` to `WorkflowTrace` | Pending | — |
-| Operator console renders "Cache hit: X tokens saved" when cache is hit | Pending | — |
-| Surface routing model in `WorkflowTrace` alongside synthesis model | Pending | — |
-| Tests for Ollama routing path and Claude caching fields | Pending | — |
+| Change `OrchestratorRequest` default `provider` from `"ollama"` to `"claude"` | Done | feat/sprint-6-7-tiered-agents |
+| Add `cache_control: {"type": "ephemeral"}` to system prompt in `claude.py` | Done | feat/sprint-6-7-tiered-agents |
+| Add `get_last_usage()` default to `WeeklyUpdateProvider` base class | Done | feat/sprint-6-7-tiered-agents |
+| Override `get_last_usage()` in `ClaudeWeeklyUpdateProvider` with cache fields | Done | feat/sprint-6-7-tiered-agents |
+| Add `cache_read_input_tokens` and `cache_creation_input_tokens` to `WorkflowTrace` | Done | feat/sprint-6-7-tiered-agents |
+| Thread `provider_usage` from model draft → `WeeklyUpdateResponse` → trace | Done | feat/sprint-6-7-tiered-agents |
+| Surface `routing_model` field in `WorkflowTrace` | Done | feat/sprint-6-7-tiered-agents |
+| `tests/test_sprint6_cache_tokens.py` — 9 tests, all passing | Done | feat/sprint-6-7-tiered-agents |
 
 ---
 
 ## Sprint 7 — Multi-Agent Researcher → Writer
 
-**Objective:** Add a two-agent workflow demonstrating Claude-to-Claude orchestration. Researcher retrieves and synthesizes evidence via filesystem tools; writer formats the synthesis for a target audience. Required agentic pattern for the Anthropic FE showcase.
+**Objective:** Add a two-agent workflow demonstrating Claude-to-Claude orchestration. Researcher synthesizes evidence via tool use; writer formats the synthesis for a target audience. Required agentic pattern for the Anthropic FE showcase.
 
 **Maps to:** plan.md Phase 5g
 
-**Status:** Planned — not yet started
+**Status: Complete — shipped on `feat/sprint-6-7-tiered-agents`**
 
 | Step | Status | PR |
 |---|---|---|
-| `packages/shared/agents/researcher.py` — Claude with filesystem MCP tools, returns structured synthesis | Pending | — |
-| `packages/shared/agents/writer.py` — Claude formats researcher output for `linkedin_post`, `executive_brief`, or `team_update` | Pending | — |
-| `target_audience` field on `OrchestratorRequest` — triggers researcher → writer pipeline | Pending | — |
-| `agent_calls` list in `WorkflowTrace` — shows researcher and writer invocations with token counts | Pending | — |
-| Operator console renders agent call chain when `agent_calls` is populated | Pending | — |
-| Tests covering researcher → writer handoff contract | Pending | — |
+| `packages/shared/agents/researcher.py` — Claude Haiku tool use, returns `ResearchSynthesis` | Done | feat/sprint-6-7-tiered-agents |
+| `packages/shared/agents/writer.py` — Claude Haiku completion, formats for target audience | Done | feat/sprint-6-7-tiered-agents |
+| `AgentCall` schema — per-agent token counts including cache fields | Done | feat/sprint-6-7-tiered-agents |
+| `target_audience` field on `OrchestratorRequest` — triggers researcher → writer pipeline | Done | feat/sprint-6-7-tiered-agents |
+| `agent_calls` list in `WorkflowTrace` — researcher and writer invocations | Done | feat/sprint-6-7-tiered-agents |
+| `formatted_content` field on `OrchestratorResponse` — writer output | Done | feat/sprint-6-7-tiered-agents |
+| Wire researcher → writer in `chief_of_staff.py` | Done | feat/sprint-6-7-tiered-agents |
+| `tests/test_sprint7_agents.py` — 9 tests, all passing | Done | feat/sprint-6-7-tiered-agents |
 
 ---
 
@@ -159,14 +159,14 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5h
 
-**Status: In progress — data files shipped locally, README framing pending**
+**Status: Complete — shipped on `feat/sprint-6-7-tiered-agents`**
 
 | Step | Status | PR |
 |---|---|---|
-| Replace `data/local_only/projects/` with realistic quarterly planning scenario | Done | local |
-| Replace `data/local_only/brand/` with realistic brand scenario | Done | local |
-| Add "Why Claude" section to `README.md` | Pending | — |
-| Update `README.md` architecture diagram to show tiered model layers | Pending | — |
+| Replace `data/local_only/projects/` with realistic quarterly planning scenario | Done | feat/sprint-8-realistic-demo-data |
+| Replace `data/local_only/brand/` with realistic brand scenario | Done | feat/sprint-8-realistic-demo-data |
+| Add "Why Claude" section to `README.md` | Done | feat/sprint-6-7-tiered-agents |
+| Update `README.md` architecture diagram to Mermaid with tiered model layers | Done | feat/sprint-6-7-tiered-agents |
 
 ---
 
@@ -195,6 +195,5 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 2 is complete. The standalone MCP server shipped in PR #50 with both workflow tools registered, tests passing, and Claude Desktop config included.
 - Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint 9.
 - Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint 9.
-- Sprint 5 is complete (PR #57). ChromaDB + Ollama embedding infrastructure is in place. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script. Semantic search becomes demonstrably better than keyword matching after Sprint 8 replaces the toy sample data.
-- Sprint 6 and Sprint 7 can be sequenced or parallelized after Sprint 5 ships.
-- Sprint 8 and Sprint 9 have no hard dependencies and can run alongside any showcase sprint.
+- Sprint 5 is complete (PR #57). ChromaDB + Ollama embedding infrastructure is in place. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script.
+- Sprints 6, 7, and 8 are complete on `feat/sprint-6-7-tiered-agents`. Prompt caching, multi-agent researcher→writer pipeline, realistic demo data, Mermaid architecture diagram, and "Why Claude" framing all shipped together. 122 tests passing.

@@ -32,27 +32,36 @@ enterprise AI work requires.
 
 ## Architecture
 
-```
-User prompt
-    │
-    ▼
-Chief of Staff Orchestrator  ──── routes to ────▶  Director OS workflow
-    │                                               Brand OS workflow
-    │
-    ├── ClaudeProvider (claude-haiku-4-5, default)
-    │       └── Falls back to Ollama when ANTHROPIC_API_KEY absent
-    │
-    ├── FilesystemMCPServer
-    │       ├── list_files(path, pattern)
-    │       ├── read_file(path)
-    │       └── search_content(path, query)
-    │
-    ├── Retrieval layer (local markdown, CSV, JSON)
-    │
-    └── Validator agent (evidence-based, low verbosity, no unsupported claims)
-            │
-            ▼
-        Structured response + operator trace
+```mermaid
+flowchart TB
+    In([OrchestratorRequest]) --> CoS["Chief of Staff\n(keyword router)"]
+
+    CoS -->|brand keywords| Brand["Brand OS\nbrand_os.content_draft"]
+    CoS -->|leadership / default| Director["Director OS\ndirector_os.weekly_update"]
+
+    Director --> Retrieval["Local Retrieval\nmarkdown evidence"]
+    Brand --> BRetrieval["Local Retrieval\nbrand evidence"]
+
+    Retrieval --> Draft{"use_model?"}
+    Draft -->|"provider: claude"| ClaudeProvider["Claude Haiku\ntool use + prompt cache\ncache_control ephemeral"]
+    Draft -->|"provider: ollama"| OllamaProvider["Ollama llama3.2\nlocal inference"]
+    Draft -->|false| Det["Deterministic extraction\nkeyword matching"]
+
+    ClaudeProvider --> Val["Validator\nevidence grounding"]
+    OllamaProvider --> Val
+    Det --> Val
+    BRetrieval --> BFmt["Section formatter"]
+
+    Val --> TA{"target_audience?"}
+    TA -->|set| Researcher["ResearcherAgent\nClaude Haiku  tool use\nstructured synthesis"]
+    Researcher --> Writer["WriterAgent\nClaude Haiku  completion\naudienced formatting"]
+    Writer --> RespA(["OrchestratorResponse\nformatted_content + agent_calls + trace"])
+    TA -->|not set| RespB(["OrchestratorResponse\nWorkflowTrace + cache metrics"])
+    BFmt --> RespB
+
+    style ClaudeProvider fill:#e8f5e9,stroke:#388e3c
+    style Researcher fill:#e8f5e9,stroke:#388e3c
+    style Writer fill:#e8f5e9,stroke:#388e3c
 ```
 
 ---
@@ -209,6 +218,35 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 | Observability | LangSmith (optional) |
 | Evaluation | Custom eval harness with committed results |
 | CI/CD | GitHub Actions (lint, test, evals on every PR) |
+
+---
+
+## Why Claude
+
+Claude is the primary synthesis engine for three specific reasons:
+
+**Tool use for structured output.** The Director OS workflow requires grounded
+output — every win, risk, and next step must cite a source file and line number
+from the retrieved evidence. Claude's tool use API enforces this contract at the
+schema level. The `generate_weekly_update` tool schema declares required
+`source` and `line_number` fields; hallucinated citations are caught at parse
+time, not post-hoc.
+
+**Prompt caching reduces per-request cost.** The system prompt (instructions +
+grounding rules) is stable across all calls for the same deployment. Marking it
+with `cache_control: {"type": "ephemeral"}` lets Claude reuse the KV
+representation within a 5-minute window. Cache savings surface in every
+`WorkflowTrace` via `cache_read_input_tokens` and `cache_creation_input_tokens`
+so operators can see the cost trajectory over time.
+
+**Multi-agent coordination via explicit handoff contracts.** The
+`ResearcherAgent → WriterAgent` pipeline separates synthesis from formatting.
+The researcher uses tool use to produce structured findings
+(`ResearchSynthesis`); the writer takes only that struct — not raw evidence —
+and formats it for the target audience. This explicit contract bounds
+hallucination risk: the writer can only rephrase what the researcher already
+extracted. Each agent emits an `AgentCall` with token counts so the full
+pipeline cost is visible in the trace.
 
 ---
 
