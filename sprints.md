@@ -86,7 +86,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
-## Sprint A — Semantic RAG
+## Sprint 5 — Semantic RAG
 
 **Objective:** Replace keyword retrieval with ChromaDB-backed semantic vector search using Ollama `nomic-embed-text` embeddings. This is the prerequisite for all showcase sprints — the retrieval story is indefensible until this ships.
 
@@ -106,7 +106,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
-## Sprint B — Tiered Architecture + MCP Default + Prompt Caching
+## Sprint 6 — Tiered Architecture + MCP Default + Prompt Caching
 
 **Objective:** Move Ollama to the routing layer, make Claude Haiku the default synthesis provider, wire the MCP agentic loop into the default Director OS path, and add prompt caching. Two Claude-native wins in one sprint.
 
@@ -129,7 +129,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
-## Sprint C — Multi-Agent Researcher → Writer
+## Sprint 7 — Multi-Agent Researcher → Writer
 
 **Objective:** Add a two-agent workflow demonstrating Claude-to-Claude orchestration. Researcher retrieves and synthesizes evidence via filesystem tools; writer formats the synthesis for a target audience. Required agentic pattern for the Anthropic FE showcase.
 
@@ -148,7 +148,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
-## Sprint D — Realistic Demo Data + "Why Claude" Framing
+## Sprint 8 — Realistic Demo Data + "Why Claude" Framing
 
 **Objective:** Replace toy markdown files with a realistic enterprise scenario. Add a "Why Claude" README section that explains Claude-specific design decisions. Makes the demo land with a hiring manager or enterprise evaluator.
 
@@ -165,9 +165,9 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
-## Sprint E — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag)
+## Sprint 9 — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag)
 
-**Objective:** Close out the two remaining Sprint 3 test gaps and complete the Sprint 4 docs and release framing. Runs in parallel with Sprint C and D.
+**Objective:** Close out the two remaining Sprint 3 test gaps and complete the Sprint 4 docs and release framing. Runs in parallel with Sprint 7 and D.
 
 **Maps to:** plan.md Phase 5 (test coverage), Phase 5c (MCP docs), Phase 7 (hardening)
 
@@ -187,8 +187,8 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 ## Coordination notes
 
 - Sprint 2 is complete. The standalone MCP server shipped in PR #50 with both workflow tools registered, tests passing, and Claude Desktop config included.
-- Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint E.
-- Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint E.
-- Sprint A is the prerequisite for B and C — do not start B until ChromaDB retrieval is in place.
-- Sprint B and Sprint C can be sequenced or parallelized after Sprint A ships.
-- Sprint D and Sprint E have no hard dependencies and can run alongside any showcase sprint.
+- Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint 9.
+- Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint 9.
+- Sprint 5 is the prerequisite for B and C — do not start B until ChromaDB retrieval is in place.
+- Sprint 6 and Sprint 7 can be sequenced or parallelized after Sprint 5 ships.
+- Sprint 8 and Sprint 9 have no hard dependencies and can run alongside any showcase sprint.

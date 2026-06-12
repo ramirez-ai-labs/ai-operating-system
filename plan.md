@@ -317,7 +317,7 @@ The current retrieval layer reads markdown files and filters by keyword match. T
 
 ### Status
 
-- Planned — Sprint A
+- Planned — Sprint 5
 
 ## Phase 5e: Tiered Model Architecture — Ollama to Routing Layer
 
@@ -341,7 +341,7 @@ Move Ollama from its current position as a parallel synthesis provider to its co
 
 ### Status
 
-- Planned — Sprint B
+- Planned — Sprint 6
 
 ## Phase 5f: MCP Agentic Loop as Default Path + Prompt Caching
 
@@ -365,7 +365,7 @@ Promote the existing MCP tool use loop from opt-in side-car to the default Direc
 
 ### Status
 
-- Planned — Sprint B
+- Planned — Sprint 6
 
 ## Phase 5g: Multi-Agent Researcher → Writer
 
@@ -389,7 +389,7 @@ Add a two-agent workflow demonstrating Claude-to-Claude orchestration. A researc
 
 ### Status
 
-- Planned — Sprint C
+- Planned — Sprint 7
 
 ## Phase 5h: Realistic Demo Data + "Why Claude" Framing
 
@@ -411,7 +411,7 @@ Replace the 5 toy markdown files with a realistic enterprise scenario and add a 
 
 ### Status
 
-- Planned — Sprint D
+- Planned — Sprint 8
 
 ## Phase 6: Add a Lightweight Local UI and Optional Langflow Demo Layer
 
@@ -462,11 +462,11 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 The repo is being focused as an Anthropic Forward Engineer showcase. The sequence below is ordered by showcase impact, not general engineering priority.
 
-1. **Sprint A — Semantic RAG (Phase 5d):** ChromaDB + Ollama `nomic-embed-text` embeddings. Prerequisite for everything else — the retrieval story is indefensible until this ships.
-2. **Sprint B — Tiered architecture + MCP default + prompt caching (Phases 5e, 5f):** Move Ollama to routing, make Claude Haiku the synthesis default, wire MCP loop into the default path, add cache_control. Highest visible impact per effort.
-3. **Sprint C — Multi-agent researcher → writer (Phase 5g):** Two Claude instances with a clean handoff. Required to demonstrate agentic orchestration for the FE role.
-4. **Sprint D — Realistic demo data + "Why Claude" README (Phase 5h):** Replace toy data with an enterprise scenario. Add the framing that makes the demo land with a non-technical evaluator.
-5. **Sprint E — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag):** Filesystem edge case tests, CI coverage tracking, README MCP section, v1.0 tag. Runs in parallel with Sprint C and D.
+1. **Sprint 5 — Semantic RAG (Phase 5d):** ChromaDB + Ollama `nomic-embed-text` embeddings. Prerequisite for everything else — the retrieval story is indefensible until this ships.
+2. **Sprint 6 — Tiered architecture + MCP default + prompt caching (Phases 5e, 5f):** Move Ollama to routing, make Claude Haiku the synthesis default, wire MCP loop into the default path, add cache_control. Highest visible impact per effort.
+3. **Sprint 7 — Multi-agent researcher → writer (Phase 5g):** Two Claude instances with a clean handoff. Required to demonstrate agentic orchestration for the FE role.
+4. **Sprint 8 — Realistic demo data + "Why Claude" README (Phase 5h):** Replace toy data with an enterprise scenario. Add the framing that makes the demo land with a non-technical evaluator.
+5. **Sprint 9 — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag):** Filesystem edge case tests, CI coverage tracking, README MCP section, v1.0 tag. Runs in parallel with Sprint 7 and D.
 
 ## Definition of Success
 
