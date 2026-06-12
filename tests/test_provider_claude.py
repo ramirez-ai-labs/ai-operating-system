@@ -13,15 +13,22 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from packages.shared.providers.claude import ClaudeWeeklyUpdateProvider, _build_prompt, _parse_grounded_items
+from packages.shared.providers.claude import (
+    ClaudeWeeklyUpdateProvider,
+    _build_prompt,
+    _parse_grounded_items,
+)
 from packages.shared.schemas.director_os import EvidenceItem
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_evidence(source: str = "notes.md", line_number: int = 1, excerpt: str = "shipped v2") -> EvidenceItem:
+def _make_evidence(
+    source: str = "notes.md",
+    line_number: int = 1,
+    excerpt: str = "shipped v2",
+) -> EvidenceItem:
     return EvidenceItem(source=source, line_number=line_number, title="Note", excerpt=excerpt)
 
 
@@ -65,11 +72,15 @@ def test_returns_draft_from_valid_tool_use_block(monkeypatch: pytest.MonkeyPatch
     }
 
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = _make_api_response([_make_tool_use_block(payload)])
+    mock_client.messages.create.return_value = _make_api_response(
+        [_make_tool_use_block(payload)]
+    )
 
     with patch("anthropic.Anthropic", return_value=mock_client):
         provider = ClaudeWeeklyUpdateProvider(model="claude-haiku-4-5-20251001")
-        draft = provider.generate_weekly_update(focus="sprint review", evidence=[_make_evidence()])
+        draft = provider.generate_weekly_update(
+            focus="sprint review", evidence=[_make_evidence()]
+        )
 
     assert draft.summary == "Team shipped v2 on time."
     assert len(draft.wins) == 1
@@ -94,7 +105,9 @@ def test_multiple_sections_all_populated(monkeypatch: pytest.MonkeyPatch) -> Non
     }
 
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = _make_api_response([_make_tool_use_block(payload)])
+    mock_client.messages.create.return_value = _make_api_response(
+        [_make_tool_use_block(payload)]
+    )
 
     with patch("anthropic.Anthropic", return_value=mock_client):
         provider = ClaudeWeeklyUpdateProvider(model="claude-haiku-4-5-20251001")
@@ -136,7 +149,9 @@ def test_raises_on_hallucinated_citation(monkeypatch: pytest.MonkeyPatch) -> Non
     }
 
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = _make_api_response([_make_tool_use_block(payload)])
+    mock_client.messages.create.return_value = _make_api_response(
+        [_make_tool_use_block(payload)]
+    )
 
     with patch("anthropic.Anthropic", return_value=mock_client):
         provider = ClaudeWeeklyUpdateProvider(model="claude-haiku-4-5-20251001")
