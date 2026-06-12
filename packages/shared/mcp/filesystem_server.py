@@ -290,6 +290,9 @@ class FilesystemMCPServer:
         actual path traversal control. The startswith check on the resolved
         absolute path is authoritative.
         """
+        # Path.resolve() expands all symlinks and ".." segments to an absolute
+        # path. The startswith check then verifies the result stays inside the
+        # declared root — this is the real security boundary, not string manipulation.
         resolved = (self.root / rel_path.lstrip("/")).resolve()
 
         if not str(resolved).startswith(str(self.root)):
@@ -320,6 +323,8 @@ def build_tool_result_message(
     """
     content = result["result"] if result["success"] else f"Error: {result['error']}"
 
+    # Tool results use role="user" per the Anthropic multi-turn protocol.
+    # This keeps the conversation alternating: assistant (tool_use) → user (tool_result).
     return {
         "role": "user",
         "content": [

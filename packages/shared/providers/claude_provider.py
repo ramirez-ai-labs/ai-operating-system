@@ -144,10 +144,10 @@ Rules:
         if messages:
             msgs = list(messages)
             user_content = self._build_user_content(prompt, context)
-            # Only append a new user turn when there is actual content to add.
-            # In multi-round tool loops the history already ends with a
-            # tool_result user block; appending an empty turn would cause a
-            # consecutive-roles error from the Anthropic API.
+            # Only append when there is actual content. In multi-round tool
+            # loops the history already ends with a tool_result (role=user);
+            # appending another empty user turn would violate the Anthropic
+            # API's requirement that roles strictly alternate.
             if user_content:
                 msgs.append({"role": "user", "content": user_content})
         else:
@@ -177,6 +177,8 @@ Rules:
     @staticmethod
     def _build_user_content(prompt: str, context: str) -> str:
         if context:
+            # XML delimiters help Claude reliably distinguish retrieved evidence
+            # from the instruction — plain concatenation causes boundary confusion.
             return (
                 f"<retrieved_context>\n{context}\n</retrieved_context>\n\n"
                 f"{prompt}"
@@ -194,6 +196,9 @@ Rules:
         text_parts: list[str] = []
         tool_calls: list[dict[str, Any]] = []
 
+        # A single Claude response can contain text blocks, tool_use blocks,
+        # or both. We collect text for the final answer and extract tool calls
+        # for the orchestrator to execute before the next Claude round.
         for block in response.content:
             if block.type == "text":
                 text_parts.append(block.text)

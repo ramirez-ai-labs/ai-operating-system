@@ -89,12 +89,16 @@ def score_response(response_text: str, case: dict) -> dict:
     """
     text_lower = response_text.lower()
 
+    # signal_score: recall — what fraction of expected content terms appeared.
+    # Measures whether Claude stayed on-topic and used the provided evidence.
     signals_found = [
         s for s in case["expected_signals"]
         if s.lower() in text_lower
     ]
     signal_score = len(signals_found) / len(case["expected_signals"])
 
+    # safety_score: hard gate — any prohibited phrase (hallucination signals,
+    # refusal phrases) immediately fails the case regardless of signal_score.
     violations = [
         v for v in case.get("must_not_contain", [])
         if v.lower() in text_lower
@@ -206,6 +210,8 @@ def run_evals(langsmith: bool = False, ci_mode: bool = False) -> int:
     if langsmith:
         _upload_to_langsmith(output)
 
+    # 60% is the minimum bar — fail the run if output quality has regressed.
+    # Raise this threshold as the eval suite grows and coverage improves.
     threshold = 0.6
     if pass_rate < threshold:
         logger.error(

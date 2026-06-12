@@ -31,6 +31,9 @@ from packages.shared.providers.claude_provider import ClaudeProvider, ProviderRe
 
 logger = logging.getLogger(__name__)
 
+# Safety circuit breaker. If Claude keeps requesting tools without ever
+# producing a final text response, we stop at this many rounds rather than
+# looping indefinitely and burning tokens.
 MAX_TOOL_ROUNDS = 5
 
 
@@ -93,8 +96,9 @@ def run_with_mcp_tools(
         "data_path": data_path,
     }
 
-    # Seed messages with the initial user prompt. Subsequent rounds only append
-    # assistant tool_use blocks and user tool_result blocks — no extra user turns.
+    # Seed the conversation with the user prompt once. Every subsequent round
+    # extends this list by appending the assistant's tool_use block followed by
+    # the tool_result block. The original prompt is never re-sent.
     messages: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
     total_input = 0
     total_output = 0
@@ -139,8 +143,10 @@ def run_with_mcp_tools(
                 round_trace["tool_calls"].append(call_record)
                 trace["mcp_tool_calls"].append(call_record)
 
-                # Append assistant tool_use block then user tool_result block.
-                # This is the Anthropic multi-turn tool_use format.
+                # The Anthropic API requires tool interactions to be recorded as
+                # two consecutive messages: assistant declares the tool call, then
+                # user returns the result. Both must be present before the next
+                # Claude call or the API will reject the conversation history.
                 messages.append({
                     "role": "assistant",
                     "content": [
