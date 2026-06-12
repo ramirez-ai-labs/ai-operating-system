@@ -17,32 +17,25 @@ This is meant to keep the project grounded, avoid scope creep, and preserve alig
 
 The repository currently includes:
 
-- project documentation in `README.md`
-- contribution and implementation guidance in `AGENTS.md`
-- a minimal `Director OS` FastAPI MVP
-- a lightweight Chief of Staff orchestration endpoint
-- an explicit `LangGraph` workflow state graph for `Director OS`
-- a first `Brand OS` workflow
-- local retrieval from markdown files
-- validation logic
-- optional Ollama provider support
-- optional `LangSmith` tracing for the `Director OS` graph
-- a small checked-in local evaluation set for `Director OS`
-- a minimal local operator console served from `apps/api`
+- project documentation in `README.md` with Mermaid architecture diagram and "Why Claude" section
+- a `Director OS` FastAPI workflow with LangGraph state graph, Claude provider (tool use + prompt caching), Ollama fallback, deterministic baseline, and evidence-grounded validation
+- a `Brand OS` workflow on the same shared graph-oriented foundation
+- a Chief of Staff orchestration layer with keyword routing across both domains
+- ChromaDB semantic retrieval backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
+- a `ResearcherAgent → WriterAgent` multi-agent pipeline for audience-targeted content formatting
+- prompt caching on the Claude provider with cache metrics surfaced in every `WorkflowTrace`
 - an in-process Claude filesystem tool loop for MCP-style local retrieval traces
-- a standalone MCP server under `apps/mcp` exposing `director_os_weekly_update` and `brand_os_content_draft` as tools
-- sample local project data
-- tests for core weekly-update, orchestration, and Brand OS behavior
-- GitHub Actions CI and release workflows
+- a standalone MCP server under `apps/mcp` exposing both workflows as tools for Claude Desktop / Claude Code
+- a realistic enterprise scenario dataset under `data/local_only/`
+- a local operator console at `/` with provider selection, target audience, cache hit display, and agent pipeline visualization
+- 18 test files, 122 tests passing; local evals for both Director OS and Brand OS running in CI
+- optional LangSmith tracing
 
 The repository does not yet include:
 
-- a dedicated frontend app under `apps/web`
-- semantic vector retrieval (ChromaDB — Phase 5d)
 - Ollama wired to the routing layer (currently keyword if/else — Phase 5e)
-- prompt caching on the Claude provider (Phase 5f)
-- a multi-agent researcher → writer pattern (Phase 5g)
-- a stable visual demo layer
+- a dedicated `apps/web` frontend beyond the current operator console
+- branch protection rules on `main` (Phase 7)
 
 ## Guiding Principles
 
