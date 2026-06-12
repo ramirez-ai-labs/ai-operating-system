@@ -8,6 +8,7 @@ dependencies = [
   "fastapi>=0.115.0,<1.0.0",
   "langgraph>=1.0.0,<2.0.0",
   "langsmith>=0.3.45,<1.0.0",
+  "mcp>=1.27.2,<2.0.0",
   "pydantic>=2.8.0,<3.0.0",
   "uvicorn>=0.30.0,<1.0.0",
 ]
@@ -28,6 +29,7 @@ build-backend = "setuptools.build_meta"
 packages = [
   "apps",
   "apps.api",
+  "apps.mcp",
   "brand_os",
   "brand_os.workflows",
   "director_os",

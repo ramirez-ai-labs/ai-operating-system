@@ -4,8 +4,9 @@ AI-OS is a production-grade multi-agent system that helps technical leaders
 synthesize fragmented information — project status, team signals, brand work —
 into structured, actionable output.
 
-Built on **Claude** (Anthropic) with **MCP tool integration**, **LangGraph
-orchestration**, and a **live eval harness** with committed results.
+Built on **Claude** (Anthropic) with **LangGraph orchestration**, an
+in-process filesystem tool loop, and a **standalone MCP server** for workflow
+entry points.
 
 ---
 
@@ -14,17 +15,18 @@ orchestration**, and a **live eval harness** with committed results.
 | Capability | Implementation |
 |---|---|
 | Production Claude integration | `packages/shared/providers/claude_provider.py` |
-| MCP server (filesystem tools) | `packages/shared/mcp/filesystem_server.py` |
-| Sub-agent orchestration loop | `packages/shared/mcp/orchestrator_integration.py` |
+| In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `packages/shared/mcp/orchestrator_integration.py` |
+| Standalone MCP server | `apps/mcp/server.py` |
 | LLM evaluation framework | `scripts/run_director_os_evals_claude.py` + committed results |
 | Operator trace / observability | `trace.mcp_tool_calls` in every `/orchestrate` response |
 | Repeatable deployment pattern | `docs/DEPLOYMENT.md` — secrets, eval gate, rollback, MCP adapters |
 | LangGraph state graphs | `packages/shared/graphs/director_os.py`, `brand_os.py` |
 | LangSmith tracing | Optional — `LANGSMITH_API_KEY` + `--langsmith` flag |
 
-The architecture is designed to be adapted. The provider layer, MCP server,
-and validator agent are all swappable — designed for the kind of customer
-environment customization that enterprise AI work requires.
+The architecture is designed to be adapted. The provider layer, the
+in-process filesystem tool loop, and the standalone MCP server are all
+swappable — designed for the kind of customer environment customization that
+enterprise AI work requires.
 
 ---
 
@@ -119,9 +121,15 @@ what data was retrieved, and token counts:
 
 ---
 
-## MCP tool integration
+## MCP entry points
 
-The filesystem MCP server exposes three tools Claude can invoke during synthesis:
+AI-OS currently supports two MCP-related paths:
+
+1. The in-process filesystem tool loop used by the FastAPI `/orchestrate` flow.
+2. The standalone MCP server in `apps/mcp/server.py`, which exports the real
+   workflow entry points as MCP tools for Claude Desktop or Claude Code.
+
+The filesystem loop exposes three tools Claude can invoke during synthesis:
 
 | Tool | Description |
 |---|---|
@@ -196,7 +204,8 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 | Workflow orchestration | LangGraph |
 | Model provider (cloud) | Anthropic SDK — Claude Haiku / Sonnet / Opus |
 | Model provider (local) | Ollama |
-| MCP server | Custom filesystem server (`packages/shared/mcp/`) |
+| In-process MCP loop | `packages/shared/mcp/filesystem_server.py` |
+| Standalone MCP server | `apps/mcp/server.py` |
 | Observability | LangSmith (optional) |
 | Evaluation | Custom eval harness with committed results |
 | CI/CD | GitHub Actions (lint, test, evals on every PR) |
