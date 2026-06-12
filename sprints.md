@@ -53,14 +53,14 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5 and Phase 5b
 
-**Status: Planned — current suite is 85% overall, with notable gaps in provider and MCP paths**
+**Status: In progress — provider and orchestration paths now covered; filesystem edge cases and CI coverage tracking remain**
 
 | Step | Status | PR |
 |---|---|---|
-| Add unit tests for `packages/shared/providers/claude.py` | Pending | — |
-| Add unit tests for `packages/shared/providers/ollama.py` | Pending | — |
-| Add tests for `packages/shared/providers/claude_provider.py` fallback and tool-use paths | Pending | — |
-| Add tests for `packages/shared/mcp/orchestrator_integration.py` | Pending | — |
+| Add unit tests for `packages/shared/providers/claude.py` | Done | local |
+| Add unit tests for `packages/shared/providers/ollama.py` | Done | local |
+| Add tests for `packages/shared/providers/claude_provider.py` fallback and tool-use paths | Done | local |
+| Add tests for `packages/shared/mcp/orchestrator_integration.py` | Done | local |
 | Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Pending | — |
 | Measure and track coverage trend in CI | Pending | — |
 
