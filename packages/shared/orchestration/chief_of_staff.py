@@ -127,6 +127,15 @@ def _build_trace(
         }
         model_supported = True
         model_used = request.use_model and not fallback_used
+        if model_used:
+            provider_used = request.provider
+            model_id_used = (
+                request.claude_model if request.provider == "claude"
+                else request.ollama_model
+            )
+        else:
+            provider_used = None
+            model_id_used = None
     else:
         fallback_used = False
         section_counts = {
@@ -136,6 +145,8 @@ def _build_trace(
         }
         model_supported = False
         model_used = False
+        provider_used = None
+        model_id_used = None
 
     return WorkflowTrace(
         data_path=request.data_path,
@@ -145,6 +156,8 @@ def _build_trace(
         model_requested=request.use_model,
         model_supported=model_supported,
         model_used=model_used,
+        provider_used=provider_used,
+        model_id_used=model_id_used,
         fallback_used=fallback_used,
         section_counts=section_counts,
         validation_summary=(

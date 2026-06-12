@@ -84,6 +84,8 @@ class WorkflowTrace(BaseModel):
     model_requested: bool
     model_supported: bool
     model_used: bool
+    provider_used: str | None
+    model_id_used: str | None
     fallback_used: bool
     section_counts: dict[str, int]
     validation_summary: str

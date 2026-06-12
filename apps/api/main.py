@@ -215,12 +215,16 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
     .trace-card dl {
       margin: 0;
       display: grid;
-      grid-template-columns: 110px 1fr;
+      grid-template-columns: 120px 1fr;
       gap: 8px 10px;
       font-size: 0.92rem;
     }
     .trace-card dt {
       color: var(--muted);
+      font-style: normal;
+    }
+    .trace-card dd {
+      margin: 0;
     }
     ul {
       margin: 0;
@@ -236,6 +240,40 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
       font-size: 0.88rem;
       line-height: 1.45;
     }
+    .result-summary-text {
+      margin: 0;
+      font-size: 0.97rem;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+    .result-section + .result-section {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .result-section h4 {
+      margin: 0 0 8px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    .result-item {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(216,206,191,0.5);
+    }
+    .result-item:last-child { border-bottom: 0; }
+    .result-item .source-tag {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: monospace;
+    }
+    .flag-true { color: var(--accent); font-weight: 700; }
+    .flag-false { color: var(--muted); }
     .pill {
       display: inline-block;
       padding: 4px 10px;
@@ -411,26 +449,24 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           </div>
           <div class="result-card">
             <h3>Section Counts</h3>
-            <p>Shows how much structured output the selected workflow produced.</p>
             <ul id="section-counts">
-              <li>Run a request to populate section counts.</li>
+              <li style="color:var(--muted)">Run a request to populate section counts.</li>
             </ul>
           </div>
           <div class="result-card">
             <h3>Evidence Sources</h3>
-            <p>Lists the local files that grounded the result.</p>
             <ul id="evidence-sources">
-              <li>Run a request to inspect evidence sources.</li>
+              <li style="color:var(--muted)">Run a request to inspect evidence sources.</li>
             </ul>
           </div>
           <div class="result-card">
-            <h3>Result Summary</h3>
-            <p>A readable summary of the workflow result.</p>
-            <pre id="result-summary">No workflow run yet.</pre>
+            <h3>Result</h3>
+            <div id="result-detail">
+              <p class="result-summary-text" style="color:var(--muted)">No workflow run yet.</p>
+            </div>
           </div>
           <div class="raw-card">
-            <h3>Raw Response</h3>
-            <p>The full JSON payload returned by <code>/orchestrate</code>.</p>
+            <h3>Raw Response — <code>/orchestrate</code></h3>
             <pre id="raw-response">No workflow run yet.</pre>
           </div>
         </div>
@@ -444,11 +480,22 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
     const traceMeta = document.getElementById("trace-meta");
     const sectionCounts = document.getElementById("section-counts");
     const evidenceSources = document.getElementById("evidence-sources");
-    const resultSummary = document.getElementById("result-summary");
+    const resultDetail = document.getElementById("result-detail");
     const rawResponse = document.getElementById("raw-response");
     const dataPathInput = document.getElementById("data_path");
     const promptInput = document.getElementById("prompt");
     const workflowInput = document.getElementById("workflow");
+
+    function flag(val) {
+      return `<span class="${val ? 'flag-true' : 'flag-false'}">${val}</span>`;
+    }
+
+    function renderItems(items, labelKey) {
+      if (!items || items.length === 0) return '<p class="result-summary-text" style="color:var(--muted)">None</p>';
+      return items.map(item =>
+        `<div class="result-item">${item[labelKey] || item.text || JSON.stringify(item)}<span class="source-tag">${item.source || ''}</span></div>`
+      ).join("");
+    }
 
     workflowInput.addEventListener("change", () => {
       if (workflowInput.value === "brand_os.content_draft") {
@@ -488,7 +535,7 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         if (!response.ok) {
           statusNode.textContent = "Request failed. Inspect the raw response below.";
           rawResponse.textContent = JSON.stringify(body, null, 2);
-          resultSummary.textContent = body.detail || "The API returned an error.";
+          resultDetail.innerHTML = `<p class="result-summary-text" style="color:var(--accent-2)">${body.detail || "The API returned an error."}</p>`;
           return;
         }
 
@@ -497,12 +544,15 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           "<dt>Workflow</dt><dd>" + body.selected_workflow + "</dd>" +
           "<dt>Rationale</dt><dd>" + body.rationale + "</dd>";
 
+        const providerRow = body.trace.model_used && body.trace.provider_used
+          ? "<dt>Provider</dt><dd>" + body.trace.provider_used + "</dd>" +
+            "<dt>Model</dt><dd>" + (body.trace.model_id_used || "—") + "</dd>"
+          : "<dt>Provider</dt><dd style='color:var(--muted)'>deterministic (no model)</dd>";
         traceMeta.innerHTML =
           "<dt>Evidence</dt><dd>" + body.trace.evidence_count + " items</dd>" +
-          "<dt>Model</dt><dd>requested=" + body.trace.model_requested +
-          ", supported=" + body.trace.model_supported +
-          ", used=" + body.trace.model_used + "</dd>" +
-          "<dt>Fallback</dt><dd>" + body.trace.fallback_used + "</dd>" +
+          providerRow +
+          "<dt>Model used</dt><dd>" + flag(body.trace.model_used) + "</dd>" +
+          "<dt>Fallback</dt><dd>" + flag(body.trace.fallback_used) + "</dd>" +
           "<dt>Data Path</dt><dd>" + body.trace.data_path + "</dd>";
 
         sectionCounts.innerHTML = Object.entries(body.trace.section_counts)
@@ -514,12 +564,25 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           .join("");
 
         const result = body.result || {};
-        resultSummary.textContent =
-          result.summary || result.insight_summary || "No summary field returned.";
+        const summary = result.summary || result.insight_summary || "";
+        const wins = result.wins || result.post_outline || [];
+        const risks = result.risks || [];
+        const nextSteps = result.next_steps || result.podcast_angles || [];
+
+        let detailHtml = summary
+          ? `<p class="result-summary-text">${summary}</p>` : "";
+        if (wins.length) detailHtml +=
+          `<div class="result-section"><h4>Wins / Insights</h4>${renderItems(wins, "text")}</div>`;
+        if (risks.length) detailHtml +=
+          `<div class="result-section"><h4>Risks</h4>${renderItems(risks, "text")}</div>`;
+        if (nextSteps.length) detailHtml +=
+          `<div class="result-section"><h4>Next Steps</h4>${renderItems(nextSteps, "text")}</div>`;
+        resultDetail.innerHTML = detailHtml || "<p class='result-summary-text' style='color:var(--muted)'>No result content returned.</p>";
+
         rawResponse.textContent = JSON.stringify(body, null, 2);
       } catch (error) {
         statusNode.textContent = "Request failed before the API responded.";
-        resultSummary.textContent = String(error);
+        resultDetail.innerHTML = `<p class="result-summary-text" style="color:var(--accent-2)">${String(error)}</p>`;
       }
     });
   </script>
