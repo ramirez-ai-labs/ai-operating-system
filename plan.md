@@ -241,9 +241,12 @@ Introduce Anthropic Claude as a first-class provider alongside Ollama, and estab
 - Implemented: `provider` and `claude_model` fields on `WeeklyUpdateRequest`
 - Implemented: `_build_provider` factory in `packages/shared/graphs/director_os.py`
 - Implemented: `--provider claude` flag on `scripts/run_director_os_evals.py`
+- Implemented: `scripts/run_director_os_evals_claude.py` — dedicated eval runner producing signal/safety scores, token counts, and real Claude response text
 - Implemented: Claude-specific tests in `tests/test_director_os_evaluations.py`
 - Implemented: `.env.example` with all required keys
 - Implemented: provider selection is now wired through the Chief of Staff orchestrator for Director OS synthesis
+- Implemented: `evaluations/director_os/results_claude.json` committed in PR #44 — **but output shows deterministic fallback, not live Claude API responses.** Re-running `scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` and committing the result is the single remaining action for JD requirements #1 and #4.
+- Remaining: run live Claude evals and commit real output (see Sprint 1 blocker note)
 - Remaining: operator console provider dropdown (UI toggle for Ollama vs Claude)
 - Remaining: move Ollama from synthesis provider to routing/classification layer (Phase 5e)
 - Remaining: move Ollama to embedding layer for ChromaDB (Phase 5d)
@@ -462,11 +465,12 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 The repo is being focused as an Anthropic Forward Engineer showcase. The sequence below is ordered by showcase impact, not general engineering priority.
 
-1. **Sprint 5 — Semantic RAG (Phase 5d):** ChromaDB + Ollama `nomic-embed-text` embeddings. Prerequisite for everything else — the retrieval story is indefensible until this ships.
+0. **Live Claude eval re-run (JD blocker — do this first):** Run `python scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` set and commit the result. The current `results_claude.json` shows deterministic fallback output. This one commit closes JD requirements #1 (production Claude integration) and #4 (evaluation framework with committed results) simultaneously. Every other sprint is blocked on this for showcase credibility.
+1. **Sprint 5 — Semantic RAG (Phase 5d):** ChromaDB + Ollama `nomic-embed-text` embeddings. Prerequisite for Sprints 6 and 7 — the retrieval story is indefensible at scale until this ships.
 2. **Sprint 6 — Tiered architecture + MCP default + prompt caching (Phases 5e, 5f):** Move Ollama to routing, make Claude Haiku the synthesis default, wire MCP loop into the default path, add cache_control. Highest visible impact per effort.
 3. **Sprint 7 — Multi-agent researcher → writer (Phase 5g):** Two Claude instances with a clean handoff. Required to demonstrate agentic orchestration for the FE role.
 4. **Sprint 8 — Realistic demo data + "Why Claude" README (Phase 5h):** Replace toy data with an enterprise scenario. Add the framing that makes the demo land with a non-technical evaluator.
-5. **Sprint 9 — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag):** Filesystem edge case tests, CI coverage tracking, README MCP section, v1.0 tag. Runs in parallel with Sprint 7 and D.
+5. **Sprint 9 — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag):** Filesystem edge case tests, CI coverage tracking, README MCP section, v1.0 tag. Runs in parallel with Sprints 7 and 8.
 
 ## Definition of Success
 

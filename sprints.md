@@ -10,7 +10,9 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5b
 
-**Status: Complete — all items merged or pending final PR merge**
+**Status: Mostly complete — live Claude eval re-run is the only remaining action**
+
+> **Blocker for JD requirements #1 and #4:** `results_claude.json` was committed in PR #44 but contains deterministic fallback output (summaries match the `DETERMINISTIC_SUMMARY_PREFIX` template). A reviewer looking at the file will see no model ID, no token counts, and no content that differs from the keyword-scorer path. Running `scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` set will replace the file with real Claude API output — signal/safety scores, actual response text, token counts, model ID. That single commit closes both gaps.
 
 | Step | Status | PR |
 |---|---|---|
@@ -19,7 +21,8 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | `anthropic` in `pyproject.toml` | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
 | `--provider claude` flag on eval runner | Done | [#39](https://github.com/ramirez-ai-labs/ai-operating-system/pull/39) |
 | `config/models.yaml` | Done | [#42](https://github.com/ramirez-ai-labs/ai-operating-system/pull/42) |
-| `evaluations/director_os/results_claude.json` | Open PR | [#44](https://github.com/ramirez-ai-labs/ai-operating-system/pull/44) |
+| `evaluations/director_os/results_claude.json` committed | Done | [#44](https://github.com/ramirez-ai-labs/ai-operating-system/pull/44) |
+| Re-run `scripts/run_director_os_evals_claude.py` with live API key and commit real Claude output | **Pending** | — |
 
 ---
 
@@ -72,11 +75,11 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 7 (hardening) and Phase 5c (MCP docs)
 
-**Status: Partially started — deployment guide exists; release framing remains**
+**Status: Partially complete — deployment guide shipped; README and release tag remain**
 
 | Step | Status | PR |
 |---|---|---|
-| `docs/DEPLOYMENT.md` | Done | local |
+| `docs/DEPLOYMENT.md` | Done | main |
 | Update `README.md` with MCP section and v1.0 framing | Pending | — |
 | GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Pending | — |
 | Archive or unpin `openai-foundations` from org page | Pending | — |
@@ -186,9 +189,10 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ## Coordination notes
 
+- **Sprint 1 live eval re-run is the only hard blocker for JD showcase readiness.** All five JD requirements are met in code; the only gap is that the committed `results_claude.json` shows deterministic fallback output instead of real Claude API responses. Run `python scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` and commit the result.
 - Sprint 2 is complete. The standalone MCP server shipped in PR #50 with both workflow tools registered, tests passing, and Claude Desktop config included.
 - Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint 9.
 - Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint 9.
-- Sprint 5 is the prerequisite for B and C — do not start B until ChromaDB retrieval is in place.
+- Sprint 5 is the prerequisite for Sprints 6 and 7 — do not start either until ChromaDB retrieval is in place.
 - Sprint 6 and Sprint 7 can be sequenced or parallelized after Sprint 5 ships.
 - Sprint 8 and Sprint 9 have no hard dependencies and can run alongside any showcase sprint.
