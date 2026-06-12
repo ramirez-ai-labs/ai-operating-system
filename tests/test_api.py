@@ -300,6 +300,27 @@ def test_orchestrate_reports_director_fallback_in_api_trace(monkeypatch) -> None
     assert body["trace"]["fallback_used"] is True
 
 
+def test_orchestrate_accepts_director_provider_selection_without_model_call() -> None:
+    """Provider selection should be accepted even when synthesis is not requested."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "workflow": "director_os.weekly_update",
+            "data_path": "data/local_only/projects",
+            "focus": "leadership update",
+            "provider": "claude",
+            "claude_model": "claude-sonnet-4-5-20250929",
+            "use_model": False,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["selected_workflow"] == "director_os.weekly_update"
+    assert body["trace"]["model_requested"] is False
+    assert body["trace"]["model_used"] is False
+
+
 def test_orchestrate_prefers_brand_keywords_for_ambiguous_prompt() -> None:
     """Ambiguous prompts currently prefer Brand OS when Brand keywords appear first."""
     response = client.post(
@@ -374,3 +395,18 @@ def test_orchestrate_returns_422_for_wrong_field_type() -> None:
 
     assert response.status_code == 422
     assert "max_documents" in str(response.json()["detail"]).lower()
+
+
+def test_orchestrate_returns_422_for_unknown_provider() -> None:
+    """FastAPI should reject provider names outside the supported local/cloud set."""
+    response = client.post(
+        "/orchestrate",
+        json={
+            "prompt": "Prepare my leadership weekly update",
+            "data_path": "data/local_only/projects",
+            "provider": "openai",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "provider" in str(response.json()["detail"]).lower()

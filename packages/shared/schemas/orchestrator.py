@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -39,13 +39,20 @@ class OrchestratorRequest(BaseModel):
         default=True,
         description="Allow deterministic fallback if model generation is unavailable or weak.",
     )
+    provider: Literal["ollama", "claude"] = Field(
+        default="ollama",
+        description=(
+            "Model provider for Director OS synthesis when use_model is enabled. "
+            "Claude requires ANTHROPIC_API_KEY and remains opt-in."
+        ),
+    )
     ollama_url: str = Field(
         default="http://127.0.0.1:11434",
-        description="Base URL for the local Ollama server when model synthesis is enabled.",
+        description="Base URL for the local Ollama server when provider is 'ollama'.",
     )
     ollama_model: str = Field(
         default="llama3.2",
-        description="Ollama model name used when model synthesis is enabled.",
+        description="Ollama model name used when provider is 'ollama'.",
     )
     use_mcp: bool = Field(
         default=False,
@@ -58,7 +65,10 @@ class OrchestratorRequest(BaseModel):
     )
     claude_model: str = Field(
         default="claude-haiku-4-5-20251001",
-        description="Claude model ID used for MCP-backed synthesis when use_mcp is True.",
+        description=(
+            "Claude model ID used for Director OS synthesis when provider is "
+            "'claude' and for MCP-backed synthesis when use_mcp is True."
+        ),
     )
 
 

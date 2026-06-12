@@ -62,8 +62,12 @@ def _run_workflow(request: OrchestratorRequest, workflow: str):
                 max_documents=request.max_documents,
                 use_model=request.use_model,
                 fallback_to_deterministic=request.fallback_to_deterministic,
+                # Keep provider choice at the workflow boundary so routing can
+                # stay deterministic while synthesis remains explicitly opt-in.
+                provider=request.provider,
                 ollama_url=request.ollama_url,
                 ollama_model=request.ollama_model,
+                claude_model=request.claude_model,
             )
         )
 
