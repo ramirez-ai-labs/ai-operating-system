@@ -196,6 +196,7 @@ Make model-assisted and selectively agentic behavior more reliable without weake
 - Implemented: structured output validation via the shared validator
 - Remaining: bounded agentic steps beyond the current graph nodes
 - Remaining: broader eval coverage for weak retrieval and malformed model output
+- Remaining: strengthen automated test coverage for provider adapters and MCP orchestration paths, especially `packages/shared/providers/claude.py`, `packages/shared/providers/ollama.py`, and `packages/shared/mcp/orchestrator_integration.py`
 
 ## Phase 5b: Claude Provider and Layered LLM Architecture
 
@@ -237,8 +238,8 @@ Introduce Anthropic Claude as a first-class provider alongside Ollama, and estab
 - Implemented: `--provider claude` flag on `scripts/run_director_os_evals.py`
 - Implemented: Claude-specific tests in `tests/test_director_os_evaluations.py`
 - Implemented: `.env.example` with all required keys
+- Implemented: provider selection is now wired through the Chief of Staff orchestrator for Director OS synthesis
 - Remaining: operator console provider dropdown (UI toggle for Ollama vs Claude)
-- Remaining: wire provider selection through the Chief of Staff orchestrator so routing can remain local while Director OS synthesis can explicitly use Ollama or Claude
 
 ## Phase 5c: MCP Server — Expose AI-OS Workflows as Tools
 

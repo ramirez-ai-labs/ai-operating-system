@@ -36,17 +36,37 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | `packages/shared/mcp/filesystem_server.py` | Done | local |
 | `packages/shared/mcp/orchestrator_integration.py` | Done | local |
 | Wire `orchestrator_integration` into `/orchestrate` endpoint | Done | local |
+| Provider selection through Chief of Staff routing | Done | local |
 | `tests/test_claude_mcp.py` | Done | local |
-| `apps/mcp/server.py` standalone workflow MCP server | Pending | — |
-| Expose `director_os_weekly_update` as MCP tool | Pending | — |
-| Expose `brand_os_content_draft` as MCP tool | Pending | — |
-| `mcp` SDK added to `pyproject.toml` | Pending | — |
-| `claude_desktop_config.json` example | Pending | — |
-| Standalone MCP server tests passing | Pending | — |
+| `apps/mcp/server.py` standalone workflow MCP server | Done | local |
+| Expose `director_os_weekly_update` as MCP tool | Done | local |
+| Expose `brand_os_content_draft` as MCP tool | Done | local |
+| `mcp` SDK added to `pyproject.toml` | Done | local |
+| `claude_desktop_config.json` example | Done | local |
+| Standalone MCP server tests passing | Done | local |
 
 ---
 
-## Sprint 3 — Docs and Framing
+## Sprint 3 — Test Coverage Hardening
+
+**Objective:** Raise automated coverage on the provider and MCP integration paths that are still under-tested, so the repo has stronger confidence in its real execution paths.
+
+**Maps to:** plan.md Phase 5 and Phase 5b
+
+**Status: Planned — current suite is 85% overall, with notable gaps in provider and MCP paths**
+
+| Step | Status | PR |
+|---|---|---|
+| Add unit tests for `packages/shared/providers/claude.py` | Pending | — |
+| Add unit tests for `packages/shared/providers/ollama.py` | Pending | — |
+| Add tests for `packages/shared/providers/claude_provider.py` fallback and tool-use paths | Pending | — |
+| Add tests for `packages/shared/mcp/orchestrator_integration.py` | Pending | — |
+| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Pending | — |
+| Measure and track coverage trend in CI | Pending | — |
+
+---
+
+## Sprint 4 — Docs and Framing
 
 **Objective:** Ship the deployment guide, updated README, and a v1.0 release tag that frames AI-OS as an enterprise-ready MCP-first AI system.
 
