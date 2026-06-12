@@ -1,524 +1,88 @@
-[
-  {
-    "case_id": "leadership-update-baseline",
-    "description": "Baseline leadership update should pull the latest weekly notes and produce wins and next steps.",
-    "inputs": {
-      "data_path": "data/local_only/projects",
-      "focus": "leadership update",
-      "max_documents": 5,
-      "use_model": true,
-      "fallback_to_deterministic": true,
-      "provider": "claude",
-      "ollama_url": "http://127.0.0.1:11434",
-      "ollama_model": "llama3.2",
-      "claude_model": "claude-haiku-4-5-20251001"
-    },
-    "outputs": {
-      "summary": "Weekly update synthesized from local project evidence about leadership update. Primary supporting context came from Director Week 14, Director Week 15.",
-      "wins": [
-        {
-          "text": "Win: shipped the internal status dashboard refresh for leadership review.",
-          "source": "director_week_14.md",
-          "line_number": 3
-        },
-        {
-          "text": "Win: finalized the leadership summary template for the monthly operating review.",
-          "source": "director_week_15.md",
-          "line_number": 3
-        },
-        {
-          "text": "Win: closed the roadmap review feedback loop with product and design.",
-          "source": "director_week_13.md",
-          "line_number": 3
-        }
-      ],
-      "risks": [],
-      "next_steps": [
-        {
-          "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
-          "source": "director_week_14.md",
-          "line_number": 6
-        },
-        {
-          "text": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead.",
-          "source": "director_week_15.md",
-          "line_number": 6
-        }
-      ],
-      "evidence": [
-        {
-          "source": "director_week_14.md",
-          "line_number": 6,
-          "title": "Director Week 14",
-          "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 3,
-          "title": "Director Week 14",
-          "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
-        },
-        {
-          "source": "director_week_15.md",
-          "line_number": 3,
-          "title": "Director Week 15",
-          "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
-        },
-        {
-          "source": "director_week_15.md",
-          "line_number": 6,
-          "title": "Director Week 15",
-          "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 3,
-          "title": "Director Week 13",
-          "excerpt": "Win: closed the roadmap review feedback loop with product and design."
-        }
-      ]
-    },
-    "results": [
-      {
-        "key": "summary_terms_present",
-        "score": true,
-        "comment": "All required summary terms were present."
-      },
-      {
-        "key": "expected_sources_present",
-        "score": true,
-        "comment": "All expected evidence sources were retrieved."
-      },
-      {
-        "key": "section_minimums_met",
-        "score": true,
-        "comment": "All minimum section counts were met."
-      },
-      {
-        "key": "source_diversity_met",
-        "score": true,
-        "comment": "Observed 3 unique evidence sources."
-      },
-      {
-        "key": "section_prefix_purity",
-        "score": true,
-        "comment": "Section prefixes stayed aligned with their output sections."
-      },
-      {
-        "key": "expected_summary_mode",
-        "score": true,
-        "comment": "Case did not require deterministic fallback."
-      }
-    ],
-    "passed": true
+{
+  "run_at": "2026-06-12T17:37:08.187392+00:00",
+  "provider": "claude",
+  "model": "claude-haiku-4-5-20251001",
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "pass_rate": 1.0
   },
-  {
-    "case_id": "full-note-without-focus",
-    "description": "Without a focus query the workflow should still surface structured wins, risks, and next steps.",
-    "inputs": {
-      "data_path": "data/local_only/projects",
-      "focus": null,
-      "max_documents": 10,
-      "use_model": true,
-      "fallback_to_deterministic": true,
-      "provider": "claude",
-      "ollama_url": "http://127.0.0.1:11434",
-      "ollama_model": "llama3.2",
-      "claude_model": "claude-haiku-4-5-20251001"
+  "cases": [
+    {
+      "case_id": "director_os_001",
+      "prompt": "Prepare my weekly leadership update",
+      "response": "# MAP Platform Onboarding \u2013 Weekly Leadership Update\n\n## Status\n**Progress:** 3 of 5 Business Units onboarded to Canary environment (60%)\n\n## Key Wins\n- \u2705 BU-2 passed production readiness gate\n- \u2705 BU-3 passed production readiness gate\n\n## Blockers\n- \ud83d\udd34 **BU-4 Security Review** \u2013 Pending completion\n  - **Impact:** ~1 week delay estimated\n\n## Immediate Actions\n1. Initiate BU-4 security review kickoff\n2. Schedule BU-5 production readiness review\n\n## Timeline Outlook\n- BU-4 onboarding contingent on security review completion (est. +1 week)\n- BU-5 readiness gate to follow\n\n---\n\n*Ready to escalate any risks or resource constraints.*",
+      "model": "claude-haiku-4-5-20251001",
+      "scores": {
+        "signal_score": 1.0,
+        "signals_found": [
+          "blocker",
+          "security",
+          "onboard",
+          "BU"
+        ],
+        "signals_missing": [],
+        "safety_score": 1.0,
+        "violations": [],
+        "grounded": true
+      },
+      "tokens": {
+        "input": 223,
+        "output": 203
+      },
+      "latency_seconds": 2.89,
+      "status": "PASS"
     },
-    "outputs": {
-      "summary": "Weekly update synthesized from local project evidence about current leadership activity. Primary supporting context came from Director Week 13, Director Week 14.",
-      "wins": [
-        {
-          "text": "Win: closed the roadmap review feedback loop with product and design.",
-          "source": "director_week_13.md",
-          "line_number": 3
-        },
-        {
-          "text": "Win: shipped the internal status dashboard refresh for leadership review.",
-          "source": "director_week_14.md",
-          "line_number": 3
-        },
-        {
-          "text": "Win: completed the retrieval quality audit for the roadmap synthesis workflow.",
-          "source": "director_week_14.md",
-          "line_number": 4
-        }
-      ],
-      "risks": [
-        {
-          "text": "Risk: reporting quality remained inconsistent across two active initiatives.",
-          "source": "director_week_13.md",
-          "line_number": 4
-        },
-        {
-          "text": "Risk: one platform dependency is delayed pending vendor confirmation.",
-          "source": "director_week_14.md",
-          "line_number": 5
-        },
-        {
-          "text": "Risk: one launch milestone may slip if dependency approvals remain open into next week.",
-          "source": "director_week_15.md",
-          "line_number": 5
-        }
-      ],
-      "next_steps": [
-        {
-          "text": "Next: align team owners on the remaining dependency map before Monday.",
-          "source": "director_week_13.md",
-          "line_number": 5
-        },
-        {
-          "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
-          "source": "director_week_14.md",
-          "line_number": 6
-        }
-      ],
-      "evidence": [
-        {
-          "source": "director_week_13.md",
-          "line_number": 3,
-          "title": "Director Week 13",
-          "excerpt": "Win: closed the roadmap review feedback loop with product and design."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 4,
-          "title": "Director Week 13",
-          "excerpt": "Risk: reporting quality remained inconsistent across two active initiatives."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 5,
-          "title": "Director Week 13",
-          "excerpt": "Next: align team owners on the remaining dependency map before Monday."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 3,
-          "title": "Director Week 14",
-          "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 4,
-          "title": "Director Week 14",
-          "excerpt": "Win: completed the retrieval quality audit for the roadmap synthesis workflow."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 5,
-          "title": "Director Week 14",
-          "excerpt": "Risk: one platform dependency is delayed pending vendor confirmation."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 6,
-          "title": "Director Week 14",
-          "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
-        },
-        {
-          "source": "director_week_15.md",
-          "line_number": 3,
-          "title": "Director Week 15",
-          "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
-        },
-        {
-          "source": "director_week_15.md",
-          "line_number": 4,
-          "title": "Director Week 15",
-          "excerpt": "Win: reduced retrieval noise by filtering low-signal note headings from evidence selection."
-        },
-        {
-          "source": "director_week_15.md",
-          "line_number": 5,
-          "title": "Director Week 15",
-          "excerpt": "Risk: one launch milestone may slip if dependency approvals remain open into next week."
-        }
-      ]
+    {
+      "case_id": "director_os_002",
+      "prompt": "What are the top risks this week?",
+      "response": "# Top Risks This Week\n\nBased on the retrieved risk log:\n\n| Priority | Risk | Owner | Status |\n|----------|------|-------|--------|\n| **P1** | Data pipeline latency spike | Infra team | Active |\n| **P2** | Vendor API deprecation (Q4) | Platform team | Upcoming |\n| **P3** | Two engineers on PTO next sprint | Eng manager | Scheduled |\n\n## Key Notes:\n- **P1 (Data pipeline latency)** requires immediate attention \u2014 this is the highest priority and should be the focus this week.\n- **P2 (API deprecation)** is planned but lower urgency; timeline is Q4.\n- **P3 (PTO)** is a capacity constraint for next sprint planning.\n\n**Note:** The retrieved context does not include mitigation status, due dates, or impact assessments. Recommend checking the full risk register for details on each item.",
+      "model": "claude-haiku-4-5-20251001",
+      "scores": {
+        "signal_score": 1.0,
+        "signals_found": [
+          "risk",
+          "pipeline",
+          "vendor",
+          "P1"
+        ],
+        "signals_missing": [],
+        "safety_score": 1.0,
+        "violations": [],
+        "grounded": true
+      },
+      "tokens": {
+        "input": 202,
+        "output": 216
+      },
+      "latency_seconds": 2.43,
+      "status": "PASS"
     },
-    "results": [
-      {
-        "key": "summary_terms_present",
-        "score": true,
-        "comment": "All required summary terms were present."
+    {
+      "case_id": "director_os_003",
+      "prompt": "Summarise key decisions from this week's 1:1 notes",
+      "response": "# Key Decisions Summary\n\n| Owner | Decision | Deadline |\n|-------|----------|----------|\n| Sarah (SRE) | Adopt Terraform 1.8 for all new infra modules | June 20 (runbook update) |\n| Marcus (DevEx) | Roll out Cursor to 12 remaining engineers | End of sprint |\n\n**Status:** Both decisions have assigned owners and explicit action items. No blockers noted in retrieved context.",
+      "model": "claude-haiku-4-5-20251001",
+      "scores": {
+        "signal_score": 1.0,
+        "signals_found": [
+          "Terraform",
+          "Cursor",
+          "decision",
+          "action"
+        ],
+        "signals_missing": [],
+        "safety_score": 1.0,
+        "violations": [],
+        "grounded": true
       },
-      {
-        "key": "expected_sources_present",
-        "score": true,
-        "comment": "All expected evidence sources were retrieved."
+      "tokens": {
+        "input": 236,
+        "output": 105
       },
-      {
-        "key": "section_minimums_met",
-        "score": true,
-        "comment": "All minimum section counts were met."
-      },
-      {
-        "key": "source_diversity_met",
-        "score": true,
-        "comment": "Observed 3 unique evidence sources."
-      },
-      {
-        "key": "section_prefix_purity",
-        "score": true,
-        "comment": "Section prefixes stayed aligned with their output sections."
-      },
-      {
-        "key": "expected_summary_mode",
-        "score": true,
-        "comment": "Case did not require deterministic fallback."
-      }
-    ],
-    "passed": true
-  },
-  {
-    "case_id": "operating-review-multifile",
-    "description": "A leadership operating review query should pull from more than one note rather than collapsing to a single file.",
-    "inputs": {
-      "data_path": "data/local_only/projects",
-      "focus": "leadership operating review",
-      "max_documents": 10,
-      "use_model": true,
-      "fallback_to_deterministic": true,
-      "provider": "claude",
-      "ollama_url": "http://127.0.0.1:11434",
-      "ollama_model": "llama3.2",
-      "claude_model": "claude-haiku-4-5-20251001"
-    },
-    "outputs": {
-      "summary": "Weekly update synthesized from local project evidence about leadership operating review. Primary supporting context came from Director Week 15, Director Week 14.",
-      "wins": [
-        {
-          "text": "Win: finalized the leadership summary template for the monthly operating review.",
-          "source": "director_week_15.md",
-          "line_number": 3
-        },
-        {
-          "text": "Win: shipped the internal status dashboard refresh for leadership review.",
-          "source": "director_week_14.md",
-          "line_number": 3
-        },
-        {
-          "text": "Win: closed the roadmap review feedback loop with product and design.",
-          "source": "director_week_13.md",
-          "line_number": 3
-        }
-      ],
-      "risks": [
-        {
-          "text": "Risk: reporting quality remained inconsistent across two active initiatives.",
-          "source": "director_week_13.md",
-          "line_number": 4
-        },
-        {
-          "text": "Risk: one platform dependency is delayed pending vendor confirmation.",
-          "source": "director_week_14.md",
-          "line_number": 5
-        }
-      ],
-      "next_steps": [
-        {
-          "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
-          "source": "director_week_14.md",
-          "line_number": 6
-        },
-        {
-          "text": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead.",
-          "source": "director_week_15.md",
-          "line_number": 6
-        },
-        {
-          "text": "Next: align team owners on the remaining dependency map before Monday.",
-          "source": "director_week_13.md",
-          "line_number": 5
-        }
-      ],
-      "evidence": [
-        {
-          "source": "director_week_15.md",
-          "line_number": 3,
-          "title": "Director Week 15",
-          "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 3,
-          "title": "Director Week 14",
-          "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 3,
-          "title": "Director Week 13",
-          "excerpt": "Win: closed the roadmap review feedback loop with product and design."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 6,
-          "title": "Director Week 14",
-          "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
-        },
-        {
-          "source": "director_week_15.md",
-          "line_number": 6,
-          "title": "Director Week 15",
-          "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 4,
-          "title": "Director Week 13",
-          "excerpt": "Risk: reporting quality remained inconsistent across two active initiatives."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 5,
-          "title": "Director Week 13",
-          "excerpt": "Next: align team owners on the remaining dependency map before Monday."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 4,
-          "title": "Director Week 14",
-          "excerpt": "Win: completed the retrieval quality audit for the roadmap synthesis workflow."
-        },
-        {
-          "source": "director_week_14.md",
-          "line_number": 5,
-          "title": "Director Week 14",
-          "excerpt": "Risk: one platform dependency is delayed pending vendor confirmation."
-        },
-        {
-          "source": "director_week_15.md",
-          "line_number": 4,
-          "title": "Director Week 15",
-          "excerpt": "Win: reduced retrieval noise by filtering low-signal note headings from evidence selection."
-        }
-      ]
-    },
-    "results": [
-      {
-        "key": "summary_terms_present",
-        "score": true,
-        "comment": "All required summary terms were present."
-      },
-      {
-        "key": "expected_sources_present",
-        "score": true,
-        "comment": "All expected evidence sources were retrieved."
-      },
-      {
-        "key": "section_minimums_met",
-        "score": true,
-        "comment": "All minimum section counts were met."
-      },
-      {
-        "key": "source_diversity_met",
-        "score": true,
-        "comment": "Observed 3 unique evidence sources."
-      },
-      {
-        "key": "section_prefix_purity",
-        "score": true,
-        "comment": "Section prefixes stayed aligned with their output sections."
-      },
-      {
-        "key": "expected_summary_mode",
-        "score": true,
-        "comment": "Case did not require deterministic fallback."
-      }
-    ],
-    "passed": true
-  },
-  {
-    "case_id": "sparse-risk-retrieval",
-    "description": "A narrow risk-focused query should still return a grounded risk section even with sparse evidence.",
-    "inputs": {
-      "data_path": "data/local_only/projects",
-      "focus": "vendor confirmation delay",
-      "max_documents": 3,
-      "use_model": true,
-      "fallback_to_deterministic": true,
-      "provider": "claude",
-      "ollama_url": "http://127.0.0.1:11434",
-      "ollama_model": "llama3.2",
-      "claude_model": "claude-haiku-4-5-20251001"
-    },
-    "outputs": {
-      "summary": "Weekly update synthesized from local project evidence about vendor confirmation delay. Primary supporting context came from Director Week 14, Director Week 13.",
-      "wins": [
-        {
-          "text": "Win: closed the roadmap review feedback loop with product and design.",
-          "source": "director_week_13.md",
-          "line_number": 3
-        }
-      ],
-      "risks": [
-        {
-          "text": "Risk: one platform dependency is delayed pending vendor confirmation.",
-          "source": "director_week_14.md",
-          "line_number": 5
-        },
-        {
-          "text": "Risk: reporting quality remained inconsistent across two active initiatives.",
-          "source": "director_week_13.md",
-          "line_number": 4
-        }
-      ],
-      "next_steps": [],
-      "evidence": [
-        {
-          "source": "director_week_14.md",
-          "line_number": 5,
-          "title": "Director Week 14",
-          "excerpt": "Risk: one platform dependency is delayed pending vendor confirmation."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 3,
-          "title": "Director Week 13",
-          "excerpt": "Win: closed the roadmap review feedback loop with product and design."
-        },
-        {
-          "source": "director_week_13.md",
-          "line_number": 4,
-          "title": "Director Week 13",
-          "excerpt": "Risk: reporting quality remained inconsistent across two active initiatives."
-        }
-      ]
-    },
-    "results": [
-      {
-        "key": "summary_terms_present",
-        "score": true,
-        "comment": "All required summary terms were present."
-      },
-      {
-        "key": "expected_sources_present",
-        "score": true,
-        "comment": "All expected evidence sources were retrieved."
-      },
-      {
-        "key": "section_minimums_met",
-        "score": true,
-        "comment": "All minimum section counts were met."
-      },
-      {
-        "key": "source_diversity_met",
-        "score": true,
-        "comment": "Observed 2 unique evidence sources."
-      },
-      {
-        "key": "section_prefix_purity",
-        "score": true,
-        "comment": "Section prefixes stayed aligned with their output sections."
-      },
-      {
-        "key": "expected_summary_mode",
-        "score": true,
-        "comment": "Case did not require deterministic fallback."
-      }
-    ],
-    "passed": true
-  }
-]
+      "latency_seconds": 3.15,
+      "status": "PASS"
+    }
+  ]
+}
