@@ -34,6 +34,17 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 logger = logging.getLogger(__name__)
 
+# Load .env from the project root so the script works the same way as the API
+# server (which loads it via uvicorn --env-file). Does not override keys that
+# are already set in the environment, so CI and shell exports take precedence.
+_env_file = Path(__file__).resolve().parent.parent / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 
 EVAL_CASES = [
     {
