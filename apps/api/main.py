@@ -491,10 +491,13 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
     }
 
     function renderItems(items, labelKey) {
-      if (!items || items.length === 0) return '<p class="result-summary-text" style="color:var(--muted)">None</p>';
-      return items.map(item =>
-        `<div class="result-item">${item[labelKey] || item.text || JSON.stringify(item)}<span class="source-tag">${item.source || ''}</span></div>`
-      ).join("");
+      if (!items || items.length === 0)
+        return '<p class="result-summary-text" style="color:var(--muted)">None</p>';
+      return items.map(item => {
+        const text = item[labelKey] || item.text || JSON.stringify(item);
+        const src = item.source || '';
+        return `<div class="result-item">${text}<span class="source-tag">${src}</span></div>`;
+      }).join("");
     }
 
     workflowInput.addEventListener("change", () => {
@@ -535,7 +538,9 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         if (!response.ok) {
           statusNode.textContent = "Request failed. Inspect the raw response below.";
           rawResponse.textContent = JSON.stringify(body, null, 2);
-          resultDetail.innerHTML = `<p class="result-summary-text" style="color:var(--accent-2)">${body.detail || "The API returned an error."}</p>`;
+          const errMsg = body.detail || "The API returned an error.";
+          resultDetail.innerHTML =
+            `<p class="result-summary-text" style="color:var(--accent-2)">${errMsg}</p>`;
           return;
         }
 
@@ -577,12 +582,15 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           `<div class="result-section"><h4>Risks</h4>${renderItems(risks, "text")}</div>`;
         if (nextSteps.length) detailHtml +=
           `<div class="result-section"><h4>Next Steps</h4>${renderItems(nextSteps, "text")}</div>`;
-        resultDetail.innerHTML = detailHtml || "<p class='result-summary-text' style='color:var(--muted)'>No result content returned.</p>";
+        const emptyMsg = "<p class='result-summary-text' "
+          + "style='color:var(--muted)'>No result content returned.</p>";
+        resultDetail.innerHTML = detailHtml || emptyMsg;
 
         rawResponse.textContent = JSON.stringify(body, null, 2);
       } catch (error) {
         statusNode.textContent = "Request failed before the API responded.";
-        resultDetail.innerHTML = `<p class="result-summary-text" style="color:var(--accent-2)">${String(error)}</p>`;
+        resultDetail.innerHTML =
+          `<p class="result-summary-text" style="color:var(--accent-2)">${String(error)}</p>`;
       }
     });
   </script>
