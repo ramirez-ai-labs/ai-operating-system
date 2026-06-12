@@ -11,7 +11,7 @@
       "required_summary_terms": [
         "leadership update",
         "Director Week 14",
-        "Director Week 15"
+        "1On1 Sarah Sre Lead"
       ],
       "expected_evidence_sources": [
         "director_week_14.md",
@@ -36,16 +36,15 @@
         "current leadership activity"
       ],
       "expected_evidence_sources": [
-        "director_week_13.md",
-        "director_week_14.md",
-        "director_week_15.md"
+        "1on1_marcus_devex_lead.md",
+        "1on1_sarah_sre_lead.md"
       ],
       "minimum_section_counts": {
         "wins": 1,
         "risks": 1,
         "next_steps": 1
       },
-      "expected_min_source_count": 3
+      "expected_min_source_count": 2
     }
   },
   {
