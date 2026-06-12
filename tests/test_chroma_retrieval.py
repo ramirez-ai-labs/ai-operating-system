@@ -273,9 +273,9 @@ def test_extract_documents_skips_headings(tmp_path) -> None:
         encoding="utf-8",
     )
 
-    from scripts.ingest_local_data import _extract_documents
+    from packages.shared.retrieval.ingest import extract_documents
 
-    docs, metadatas, ids = _extract_documents([md_file], tmp_path)
+    docs, metadatas, ids = extract_documents([md_file], tmp_path)
 
     texts = [d for d in docs]
     assert not any(t.startswith("#") for t in texts), "Headings must be excluded"
@@ -292,9 +292,9 @@ def test_extract_documents_normalises_metadata(tmp_path) -> None:
     md_file = tmp_path / "week.md"
     md_file.write_text("Win: test line.\n", encoding="utf-8")
 
-    from scripts.ingest_local_data import _extract_documents
+    from packages.shared.retrieval.ingest import extract_documents
 
-    _, metadatas, _ = _extract_documents([md_file], tmp_path)
+    _, metadatas, _ = extract_documents([md_file], tmp_path)
 
     assert len(metadatas) == 1
     assert metadatas[0]["data_root"] == str(tmp_path.resolve())
@@ -307,8 +307,8 @@ def test_extract_documents_empty_file_produces_no_chunks(tmp_path) -> None:
     empty_file = tmp_path / "empty.md"
     empty_file.write_text("", encoding="utf-8")
 
-    from scripts.ingest_local_data import _extract_documents
+    from packages.shared.retrieval.ingest import extract_documents
 
-    docs, _, _ = _extract_documents([empty_file], tmp_path)
+    docs, _, _ = extract_documents([empty_file], tmp_path)
 
     assert docs == []
