@@ -30,6 +30,7 @@ The repository currently includes:
 - a small checked-in local evaluation set for `Director OS`
 - a minimal local operator console served from `apps/api`
 - an in-process Claude filesystem tool loop for MCP-style local retrieval traces
+- a standalone MCP server under `apps/mcp` exposing `director_os_weekly_update` and `brand_os_content_draft` as tools
 - sample local project data
 - tests for core weekly-update, orchestration, and Brand OS behavior
 - GitHub Actions CI and release workflows
@@ -37,7 +38,6 @@ The repository currently includes:
 The repository does not yet include:
 
 - a dedicated frontend app under `apps/web`
-- a standalone MCP server under `apps/mcp`
 - broader evaluation coverage
 - a stable visual demo layer
 
@@ -270,10 +270,14 @@ MCP is Anthropic's open standard for connecting AI models to external tools and 
 
 ### Status
 
-- Partially implemented: `packages/shared/mcp/filesystem_server.py` exposes read-only local filesystem tools
-- Partially implemented: `packages/shared/mcp/orchestrator_integration.py` runs a bounded Claude tool-use loop and surfaces `mcp_tool_calls` in `/orchestrate` traces
-- Partially implemented: `tests/test_claude_mcp.py` covers provider stubs, filesystem tool behavior, path traversal blocking, and tool-result message shape
-- Remaining: this is not yet a standalone MCP server. `apps/mcp/server.py`, `mcp` SDK packaging, workflow tools, Claude Desktop config, and server-level tests are still planned
+- Implemented: `apps/mcp/server.py` standalone MCP server using the `mcp` Python SDK — shipped in PR #50
+- Implemented: `director_os_weekly_update` and `brand_os_content_draft` both registered as MCP tools
+- Implemented: `packages/shared/mcp/filesystem_server.py` exposes read-only local filesystem tools
+- Implemented: `packages/shared/mcp/orchestrator_integration.py` runs a bounded Claude tool-use loop and surfaces `mcp_tool_calls` in `/orchestrate` traces
+- Implemented: `mcp` SDK added to `pyproject.toml`
+- Implemented: `claude_desktop_config.json` example for one-step Claude Desktop wiring
+- Implemented: `tests/test_mcp_server.py` and `tests/test_claude_mcp.py` — all server-level tests passing
+- Remaining: document the MCP server in `README.md` alongside existing API entry points (tracked in Sprint 4)
 
 ## Phase 5d: ChromaDB — Upgrade Retrieval to Semantic Vector Search
 

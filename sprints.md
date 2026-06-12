@@ -29,21 +29,21 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5c
 
-**Status: Partially implemented — filesystem tool loop is present; standalone workflow server remains**
+**Status: Complete — all items shipped in [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50)**
 
 | Step | Status | PR |
 |---|---|---|
-| `packages/shared/mcp/filesystem_server.py` | Done | local |
-| `packages/shared/mcp/orchestrator_integration.py` | Done | local |
-| Wire `orchestrator_integration` into `/orchestrate` endpoint | Done | local |
-| Provider selection through Chief of Staff routing | Done | local |
-| `tests/test_claude_mcp.py` | Done | local |
-| `apps/mcp/server.py` standalone workflow MCP server | Done | local |
-| Expose `director_os_weekly_update` as MCP tool | Done | local |
-| Expose `brand_os_content_draft` as MCP tool | Done | local |
-| `mcp` SDK added to `pyproject.toml` | Done | local |
-| `claude_desktop_config.json` example | Done | local |
-| Standalone MCP server tests passing | Done | local |
+| `packages/shared/mcp/filesystem_server.py` | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| `packages/shared/mcp/orchestrator_integration.py` | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| Wire `orchestrator_integration` into `/orchestrate` endpoint | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| Provider selection through Chief of Staff routing | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| `tests/test_claude_mcp.py` | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| `apps/mcp/server.py` standalone workflow MCP server | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| Expose `director_os_weekly_update` as MCP tool | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| Expose `brand_os_content_draft` as MCP tool | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| `mcp` SDK added to `pyproject.toml` | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| `claude_desktop_config.json` example | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
+| Standalone MCP server tests passing | Done | [#50](https://github.com/ramirez-ai-labs/ai-operating-system/pull/50) |
 
 ---
 
@@ -86,6 +86,6 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ## Coordination notes
 
-- Sprint 2 should now focus on the actual MCP server contract, not the already-implemented in-process Claude filesystem tool loop.
-- Sprint 3 README update should land after the standalone MCP server exists so the MCP section reflects real, working code.
+- Sprint 2 is complete. The standalone MCP server shipped in PR #50 with both workflow tools registered, tests passing, and Claude Desktop config included.
+- Sprint 3 README update can now land — the MCP server exists and reflects real, working code.
 - `config/models.yaml` (Sprint 1 remainder) was created before Sprint 2 ships since it is referenced in the README target structure.
