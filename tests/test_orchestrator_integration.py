@@ -205,6 +205,69 @@ def test_run_with_mcp_tools_executes_one_tool_round(tmp_path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# run_with_mcp_tools — parallel tool calls batched into one message pair
+# ---------------------------------------------------------------------------
+
+def test_run_with_mcp_tools_batches_parallel_tool_calls(tmp_path) -> None:
+    """When Claude returns N tool calls in one response, the history must contain
+    ONE assistant message (all tool_use blocks) + ONE user message (all tool_result
+    blocks), not N interleaved pairs.  The Anthropic API rejects consecutive
+    assistant messages and returns a 400 role-alternation error otherwise."""
+    parallel_tool_response = ProviderResponse(
+        content="",
+        model="claude-haiku-4-5-20251001",
+        provider="claude",
+        input_tokens=10,
+        output_tokens=5,
+        tool_calls=[
+            {"id": "t1", "name": "list_files", "input": {"path": "projects"}},
+            {"id": "t2", "name": "search_content", "input": {"path": "projects", "query": "risk"}},
+        ],
+    )
+    text_response = ProviderResponse(
+        content="Summary complete.",
+        model="claude-haiku-4-5-20251001",
+        provider="claude",
+        input_tokens=20,
+        output_tokens=10,
+    )
+
+    mock_provider = MagicMock(spec=ClaudeProvider)
+    mock_provider.complete.side_effect = [parallel_tool_response, text_response]
+
+    mock_mcp = MagicMock()
+    mock_mcp.call_tool.return_value = {"success": True, "result": "file contents", "error": None}
+
+    with (
+        patch(_PROVIDER_PATCH, return_value=mock_provider),
+        patch(_MCP_PATCH, return_value=mock_mcp),
+    ):
+        result = run_with_mcp_tools(prompt="summarize risks", data_path=str(tmp_path))
+
+    assert result.success is True
+    assert result.content == "Summary complete."
+    assert len(result.trace["mcp_tool_calls"]) == 2
+
+    # Verify the second provider call received correctly batched messages.
+    second_call_messages = mock_provider.complete.call_args_list[1][1]["messages"]
+
+    # Should be: [user(prompt), assistant([tc1,tc2]), user([tr1,tr2])]
+    assert len(second_call_messages) == 3
+
+    assistant_msg = second_call_messages[1]
+    assert assistant_msg["role"] == "assistant"
+    assert len(assistant_msg["content"]) == 2
+    assert all(b["type"] == "tool_use" for b in assistant_msg["content"])
+    assert {b["id"] for b in assistant_msg["content"]} == {"t1", "t2"}
+
+    user_msg = second_call_messages[2]
+    assert user_msg["role"] == "user"
+    assert len(user_msg["content"]) == 2
+    assert all(b["type"] == "tool_result" for b in user_msg["content"])
+    assert {b["tool_use_id"] for b in user_msg["content"]} == {"t1", "t2"}
+
+
+# ---------------------------------------------------------------------------
 # run_with_mcp_tools — max rounds exceeded
 # ---------------------------------------------------------------------------
 

@@ -253,6 +253,12 @@ class FilesystemMCPServer:
                 )
                 break
 
+            # Count all files traversed (including binary and oversized) so the
+            # cap fires based on directory size, not just readable-file count.
+            # Without this, a directory full of large PDFs or binaries would
+            # never trigger the cap and rglob would traverse unbounded.
+            files_searched += 1
+
             if file_path.stat().st_size > self.MAX_FILE_BYTES:
                 continue
 
@@ -260,8 +266,6 @@ class FilesystemMCPServer:
                 text = file_path.read_text(encoding="utf-8")
             except (UnicodeDecodeError, OSError):
                 continue
-
-            files_searched += 1
             rel = file_path.relative_to(self.root)
 
             for lineno, line in enumerate(text.splitlines(), start=1):
@@ -287,15 +291,14 @@ class FilesystemMCPServer:
         Resolve a relative path inside the server root.
 
         Raises ValueError if the resolved path escapes the root — this is the
-        actual path traversal control. The startswith check on the resolved
-        absolute path is authoritative.
+        actual path traversal control. is_relative_to() checks containment at
+        path-component boundaries, so a sibling directory that shares the root
+        name as a string prefix (e.g. /data/local_only_evil vs /data/local_only)
+        is correctly rejected.
         """
-        # Path.resolve() expands all symlinks and ".." segments to an absolute
-        # path. The startswith check then verifies the result stays inside the
-        # declared root — this is the real security boundary, not string manipulation.
         resolved = (self.root / rel_path.lstrip("/")).resolve()
 
-        if not str(resolved).startswith(str(self.root)):
+        if not resolved.is_relative_to(self.root):
             raise ValueError(
                 f"Path traversal attempt blocked: '{rel_path}' "
                 f"resolves outside server root."

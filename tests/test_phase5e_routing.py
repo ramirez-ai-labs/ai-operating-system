@@ -1,6 +1,7 @@
 """Tests for Phase 5e: Ollama-backed workflow classification with keyword fallback."""
 
 import json
+from urllib.error import URLError
 from unittest.mock import MagicMock, patch
 
 from packages.shared.orchestration.chief_of_staff import (
@@ -49,7 +50,7 @@ def test_classify_director_os_when_model_says_director() -> None:
 
 
 def test_classify_falls_back_to_keyword_when_ollama_unreachable() -> None:
-    with patch("urllib.request.urlopen", side_effect=OSError("connection refused")):
+    with patch("urllib.request.urlopen", side_effect=URLError("connection refused")):
         workflow, rationale, routing_model = _classify_with_ollama(
             prompt="podcast episode draft",
             ollama_url="http://localhost:11434",
@@ -61,7 +62,7 @@ def test_classify_falls_back_to_keyword_when_ollama_unreachable() -> None:
 
 
 def test_classify_falls_back_to_director_default_when_ollama_unreachable() -> None:
-    with patch("urllib.request.urlopen", side_effect=OSError("connection refused")):
+    with patch("urllib.request.urlopen", side_effect=URLError("connection refused")):
         workflow, rationale, routing_model = _classify_with_ollama(
             prompt=None,
             ollama_url="http://localhost:11434",
@@ -80,7 +81,9 @@ def test_classify_treats_ambiguous_response_as_director_os() -> None:
             model="llama3.2",
         )
     assert workflow == "director_os.weekly_update"
-    assert routing_model == "ollama/llama3.2"
+    # Unexpected token triggers keyword fallback — routing_model reflects that
+    assert "keyword-match" in routing_model
+    assert "unexpected token" in routing_model
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +125,7 @@ def test_trace_routing_model_reflects_ollama_classification() -> None:
 
 
 def test_trace_routing_model_shows_fallback_when_ollama_absent() -> None:
-    with patch("urllib.request.urlopen", side_effect=OSError("connection refused")):
+    with patch("urllib.request.urlopen", side_effect=URLError("connection refused")):
         response = route_request(
             OrchestratorRequest(
                 prompt="weekly leadership update",
