@@ -1,85 +1,78 @@
-# Contributing
+# Contributing to AI Operating System
 
-This repository uses a branch-and-PR workflow.
-
-## Workflow
-
-1. Create a branch from `main`
-2. Make the smallest coherent change set you can
-3. Run local verification before opening a PR
-4. Open a pull request back to `main`
-5. Wait for CI and review before merging
-
-## Local Checks
-
-Set up a local environment first:
+## Getting started
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+git clone <repo>
+cd ai-operating-system
+python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
+cp .env.example .env   # fill in any optional keys
 ```
 
-On Windows, activate the environment with:
+Start the API server:
 
 ```bash
-.venv\Scripts\activate
+uvicorn apps.api.main:app --reload --env-file .env
 ```
 
-For Python changes, run:
+Open the console at `http://127.0.0.1:8000/`.
+
+## Branch and commit rules
+
+- Never commit directly to `main` — branch first.
+- Branch naming: `feat/`, `fix/`, `docs/`, `test/` prefixes.
+- One PR per logical unit of work. Squash-merge preferred.
+- Keep commit messages short (one line, imperative mood).
+
+## Running tests and linting
 
 ```bash
-python -m ruff check .
-python -m pytest -q
-python scripts/run_director_os_evals.py
+pytest                                # full test suite
+pytest tests/test_director_os*.py -v # one domain
+ruff check .                          # lint
+python scripts/run_director_os_evals.py   # local evals (no API key)
 python scripts/run_brand_os_evals.py
 ```
 
-Use the LangSmith-backed eval path only when you explicitly want remote experiment tracking:
+CI runs `ruff`, `pytest`, and both eval scripts on every PR to `main`. The build must be green before merge.
 
-```bash
-python scripts/run_director_os_evals.py --langsmith
-```
+## Architecture rules
 
-## REST Smoke Tests
+These are invariants — do not work around them:
 
-Start the API locally first:
+1. **All providers implement `WeeklyUpdateProvider`** from `packages/shared/providers/base.py`. Provider-specific logic stays in the provider file.
+2. **Provider selection via `_build_provider()`** in the Director OS graph. No workflow logic should branch on provider identity.
+3. **API layer stays thin.** Workflow logic lives in the graph / workflow modules so it can be tested without FastAPI.
+4. **Deterministic fallback always available.** Any model-assisted path must work when `fallback_to_deterministic=True`.
+5. **Evidence grounding is required.** Every output item must cite `source` and `line_number` from retrieved evidence.
 
-```bash
-uvicorn apps.api.main:app --reload
-```
+## Adding a new workflow domain
 
-Smoke-check the current endpoints with:
+Follow the steps in `CLAUDE.md` under "Adding a new workflow." In short:
 
-```bash
-curl -X GET http://127.0.0.1:8000/health
-curl -X POST http://127.0.0.1:8000/director-os/weekly-update -H "Content-Type: application/json" -d '{"data_path":"data/local_only/projects","focus":"leadership update","max_documents":5}'
-curl -X POST http://127.0.0.1:8000/brand-os/content-draft -H "Content-Type: application/json" -d '{"data_path":"data/local_only/brand","focus":"podcast discussion theme","max_documents":5}'
-curl -X POST http://127.0.0.1:8000/orchestrate -H "Content-Type: application/json" -d '{"prompt":"Turn this work into a podcast and LinkedIn content draft","data_path":"data/local_only/brand","max_documents":5}'
-```
+1. Schema → `packages/shared/schemas/<domain>.py`
+2. Graph → `packages/shared/graphs/<domain>.py`
+3. Workflow entry point → `<domain>/workflows/<entry>.py`
+4. Route → `apps/api/main.py`
+5. Routing → `packages/shared/orchestration/chief_of_staff.py`
+6. Sample data → `data/local_only/<domain>/`
+7. Eval cases → `evaluations/<domain>/`
+8. Tests → `tests/test_<domain>_graph.py`
+9. MCP tool → `apps/mcp/server.py`
+10. Register packages → `pyproject.toml` + `pip install -e .`
 
-Inspect these response fields:
+Use `.github/ISSUE_TEMPLATE/workflow.md` to propose new domains before building.
 
-- `/health`: `status`
-- `/director-os/weekly-update`: `summary`, `wins`, `next_steps`, `evidence`
-- `/brand-os/content-draft`: `insight_summary`, `post_outline`, `podcast_angles`, `repo_improvements`
-- `/orchestrate`: `selected_workflow`, `rationale`, `trace.section_counts`, `result`
+## Pull request checklist
 
-## Change Expectations
+- [ ] Tests pass (`pytest`)
+- [ ] Lint passes (`ruff check .`)
+- [ ] Local evals pass (`scripts/run_director_os_evals.py`)
+- [ ] New workflow? All 10 steps above are complete
+- [ ] Evidence grounding verified (every output item has `source` + `line_number`)
+- [ ] No API keys committed
 
-- Keep `README.md`, `AGENTS.md`, and `plan.md` aligned with implementation status
-- Add or update tests when behavior changes
-- Do not commit secrets, tokens, or private data
-- Keep local-first behavior as the default
-- Prefer small, reviewable PRs over broad multi-purpose changes
+## Questions?
 
-## Pull Requests
-
-PRs should include:
-
-- a short summary of what changed
-- a short explanation of why it changed
-- validation notes
-- any risk or operator-impact notes
-
-The repo already includes a pull request template under `.github/PULL_REQUEST_TEMPLATE.md`.
+Open an issue using the appropriate template in `.github/ISSUE_TEMPLATE/`.

@@ -1,0 +1,89 @@
+[
+  {
+    "id": "multiagent-linkedin-post",
+    "description": "Researcher synthesizes project evidence; writer formats it as a LinkedIn post with appropriate tone and structure.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership update",
+      "max_documents": 5,
+      "target_audience": "linkedin_post"
+    },
+    "reference_outputs": {
+      "expected_audience": "linkedin_post",
+      "required_content_signals": ["leadership", "team", "platform"],
+      "must_not_contain": ["I cannot", "no context", "unable to"],
+      "expected_min_agent_calls": 2,
+      "expected_agent_names": ["researcher", "writer"]
+    }
+  },
+  {
+    "id": "multiagent-executive-brief",
+    "description": "Researcher surfaces risks and wins; writer formats as an executive brief suitable for a VP-level audience.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "operating review",
+      "max_documents": 8,
+      "target_audience": "executive_brief"
+    },
+    "reference_outputs": {
+      "expected_audience": "executive_brief",
+      "required_content_signals": ["risk", "win", "next"],
+      "must_not_contain": ["hallucin", "fabricat", "I don't know"],
+      "expected_min_agent_calls": 2,
+      "expected_agent_names": ["researcher", "writer"]
+    }
+  },
+  {
+    "id": "multiagent-team-update",
+    "description": "Researcher reads multi-file evidence across 1:1 notes; writer produces a team update with grounded action items.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "team weekly update",
+      "max_documents": 10,
+      "target_audience": "team_update"
+    },
+    "reference_outputs": {
+      "expected_audience": "team_update",
+      "required_content_signals": ["update", "team", "action"],
+      "must_not_contain": ["I cannot", "no information"],
+      "expected_min_agent_calls": 2,
+      "expected_agent_names": ["researcher", "writer"]
+    }
+  },
+  {
+    "id": "multiagent-researcher-evidence-handoff",
+    "description": "Researcher output must contain grounded findings before the writer receives them — verifies the handoff contract.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership update",
+      "max_documents": 5,
+      "target_audience": "executive_brief"
+    },
+    "reference_outputs": {
+      "expected_audience": "executive_brief",
+      "required_content_signals": ["Director Week", "SRE", "DevEx"],
+      "must_not_contain": ["I cannot", "fabricat"],
+      "expected_min_agent_calls": 2,
+      "expected_agent_names": ["researcher", "writer"],
+      "researcher_must_produce_findings": true
+    }
+  },
+  {
+    "id": "multiagent-token-attribution",
+    "description": "Both researcher and writer agent calls must surface token counts in the trace for cost visibility.",
+    "inputs": {
+      "data_path": "data/local_only/projects",
+      "focus": "leadership update",
+      "max_documents": 5,
+      "target_audience": "linkedin_post"
+    },
+    "reference_outputs": {
+      "expected_audience": "linkedin_post",
+      "required_content_signals": ["leadership"],
+      "must_not_contain": [],
+      "expected_min_agent_calls": 2,
+      "expected_agent_names": ["researcher", "writer"],
+      "all_agent_calls_must_have_token_counts": true
+    }
+  }
+]
