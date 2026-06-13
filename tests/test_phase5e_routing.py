@@ -1,8 +1,8 @@
 """Tests for Phase 5e: Ollama-backed workflow classification with keyword fallback."""
 
 import json
-from urllib.error import URLError
 from unittest.mock import MagicMock, patch
+from urllib.error import URLError
 
 from packages.shared.orchestration.chief_of_staff import (
     _classify_with_ollama,

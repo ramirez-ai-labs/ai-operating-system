@@ -5,8 +5,6 @@ import logging
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
-logger = logging.getLogger(__name__)
-
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
 from packages.shared.agents.researcher import ResearcherAgent
@@ -20,6 +18,8 @@ from packages.shared.schemas.orchestrator import (
     OrchestratorResponse,
     WorkflowTrace,
 )
+
+logger = logging.getLogger(__name__)
 
 DIRECTOR_WORKFLOW = "director_os.weekly_update"
 BRAND_WORKFLOW = "brand_os.content_draft"
@@ -178,15 +178,24 @@ def _classify_with_ollama(
             body = json.loads(resp.read().decode("utf-8"))
         content = body["message"]["content"].strip().lower()
     except urllib_error.URLError as exc:
-        logger.warning("Ollama unreachable at %s (%s) — falling back to keyword routing", ollama_url, exc)
+        logger.warning(
+            "Ollama unreachable at %s (%s) — falling back to keyword routing",
+            ollama_url, exc,
+        )
         workflow, rationale = _select_workflow_keyword(prompt)
         return workflow, rationale, f"keyword-match (ollama/{model} unreachable)"
     except (json.JSONDecodeError, KeyError) as exc:
-        logger.error("Ollama returned unexpected response (%s) — falling back to keyword routing", exc)
+        logger.error(
+            "Ollama returned unexpected response (%s) — falling back to keyword routing",
+            exc,
+        )
         workflow, rationale = _select_workflow_keyword(prompt)
         return workflow, rationale, f"keyword-match (ollama/{model} malformed response)"
     except Exception as exc:
-        logger.error("Unexpected error during Ollama routing: %s — falling back to keyword routing", exc, exc_info=True)
+        logger.error(
+            "Unexpected error during Ollama routing: %s — falling back to keyword routing",
+            exc, exc_info=True,
+        )
         workflow, rationale = _select_workflow_keyword(prompt)
         return workflow, rationale, f"keyword-match (ollama/{model} error)"
 
@@ -204,7 +213,10 @@ def _classify_with_ollama(
             routing_model_id,
         )
     # Model did not return a recognised token — fall back to keyword rules.
-    logger.warning("Ollama returned unexpected routing token %r — falling back to keyword routing", content)
+    logger.warning(
+        "Ollama returned unexpected routing token %r — falling back to keyword routing",
+        content,
+    )
     workflow, rationale = _select_workflow_keyword(prompt)
     return workflow, rationale, f"keyword-match (ollama/{model} unexpected token)"
 

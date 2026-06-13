@@ -24,7 +24,6 @@ from typing import Any
 
 from packages.shared.mcp.filesystem_server import (
     FilesystemMCPServer,
-    build_tool_result_message,
     get_tool_definitions,
 )
 from packages.shared.providers.claude_provider import ClaudeProvider, ProviderResponse
