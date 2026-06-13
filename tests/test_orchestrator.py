@@ -1,6 +1,11 @@
+from unittest.mock import patch
+
+from packages.shared.mcp.orchestrator_integration import OrchestratedResponse
 from packages.shared.orchestration.chief_of_staff import route_request
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateResponse
 from packages.shared.schemas.orchestrator import OrchestratorRequest
+
+_MCP_RUN_PATCH = "packages.shared.orchestration.chief_of_staff.run_with_mcp_tools"
 
 
 def test_orchestrator_routes_director_os_prompt() -> None:
@@ -161,6 +166,98 @@ def test_orchestrator_forwards_director_provider_selection(monkeypatch) -> None:
     assert captured_request.provider == "claude"
     assert captured_request.claude_model == "claude-sonnet-4-5-20250929"
     assert captured_request.use_model
+
+
+# ---------------------------------------------------------------------------
+# use_mcp=True — MCP-first synthesis
+# ---------------------------------------------------------------------------
+
+def test_orchestrator_mcp_synthesis_populated_when_use_mcp(monkeypatch) -> None:
+    """When use_mcp=True, mcp_synthesis on the response must contain the MCP content."""
+    mock_mcp_response = OrchestratedResponse(
+        content="MCP synthesis: project is on track.",
+        model="claude-haiku-4-5-20251001",
+        provider="claude",
+        total_tokens=50,
+        trace={"mcp_tool_calls": [{"tool": "read_file", "input": {}, "success": True}]},
+        success=True,
+    )
+
+    with patch(_MCP_RUN_PATCH, return_value=mock_mcp_response):
+        response = route_request(
+            OrchestratorRequest(
+                prompt="weekly update",
+                data_path="data/local_only/projects",
+                use_mcp=True,
+            )
+        )
+
+    assert response.mcp_synthesis == "MCP synthesis: project is on track."
+    assert response.trace.mcp_tool_calls == mock_mcp_response.trace["mcp_tool_calls"]
+
+
+def test_orchestrator_mcp_skips_model_synthesis_in_workflow(monkeypatch) -> None:
+    """When use_mcp=True, _run_workflow must receive use_model=False so the model
+    synthesis step is skipped and tokens are not burned on two calls."""
+    mock_mcp_response = OrchestratedResponse(
+        content="MCP result.",
+        model="claude-haiku-4-5-20251001",
+        provider="claude",
+        total_tokens=30,
+        trace={"mcp_tool_calls": []},
+        success=True,
+    )
+
+    from packages.shared.orchestration import chief_of_staff as cs_module
+
+    captured_request = {}
+
+    real_build = cs_module.build_weekly_update
+
+    def capturing_build(req):
+        captured_request["use_model"] = req.use_model
+        return real_build(req)
+
+    monkeypatch.setattr(cs_module, "build_weekly_update", capturing_build)
+
+    with patch(_MCP_RUN_PATCH, return_value=mock_mcp_response):
+        route_request(
+            OrchestratorRequest(
+                prompt="weekly update",
+                data_path="data/local_only/projects",
+                use_model=True,
+                use_mcp=True,
+            )
+        )
+
+    assert captured_request["use_model"] is False, (
+        "_run_workflow should force use_model=False when use_mcp=True "
+        "to avoid burning tokens on a redundant model synthesis call"
+    )
+
+
+def test_orchestrator_mcp_synthesis_none_on_failed_mcp(monkeypatch) -> None:
+    """When the MCP loop fails, mcp_synthesis must be None — not an error string."""
+    mock_mcp_response = OrchestratedResponse(
+        content="",
+        model="unknown",
+        provider="claude",
+        total_tokens=0,
+        trace={"mcp_tool_calls": []},
+        success=False,
+        error="Exceeded maximum tool call rounds (5)",
+    )
+
+    with patch(_MCP_RUN_PATCH, return_value=mock_mcp_response):
+        response = route_request(
+            OrchestratorRequest(
+                prompt="weekly update",
+                data_path="data/local_only/projects",
+                use_mcp=True,
+            )
+        )
+
+    assert response.mcp_synthesis is None
 
 
 def test_orchestrator_rejects_unknown_workflow() -> None:
