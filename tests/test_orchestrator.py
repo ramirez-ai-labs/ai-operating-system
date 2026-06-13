@@ -1,7 +1,7 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from packages.shared.orchestration.chief_of_staff import route_request
 from packages.shared.mcp.orchestrator_integration import OrchestratedResponse
+from packages.shared.orchestration.chief_of_staff import route_request
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateResponse
 from packages.shared.schemas.orchestrator import OrchestratorRequest
 
