@@ -20,7 +20,7 @@ The repository currently includes:
 - project documentation in `README.md` with Mermaid architecture diagram and "Why Claude" section
 - a `Director OS` FastAPI workflow with LangGraph state graph, Claude provider (tool use + prompt caching), Ollama fallback, deterministic baseline, and evidence-grounded validation
 - a `Brand OS` workflow on the same shared graph-oriented foundation
-- a Chief of Staff orchestration layer with keyword routing across both domains
+- a Chief of Staff orchestration layer with Ollama LLM classification routing and keyword fallback
 - ChromaDB semantic retrieval backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
 - a `ResearcherAgent → WriterAgent` multi-agent pipeline for audience-targeted content formatting
 - prompt caching on the Claude provider with cache metrics surfaced in every `WorkflowTrace`
@@ -33,7 +33,6 @@ The repository currently includes:
 
 The repository does not yet include:
 
-- Ollama wired to the routing layer (currently keyword if/else — Phase 5e)
 - a dedicated `apps/web` frontend beyond the current operator console
 - branch protection rules on `main` (Phase 7)
 

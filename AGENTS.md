@@ -16,27 +16,33 @@ This repo should be treated as a reusable local-first agent system, not a generi
 
 ## Current Repository State
 
-The repository now contains both project documentation and an implemented Phase 1 MVP slice.
+The repository is a fully implemented multi-agent AI operating system. Sprints 1–9 are complete.
 
 Current implemented areas include:
 
-- a local FastAPI service under `apps/api`
-- a lightweight Chief of Staff orchestrator
-- a graph-backed `Director OS` weekly update workflow
-- a first `Brand OS` content-draft workflow
+- a local FastAPI service under `apps/api` with an operator console at `/`
+- a Chief of Staff orchestrator with Ollama LLM classification routing and keyword fallback
+- a graph-backed `Director OS` weekly update workflow using LangGraph
+- a `Brand OS` content-draft workflow on the same shared graph foundation
+- a `ClaudeWeeklyUpdateProvider` using the Anthropic tool use API for grounded structured output
+- prompt caching (`cache_control: ephemeral`) on the Claude provider with cache metrics in every `WorkflowTrace`
+- a `ResearcherAgent → WriterAgent` multi-agent pipeline for audience-targeted content formatting
+- an in-process filesystem MCP tool loop (`packages/shared/mcp/`) for Claude-driven retrieval traces
+- a standalone MCP server (`apps/mcp/server.py`) exposing both workflows as tools for Claude Desktop / Claude Code
+- ChromaDB semantic vector search backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
 - shared schemas, retrieval, validation, provider, observability, and evaluation helpers under `packages/shared`
-- sample local project and brand data under `data/local_only`
-- focused tests for workflow, orchestration, graph, evaluation, and observability behavior
-- lightweight GitHub Actions CI/CD workflows
+- a realistic enterprise scenario dataset under `data/local_only/`
+- 20 test files, 168 tests passing; local evals for both Director OS and Brand OS running in CI
+- optional LangSmith tracing
+- GitHub Actions CI running lint, tests, and evals on every PR
 
-The broader architecture described in `README.md` is still only partially implemented.
+The README, plan.md, and sprints.md are aligned with the actual implementation.
 
 Implications:
 
 - Do not claim a file, feature, workflow, or deployment path exists unless it is actually present in the repo.
 - When adding implementation, keep the README and the codebase aligned in the same change when practical.
-- If the README describes planned files that do not exist yet, treat them as intended targets rather than current reality.
-- Use `plan.md` as the phased roadmap for sequencing future work.
+- Use `plan.md` for the phased roadmap and `sprints.md` for sprint-level status.
 
 ## Expected Repo Shape
 

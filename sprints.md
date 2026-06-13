@@ -176,7 +176,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 6 (UI), Phase 7 (hardening)
 
-**Status: In progress — v1.0 tag remains; all code items done**
+**Status: Complete**
 
 | Step | Status | PR |
 |---|---|---|
@@ -187,9 +187,10 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | Fix FastAPI / Starlette version incompatibility (test_api.py, test_import_integrity.py) | Done | [#63](https://github.com/ramirez-ai-labs/ai-operating-system/pull/63) |
 | Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Done | [#63](https://github.com/ramirez-ai-labs/ai-operating-system/pull/63) |
 | GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Done | — |
-| Update `plan.md` — mark phases 5d–5h complete, rewrite Next Steps | Done | feat/phase-5e-ollama-routing-and-plan-update |
-| Phase 5e: Replace keyword router with Ollama classification + keyword fallback | Done | feat/phase-5e-ollama-routing-and-plan-update |
-| Cut `v1.0` release tag with description | Pending | — |
+| Update `plan.md` — mark phases 5d–5h complete, rewrite Next Steps | Done | [#65](https://github.com/ramirez-ai-labs/ai-operating-system/pull/65) |
+| Phase 5e: Replace keyword router with Ollama classification + keyword fallback | Done | [#65](https://github.com/ramirez-ai-labs/ai-operating-system/pull/65) |
+| Fix README diagram, plan.md, AGENTS.md showcase alignment | Done | [#67](https://github.com/ramirez-ai-labs/ai-operating-system/pull/67) |
+| Cut `v1.0` release tag with description | Done | — |
 
 ---
 
