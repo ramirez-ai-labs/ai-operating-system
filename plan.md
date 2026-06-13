@@ -361,7 +361,7 @@ Promote the existing MCP tool use loop from opt-in side-car to the default Direc
 
 ### Status
 
-- Complete — shipped Sprint 6. `cache_control: {"type": "ephemeral"}` on the system prompt in `packages/shared/providers/claude.py`; `cache_read_input_tokens` and `cache_creation_input_tokens` surface in every `WorkflowTrace`. Operator console renders cache hit/primed metrics.
+- Complete — shipped Sprint 6. `cache_control: {"type": "ephemeral"}` on the system prompt in `packages/shared/providers/claude.py`; `cache_read_input_tokens` and `cache_creation_input_tokens` surface in every `WorkflowTrace`. Operator console renders cache hit/primed metrics. — [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) / [#61](https://github.com/ramirez-ai-labs/ai-operating-system/pull/61)
 
 ## Phase 5g: Multi-Agent Researcher → Writer
 
@@ -385,7 +385,7 @@ Add a two-agent workflow demonstrating Claude-to-Claude orchestration. A researc
 
 ### Status
 
-- Complete — shipped Sprint 7. `ResearcherAgent` uses Claude tool use to return a structured `ResearchSynthesis`; `WriterAgent` formats it for `linkedin_post`, `executive_brief`, or `team_update`. Both agents record per-invocation token counts (including cache fields) in `AgentCall` entries on the `WorkflowTrace`.
+- Complete — shipped Sprint 7. `ResearcherAgent` uses Claude tool use to return a structured `ResearchSynthesis`; `WriterAgent` formats it for `linkedin_post`, `executive_brief`, or `team_update`. Both agents record per-invocation token counts (including cache fields) in `AgentCall` entries on the `WorkflowTrace`. — [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) / [#61](https://github.com/ramirez-ai-labs/ai-operating-system/pull/61)
 
 ## Phase 5h: Realistic Demo Data + "Why Claude" Framing
 
@@ -407,7 +407,7 @@ Replace the 5 toy markdown files with a realistic enterprise scenario and add a 
 
 ### Status
 
-- Complete — shipped Sprint 8. Realistic quarterly planning scenario under `data/local_only/projects/`; realistic brand scenario under `data/local_only/brand/`. "Why Claude" section and Mermaid architecture diagram added to `README.md`.
+- Complete — shipped Sprint 8. Realistic quarterly planning scenario under `data/local_only/projects/`; realistic brand scenario under `data/local_only/brand/`. "Why Claude" section and Mermaid architecture diagram added to `README.md`. — [#59](https://github.com/ramirez-ai-labs/ai-operating-system/pull/59)
 
 ## Phase 6: Add a Lightweight Local UI and Optional Langflow Demo Layer
 
@@ -431,8 +431,9 @@ Expose workflow execution in a way that supports both usability and project cred
 
 ### Status
 
-- Implemented: a minimal local operator console is available at `/` through `apps/api`
-- Remaining work: decide whether a dedicated `apps/web` experience is worth the extra surface area beyond the current trace-first console
+- Implemented: operator console at `/` through `apps/api` with provider selector, target audience dropdown, cache hit metrics, agent pipeline card (researcher → writer with per-agent token counts), and formatted content card
+- Shipped in Sprint 9 — [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62)
+- Remaining: a dedicated `apps/web` frontend remains optional — current console satisfies traceability and operator control goals without the extra surface area
 
 ## Phase 7: Harden the Project for Ongoing Growth
 
@@ -454,14 +455,27 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 - Quality checks and review standards are enforced consistently
 - The repository is easier to maintain as scope increases
 
+### Status
+
+- Implemented: GitHub topics set (`anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai`)
+- Implemented: `pytest --cov` runs in CI with coverage artifact upload
+- Implemented: FastAPI / Starlette compatibility pinned (`starlette<1.0.0`)
+- Remaining: branch protection rules for `main`, issue templates, contributor workflow doc
+- Remaining: `v1.0` release tag
+
 ## Recommended Immediate Next Steps
 
-Sprints 1–9 are complete. The remaining items are all housekeeping — no new architectural work is needed for the showcase.
+Sprints 1–9 are complete. The system demonstrates local-first operation, cost-conscious tiered LLM architecture, grounded evidence-based outputs, ChromaDB semantic retrieval, prompt caching, and two-agent Claude-to-Claude orchestration. The remaining items are housekeeping — no new architectural work is needed for the showcase.
 
-1. **Cut `v1.0` release tag:** The repo is functionally complete. One `gh release create v1.0.0` command with a description of what ships.
-2. **Branch protection on `main`:** Enforce PR-only merges in GitHub settings. Signals a maintained project to any technical evaluator.
-3. **Clean up stale merged branches:** ~10 merged branches remain on `origin`. A single `gh` loop removes them.
-4. **Keep phase statuses current:** As the repo evolves beyond the showcase, update Phase 5–7 status sections to stay accurate.
+**Remaining to close out v1.0:**
+1. **Cut `v1.0` release tag** — the repo is functionally complete; one `gh release create v1.0.0` closes this out
+2. **Branch protection on `main`** — enforce PR-only merges in GitHub settings; signals a maintained project to any technical evaluator
+3. **Clean up stale merged branches** — ~10 merged branches remain on `origin`
+
+**Sprint 10 candidates (post v1.0):**
+1. **Eval coverage for new paths** — add eval cases exercising the researcher→writer pipeline and ChromaDB retrieval; these paths are tested but not yet evaluated against committed scorers
+2. **Contributor docs** — close out the remaining Phase 7 hardening items (issue templates, contributor workflow doc)
+3. **Additional workflow domain** — a third OS workflow (e.g. Interview OS or Project OS) extends the multi-domain story beyond Director OS and Brand OS
 
 ## Definition of Success
 

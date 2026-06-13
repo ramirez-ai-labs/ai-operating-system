@@ -57,10 +57,10 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 | Step | Status | PR |
 |---|---|---|
-| Add unit tests for `packages/shared/providers/claude.py` | Done | local |
-| Add unit tests for `packages/shared/providers/ollama.py` | Done | local |
-| Add tests for `packages/shared/providers/claude_provider.py` fallback and tool-use paths | Done | local |
-| Add tests for `packages/shared/mcp/orchestrator_integration.py` | Done | local |
+| Add unit tests for `packages/shared/providers/claude.py` | Done | [#52](https://github.com/ramirez-ai-labs/ai-operating-system/pull/52) |
+| Add unit tests for `packages/shared/providers/ollama.py` | Done | [#52](https://github.com/ramirez-ai-labs/ai-operating-system/pull/52) |
+| Add tests for `packages/shared/providers/claude_provider.py` fallback and tool-use paths | Done | [#52](https://github.com/ramirez-ai-labs/ai-operating-system/pull/52) |
+| Add tests for `packages/shared/mcp/orchestrator_integration.py` | Done | [#52](https://github.com/ramirez-ai-labs/ai-operating-system/pull/52) |
 | Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Rolled into Sprint 9 | — |
 | Measure and track coverage trend in CI | Done — `pytest --cov` runs in CI with coverage artifact upload | — |
 
