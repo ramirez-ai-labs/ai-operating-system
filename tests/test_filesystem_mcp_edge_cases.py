@@ -65,8 +65,10 @@ class TestSearchContentEdgeCases:
             "search_content", {"path": "", "query": "keyword", "max_results": 3}
         )
         assert result["success"] is True
-        # Skip the header line; count only match lines (contain a colon-separated file:line: prefix)
-        match_lines = [l for l in result["result"].splitlines() if ":" in l and "keyword here" in l]
+        match_lines = [
+            line for line in result["result"].splitlines()
+            if ":" in line and "keyword here" in line
+        ]
         assert len(match_lines) <= 3
 
 
