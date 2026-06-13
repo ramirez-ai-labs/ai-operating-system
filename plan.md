@@ -28,7 +28,7 @@ The repository currently includes:
 - a standalone MCP server under `apps/mcp` exposing both workflows as tools for Claude Desktop / Claude Code
 - a realistic enterprise scenario dataset under `data/local_only/`
 - a local operator console at `/` with provider selection, target audience, cache hit display, and agent pipeline visualization
-- 18 test files, 122 tests passing; local evals for both Director OS and Brand OS running in CI
+- 20 test files, 168 tests passing; local evals for both Director OS and Brand OS running in CI
 - optional LangSmith tracing
 
 The repository does not yet include:
@@ -239,11 +239,11 @@ Introduce Anthropic Claude as a first-class provider alongside Ollama, and estab
 - Implemented: `.env.example` with all required keys
 - Implemented: provider selection is now wired through the Chief of Staff orchestrator for Director OS synthesis
 - Implemented: `evaluations/director_os/results_claude.json` committed in PR #44 — **but output shows deterministic fallback, not live Claude API responses.** Re-running `scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` and committing the result is the single remaining action for JD requirements #1 and #4.
-- Remaining: run live Claude evals and commit real output (see Sprint 1 blocker note)
-- Remaining: operator console provider dropdown (UI toggle for Ollama vs Claude)
-- Remaining: move Ollama from synthesis provider to routing/classification layer (Phase 5e)
-- Remaining: move Ollama to embedding layer for ChromaDB (Phase 5d)
-- Remaining: make Claude Haiku the default synthesis provider across all entry points
+- Implemented: live Claude eval results committed in `evaluations/director_os/results_claude.json` (PR #56) — 3/3 cases, 100% signal and safety
+- Implemented: operator console provider dropdown (Sprint 9, PR #62)
+- Implemented: Claude Haiku is the default synthesis provider (Sprint 6)
+- Remaining: move Ollama to routing/classification layer (Phase 5e — now complete, see below)
+- Remaining: move Ollama to embedding layer for ChromaDB (Phase 5d — now complete, see Sprint 5)
 
 ## Phase 5c: MCP Server — Expose AI-OS Workflows as Tools
 
@@ -313,7 +313,7 @@ The current retrieval layer reads markdown files and filters by keyword match. T
 
 ### Status
 
-- Planned — Sprint 5
+- Complete — shipped Sprint 5 (PR #57). ChromaDB with Ollama `nomic-embed-text` embeddings; flat-file fallback when index absent or Ollama unavailable. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script.
 
 ## Phase 5e: Tiered Model Architecture — Ollama to Routing Layer
 
@@ -337,7 +337,7 @@ Move Ollama from its current position as a parallel synthesis provider to its co
 
 ### Status
 
-- Planned — Sprint 6
+- Complete — shipped Sprint 6 + Phase 5e follow-up. `chief_of_staff.py` calls Ollama `/api/chat` with a compact classification prompt; falls back to keyword routing when Ollama is unreachable. `WorkflowTrace.routing_model` reflects the actual path taken (`"ollama/llama3.2"`, `"keyword-match (ollama/... unreachable)"`, or `"explicit"`).
 
 ## Phase 5f: MCP Agentic Loop as Default Path + Prompt Caching
 
@@ -361,7 +361,7 @@ Promote the existing MCP tool use loop from opt-in side-car to the default Direc
 
 ### Status
 
-- Planned — Sprint 6
+- Complete — shipped Sprint 6. `cache_control: {"type": "ephemeral"}` on the system prompt in `packages/shared/providers/claude.py`; `cache_read_input_tokens` and `cache_creation_input_tokens` surface in every `WorkflowTrace`. Operator console renders cache hit/primed metrics.
 
 ## Phase 5g: Multi-Agent Researcher → Writer
 
@@ -385,7 +385,7 @@ Add a two-agent workflow demonstrating Claude-to-Claude orchestration. A researc
 
 ### Status
 
-- Planned — Sprint 7
+- Complete — shipped Sprint 7. `ResearcherAgent` uses Claude tool use to return a structured `ResearchSynthesis`; `WriterAgent` formats it for `linkedin_post`, `executive_brief`, or `team_update`. Both agents record per-invocation token counts (including cache fields) in `AgentCall` entries on the `WorkflowTrace`.
 
 ## Phase 5h: Realistic Demo Data + "Why Claude" Framing
 
@@ -407,7 +407,7 @@ Replace the 5 toy markdown files with a realistic enterprise scenario and add a 
 
 ### Status
 
-- Planned — Sprint 8
+- Complete — shipped Sprint 8. Realistic quarterly planning scenario under `data/local_only/projects/`; realistic brand scenario under `data/local_only/brand/`. "Why Claude" section and Mermaid architecture diagram added to `README.md`.
 
 ## Phase 6: Add a Lightweight Local UI and Optional Langflow Demo Layer
 
@@ -456,14 +456,12 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-The repo is being focused as an Anthropic Forward Engineer showcase. The sequence below is ordered by showcase impact, not general engineering priority.
+Sprints 1–9 are complete. The remaining items are all housekeeping — no new architectural work is needed for the showcase.
 
-0. **Live Claude eval re-run (JD blocker — do this first):** Run `python scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` set and commit the result. The current `results_claude.json` shows deterministic fallback output. This one commit closes JD requirements #1 (production Claude integration) and #4 (evaluation framework with committed results) simultaneously. Every other sprint is blocked on this for showcase credibility.
-1. **Sprint 5 — Semantic RAG (Phase 5d):** ChromaDB + Ollama `nomic-embed-text` embeddings. Prerequisite for Sprints 6 and 7 — the retrieval story is indefensible at scale until this ships.
-2. **Sprint 6 — Tiered architecture + MCP default + prompt caching (Phases 5e, 5f):** Move Ollama to routing, make Claude Haiku the synthesis default, wire MCP loop into the default path, add cache_control. Highest visible impact per effort.
-3. **Sprint 7 — Multi-agent researcher → writer (Phase 5g):** Two Claude instances with a clean handoff. Required to demonstrate agentic orchestration for the FE role.
-4. **Sprint 8 — Realistic demo data + "Why Claude" README (Phase 5h):** Replace toy data with an enterprise scenario. Add the framing that makes the demo land with a non-technical evaluator.
-5. **Sprint 9 — Hygiene (Sprint 3 remainder + Sprint 4 docs/tag):** Filesystem edge case tests, CI coverage tracking, README MCP section, v1.0 tag. Runs in parallel with Sprints 7 and 8.
+1. **Cut `v1.0` release tag:** The repo is functionally complete. One `gh release create v1.0.0` command with a description of what ships.
+2. **Branch protection on `main`:** Enforce PR-only merges in GitHub settings. Signals a maintained project to any technical evaluator.
+3. **Clean up stale merged branches:** ~10 merged branches remain on `origin`. A single `gh` loop removes them.
+4. **Keep phase statuses current:** As the repo evolves beyond the showcase, update Phase 5–7 status sections to stay accurate.
 
 ## Definition of Success
 
