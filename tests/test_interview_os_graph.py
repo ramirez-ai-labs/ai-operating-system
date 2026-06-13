@@ -7,6 +7,8 @@ and do not require an API key or Ollama.
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from interview_os.workflows.interview_brief import build_interview_brief
@@ -109,6 +111,68 @@ def test_interview_os_route_in_orchestrator() -> None:
     assert response.selected_workflow == "interview_os.brief"
     assert response.result is not None
     assert response.trace.section_counts.get("key_questions") is not None
+
+
+def test_interview_brief_use_model_calls_provider() -> None:
+    """When use_model=True the graph must call the Claude provider, not the deterministic path."""
+    from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+
+    mock_response = InterviewBriefResponse(
+        candidate_summary="Claude-synthesized brief for the candidate.",
+        key_questions=[
+            GroundedItem(text="Q?", source="role_brief_senior_ai_engineer.md", line_number=5)
+        ],
+        talking_points=[],
+        red_flags=[],
+        evidence=[
+            EvidenceItem(
+                source="role_brief_senior_ai_engineer.md",
+                title="Role Brief",
+                excerpt="Question: example",
+                line_number=5,
+            )
+        ],
+    )
+    mock_provider = MagicMock()
+    mock_provider.generate_interview_brief.return_value = mock_response
+    mock_provider.get_last_usage.return_value = {}
+
+    with patch(
+        "packages.shared.graphs.interview_os._build_provider",
+        return_value=mock_provider,
+    ):
+        request = InterviewBriefRequest(
+            data_path=DATA_PATH,
+            focus="candidate brief",
+            use_model=True,
+            max_documents=5,
+        )
+        response = build_interview_brief(request)
+
+    mock_provider.generate_interview_brief.assert_called_once()
+    assert response.candidate_summary == "Claude-synthesized brief for the candidate."
+
+
+def test_interview_brief_use_model_falls_back_on_error() -> None:
+    """When the provider raises and fallback_to_deterministic=True, the deterministic path runs."""
+    mock_provider = MagicMock()
+    mock_provider.generate_interview_brief.side_effect = ValueError("API error")
+
+    with patch(
+        "packages.shared.graphs.interview_os._build_provider",
+        return_value=mock_provider,
+    ):
+        request = InterviewBriefRequest(
+            data_path=DATA_PATH,
+            focus="candidate brief",
+            use_model=True,
+            fallback_to_deterministic=True,
+            max_documents=5,
+        )
+        response = build_interview_brief(request)
+
+    assert isinstance(response, InterviewBriefResponse)
+    assert response.candidate_summary  # deterministic path produced a summary
 
 
 def test_interview_os_keyword_routing() -> None:

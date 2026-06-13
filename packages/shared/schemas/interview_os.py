@@ -28,6 +28,22 @@ class InterviewBriefRequest(BaseModel):
         le=20,
         description="Maximum number of evidence items to retrieve.",
     )
+    use_model: bool = Field(
+        default=False,
+        description="When True, use Claude to synthesize the brief from evidence.",
+    )
+    provider: str = Field(
+        default="claude",
+        description="Synthesis provider when use_model=True. 'claude' or 'ollama'.",
+    )
+    claude_model: str = Field(
+        default="claude-haiku-4-5-20251001",
+        description="Claude model ID for synthesis when provider='claude'.",
+    )
+    fallback_to_deterministic: bool = Field(
+        default=True,
+        description="Fall back to deterministic brief if model synthesis fails.",
+    )
 
 
 class InterviewBriefResponse(BaseModel):
