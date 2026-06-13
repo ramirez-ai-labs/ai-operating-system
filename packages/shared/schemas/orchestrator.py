@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from packages.shared.schemas.brand_os import BrandContentDraftResponse
 from packages.shared.schemas.director_os import WeeklyUpdateResponse
+from packages.shared.schemas.interview_os import InterviewBriefResponse
 
 
 class OrchestratorRequest(BaseModel):
@@ -133,7 +134,7 @@ class OrchestratorResponse(BaseModel):
     selected_workflow: str
     rationale: str
     trace: WorkflowTrace
-    result: WeeklyUpdateResponse | BrandContentDraftResponse
+    result: WeeklyUpdateResponse | BrandContentDraftResponse | InterviewBriefResponse
     # Populated when target_audience is set — the writer agent's audience-
     # formatted output alongside the structured workflow result.
     formatted_content: str | None = None

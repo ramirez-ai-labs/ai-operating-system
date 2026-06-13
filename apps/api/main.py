@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
+from interview_os.workflows.interview_brief import build_interview_brief
 from packages.shared.orchestration.chief_of_staff import route_request
 from packages.shared.schemas.brand_os import (
     BrandContentDraftRequest,
@@ -12,6 +13,10 @@ from packages.shared.schemas.director_os import (
     ErrorResponse,
     WeeklyUpdateRequest,
     WeeklyUpdateResponse,
+)
+from packages.shared.schemas.interview_os import (
+    InterviewBriefRequest,
+    InterviewBriefResponse,
 )
 from packages.shared.schemas.orchestrator import (
     OrchestratorRequest,
@@ -388,6 +393,7 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
                 <option value="">Auto-select</option>
                 <option value="director_os.weekly_update">director_os.weekly_update</option>
                 <option value="brand_os.content_draft">brand_os.content_draft</option>
+                <option value="interview_os.brief">interview_os.brief</option>
               </select>
             </label>
             <label>
@@ -412,10 +418,16 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
               />
             </label>
           </div>
-          <label class="checkbox">
-            <input id="use_model" name="use_model" type="checkbox" />
-            Request model-assisted synthesis when supported
-          </label>
+          <div class="row">
+            <label class="checkbox">
+              <input id="use_model" name="use_model" type="checkbox" />
+              Model-assisted synthesis
+            </label>
+            <label class="checkbox">
+              <input id="use_mcp" name="use_mcp" type="checkbox" />
+              MCP-first synthesis (use_mcp)
+            </label>
+          </div>
           <div class="row">
             <label>
               Provider
@@ -485,6 +497,10 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
             <h3>Formatted Content</h3>
             <div id="formatted-content-detail"></div>
           </div>
+          <div class="result-card" id="mcp-synthesis-card" style="display:none">
+            <h3>MCP Synthesis</h3>
+            <div id="mcp-synthesis-detail"></div>
+          </div>
           <div class="result-card">
             <h3>Result</h3>
             <div id="result-detail">
@@ -537,6 +553,11 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         if (!promptInput.value.trim()) {
           promptInput.value = "Prepare my leadership weekly update";
         }
+      } else if (workflowInput.value === "interview_os.brief") {
+        dataPathInput.value = "data/local_only/interviews";
+        if (!promptInput.value.trim()) {
+          promptInput.value = "Prepare an interview brief for the candidate";
+        }
       }
     });
 
@@ -551,6 +572,7 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         data_path: document.getElementById("data_path").value,
         max_documents: Number(document.getElementById("max_documents").value),
         use_model: document.getElementById("use_model").checked,
+        use_mcp: document.getElementById("use_mcp").checked,
         provider: document.getElementById("provider").value || "claude",
         target_audience: document.getElementById("target_audience").value || null,
       };
@@ -610,19 +632,24 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           .join("");
 
         const result = body.result || {};
-        const summary = result.summary || result.insight_summary || "";
-        const wins = result.wins || result.post_outline || [];
-        const risks = result.risks || [];
-        const nextSteps = result.next_steps || result.podcast_angles || [];
+        const summary = result.summary || result.insight_summary || result.candidate_summary || "";
+        const wins = result.wins || result.post_outline || result.key_questions || [];
+        const risks = result.risks || result.red_flags || [];
+        const nextSteps = result.next_steps || result.podcast_angles || result.talking_points || [];
+
+        const winsLabel = result.key_questions ? "Key Questions" : "Wins / Insights";
+        const risksLabel = result.red_flags ? "Red Flags" : "Risks";
+        const nextLabel = result.talking_points ? "Talking Points" : "Next Steps";
 
         let detailHtml = summary
           ? `<p class="result-summary-text">${summary}</p>` : "";
         if (wins.length) detailHtml +=
-          `<div class="result-section"><h4>Wins / Insights</h4>${renderItems(wins, "text")}</div>`;
+          `<div class="result-section"><h4>${winsLabel}</h4>${renderItems(wins, "text")}</div>`;
         if (risks.length) detailHtml +=
-          `<div class="result-section"><h4>Risks</h4>${renderItems(risks, "text")}</div>`;
+          `<div class="result-section"><h4>${risksLabel}</h4>${renderItems(risks, "text")}</div>`;
         if (nextSteps.length) detailHtml +=
-          `<div class="result-section"><h4>Next Steps</h4>${renderItems(nextSteps, "text")}</div>`;
+          `<div class="result-section"><h4>${nextLabel}</h4>`
+          + `${renderItems(nextSteps, "text")}</div>`;
         const emptyMsg = "<p class='result-summary-text' "
           + "style='color:var(--muted)'>No result content returned.</p>";
         resultDetail.innerHTML = detailHtml || emptyMsg;
@@ -663,6 +690,20 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
             "<pre style='" + preStyle + "'>" + body.formatted_content + "</pre>";
         } else {
           formattedCard.style.display = "none";
+        }
+
+        // MCP synthesis card — Claude's free-form synthesis when use_mcp=True.
+        const mcpCard = document.getElementById("mcp-synthesis-card");
+        const mcpDetail = document.getElementById("mcp-synthesis-detail");
+        if (body.mcp_synthesis) {
+          mcpCard.style.display = "";
+          const mcpPreStyle =
+            "white-space:pre-wrap;font-family:Georgia,serif;"
+            + "font-size:0.97rem;line-height:1.6";
+          mcpDetail.innerHTML =
+            "<pre style='" + mcpPreStyle + "'>" + body.mcp_synthesis + "</pre>";
+        } else {
+          mcpCard.style.display = "none";
         }
 
         rawResponse.textContent = JSON.stringify(body, null, 2);
@@ -735,5 +776,18 @@ def orchestrate(request: OrchestratorRequest) -> OrchestratorResponse:
         # sends one generic request, and the orchestrator decides which domain
         # workflow should handle it.
         return route_request(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post(
+    "/interview-os/brief",
+    response_model=InterviewBriefResponse,
+    responses={400: {"model": ErrorResponse}},
+)
+def create_interview_brief(request: InterviewBriefRequest) -> InterviewBriefResponse:
+    """Run the Interview OS brief workflow against local candidate and role notes."""
+    try:
+        return build_interview_brief(request)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

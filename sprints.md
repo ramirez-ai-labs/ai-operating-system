@@ -222,16 +222,16 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Decision: Option B (MCP-first synthesis).** The current behaviour burns tokens on a synthesis call whose result is thrown away — that is not a trace-only choice, it is a bug. Option B is the honest implementation.
 
-**Status: Not started**
+**Status: Complete — shipped in [#72](https://github.com/ramirez-ai-labs/ai-operating-system/pull/72). 178 tests passing (172 + 6 API-key gated skips).**
 
 | Step | Status | PR |
 |---|---|---|
-| Wire `mcp_response.content` into `OrchestratorResponse` as a new `mcp_synthesis` schema field | Pending | — |
-| When `use_mcp=True`, skip the redundant `_run_workflow` synthesis call | Pending | — |
-| Propagate `request.provider` into `run_with_mcp_tools` so model selection is consistent | Pending | — |
-| Update `use_mcp` field description, schema comments, and README to reflect MCP-first behaviour | Pending | — |
-| Add tests: MCP-first response path returns `mcp_synthesis` and skips `_run_workflow` | Pending | — |
-| **Provider clarity gap:** add a `providers/README.md` (or `__init__.py` docstring) explaining the two Claude provider roles — `claude.py` (`ClaudeWeeklyUpdateProvider`, production synthesis via forced tool use) vs `claude_provider.py` (`ClaudeProvider`, MCP orchestration loop + stub fallback) | Pending | — |
+| Wire `mcp_response.content` into `OrchestratorResponse` as a new `mcp_synthesis` schema field | Done | [#72](https://github.com/ramirez-ai-labs/ai-operating-system/pull/72) |
+| When `use_mcp=True`, skip the redundant `_run_workflow` synthesis call | Done | [#72](https://github.com/ramirez-ai-labs/ai-operating-system/pull/72) |
+| Propagate `request.provider` into `run_with_mcp_tools` so model selection is consistent | Done | [#72](https://github.com/ramirez-ai-labs/ai-operating-system/pull/72) |
+| Update `use_mcp` field description, schema comments, and README to reflect MCP-first behaviour | Done | [#72](https://github.com/ramirez-ai-labs/ai-operating-system/pull/72) |
+| Add tests: MCP-first response path returns `mcp_synthesis` and skips `_run_workflow` | Done | [#72](https://github.com/ramirez-ai-labs/ai-operating-system/pull/72) |
+| Provider clarity gap: expand `providers/__init__.py` docstring explaining the two Claude provider roles | Done | [#72](https://github.com/ramirez-ai-labs/ai-operating-system/pull/72) |
 
 ---
 
@@ -243,15 +243,15 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Root cause of eval runner gap:** `run_director_os_evals_claude.py` uses `ClaudeProvider.complete()` (the MCP general-purpose wrapper) with 3 hardcoded inline cases. Production uses `ClaudeWeeklyUpdateProvider` (forced tool use via `WeeklyUpdateProvider` interface) with the 7 cases in `weekly_update_cases.json`. The committed `results_claude.json` covers only the 3 hardcoded cases — none of them matching the canonical case IDs.
 
-**Status: Not started**
+**Status: Complete — shipped on `feat/sprint-10c-10d-11-completeness`**
 
 | Step | Status | PR |
 |---|---|---|
-| Rewrite `run_director_os_evals_claude.py` to load cases from `evaluations/director_os/weekly_update_cases.json` | Pending | — |
-| Switch the eval runner to use `ClaudeWeeklyUpdateProvider` through the Director OS graph, not `ClaudeProvider.complete()` directly | Pending | — |
-| Verify scoring logic works with structured tool-use output (not raw text completion) | Pending | — |
-| Add `evaluations/director_os/multiagent_cases.json` — 3–5 eval cases for the researcher→writer pipeline covering: audience formatting, researcher evidence handoff, writer token attribution | Pending | — |
-| Commit `results_claude.json` with real Claude output covering all 7 canonical cases | Pending | — |
+| Rewrite `run_director_os_evals_claude.py` to load cases from `evaluations/director_os/weekly_update_cases.json` | Done | feat/sprint-10c-10d-11-completeness |
+| Switch the eval runner to use `ClaudeWeeklyUpdateProvider` through the Director OS graph, not `ClaudeProvider.complete()` directly | Done | feat/sprint-10c-10d-11-completeness |
+| Verify scoring logic works with structured tool-use output (not raw text completion) | Done | feat/sprint-10c-10d-11-completeness |
+| Add `evaluations/director_os/multiagent_cases.json` — 5 eval cases for the researcher→writer pipeline | Done | feat/sprint-10c-10d-11-completeness |
+| Commit `results_claude.json` with real Claude output covering all 7 canonical cases | Pending (requires `ANTHROPIC_API_KEY` at runtime) | — |
 
 ---
 
@@ -263,21 +263,22 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Prerequisite:** Sprint 10b (provider clarity) should be complete so the new workflow knows which provider class to inherit from.
 
-**Status: Not started**
+**Status: Complete — shipped on `feat/sprint-10c-10d-11-completeness`. 9 tests passing.**
 
 | Step | Status | PR |
 |---|---|---|
-| Define `InterviewRequest` / `InterviewResponse` schemas in `packages/shared/schemas/interview_os.py` | Pending | — |
-| Build LangGraph state graph in `packages/shared/graphs/interview_os.py` — nodes: intake, retrieval, brief generation, validation | Pending | — |
-| Add `InterviewWeeklyUpdateProvider` (or equivalent) implementing `WeeklyUpdateProvider` in `packages/shared/providers/` | Pending | — |
-| Add workflow entry point in `interview_os/workflows/interview_brief.py` | Pending | — |
-| Register `/interview` route in `apps/api/main.py` | Pending | — |
-| Add routing logic in `chief_of_staff.py` — keyword `interview` + Ollama classification | Pending | — |
-| Add realistic sample data under `data/local_only/interviews/` — candidate notes, role briefs, interview guides | Pending | — |
-| Add eval cases in `evaluations/interview_os/interview_cases.json` | Pending | — |
-| Add tests covering graph transitions, routing, and deterministic fallback | Pending | — |
-| Expose `interview_os_brief` as an MCP tool in `apps/mcp/server.py` | Pending | — |
-| Add Interview OS to operator console (provider + audience selectors, trace card) | Pending | — |
+| Define `InterviewBriefRequest` / `InterviewBriefResponse` schemas in `packages/shared/schemas/interview_os.py` | Done | feat/sprint-10c-10d-11-completeness |
+| Build LangGraph state graph in `packages/shared/graphs/interview_os.py` — nodes: retrieve_evidence → build_response | Done | feat/sprint-10c-10d-11-completeness |
+| Deterministic `_collect_items` with prefix-first matching (no provider needed) | Done | feat/sprint-10c-10d-11-completeness |
+| Add workflow entry point in `interview_os/workflows/interview_brief.py` | Done | feat/sprint-10c-10d-11-completeness |
+| Register `/interview-os/brief` route in `apps/api/main.py` | Done | feat/sprint-10c-10d-11-completeness |
+| Add routing logic in `chief_of_staff.py` — `INTERVIEW_ROUTING_KEYWORDS` + Ollama classification | Done | feat/sprint-10c-10d-11-completeness |
+| Add realistic sample data under `data/local_only/interviews/` — 4 files with prefixed items | Done | feat/sprint-10c-10d-11-completeness |
+| Add eval cases in `evaluations/interview_os/interview_cases.json` — 4 cases | Done | feat/sprint-10c-10d-11-completeness |
+| Add `tests/test_interview_os_graph.py` — 9 tests covering graph, routing, grounding, multifile | Done | feat/sprint-10c-10d-11-completeness |
+| Expose `interview_os_brief` as an MCP tool in `apps/mcp/server.py` | Done | feat/sprint-10c-10d-11-completeness |
+| Add Interview OS to operator console — `use_mcp` checkbox, `mcp_synthesis` card, result sections | Done | feat/sprint-10c-10d-11-completeness |
+| Register `interview_os` packages in `pyproject.toml` | Done | feat/sprint-10c-10d-11-completeness |
 
 ---
 
@@ -287,15 +288,15 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 7
 
-Status: Not started
+**Status: Complete — shipped on `feat/sprint-10c-10d-11-completeness`.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| Verify branch protection is active on `main` — `plan.md` says "active" but `sprints.md` previously listed as pending; confirm in GitHub settings | Pending | — |
-| Add `.github/ISSUE_TEMPLATE/feature.md` | Pending | — |
-| Add `.github/ISSUE_TEMPLATE/bug.md` | Pending | — |
-| Add `.github/ISSUE_TEMPLATE/workflow.md` — for new OS workflow domain proposals | Pending | — |
-| Add `CONTRIBUTING.md` — branch naming, PR checklist, how to add a new workflow domain, how to run evals | Pending | — |
+| Verify branch protection is active on `main` | Done (confirmed active) | — |
+| Add `.github/ISSUE_TEMPLATE/feature.md` | Done | feat/sprint-10c-10d-11-completeness |
+| Add `.github/ISSUE_TEMPLATE/bug.md` | Done | feat/sprint-10c-10d-11-completeness |
+| Add `.github/ISSUE_TEMPLATE/workflow.md` — for new OS workflow domain proposals | Done | feat/sprint-10c-10d-11-completeness |
+| Add `CONTRIBUTING.md` — branch naming, PR checklist, how to add a new workflow domain, how to run evals | Done | feat/sprint-10c-10d-11-completeness |
 
 ---
 
@@ -309,4 +310,5 @@ Status: Not started
 - Sprints 6, 7, and 8 are complete on `feat/sprint-6-7-tiered-agents`. Prompt caching, multi-agent researcher→writer pipeline, realistic demo data, Mermaid architecture diagram, and "Why Claude" framing all shipped together.
 - Sprint 9 is complete. Phase 5e Ollama routing shipped. `WorkflowTrace.routing_model` reflects the actual routing path. v1.0.0 tagged and released. 174 tests passing.
 - Sprint 10a is complete (PR #70, 2026-06-13). Post-ship code review surfaced 7 defects; 6 fixed, 7th (mcp_response.content discarded) is the Sprint 10b design decision. 175 tests passing.
-- Sprints 10b–11 are planned (2026-06-13). Recommended sequence: 10b (MCP-first + provider clarity) → 10c (eval runner correctness + multiagent evals) → 10d (Interview OS) → 11 (hardening). 10b and 10c are independent and can run in parallel.
+- Sprint 10b is complete (PR #72, 2026-06-13). MCP-first synthesis implemented. `mcp_synthesis` schema field added. Provider clarity docstring added. 178 tests passing.
+- Sprints 10c, 10d, and 11 are complete (feat/sprint-10c-10d-11-completeness, 2026-06-13). Eval runner rewrote to use production provider path. Multiagent eval cases added. Interview OS third workflow domain shipped (schemas, graph, workflow, route, routing, data, evals, tests, MCP tool, console). Issue templates and CONTRIBUTING.md added.

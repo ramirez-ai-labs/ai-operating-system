@@ -4,8 +4,10 @@ from mcp.server.fastmcp import FastMCP
 
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
+from interview_os.workflows.interview_brief import build_interview_brief
 from packages.shared.schemas.brand_os import BrandContentDraftRequest, BrandContentDraftResponse
 from packages.shared.schemas.director_os import WeeklyUpdateRequest, WeeklyUpdateResponse
+from packages.shared.schemas.interview_os import InterviewBriefRequest, InterviewBriefResponse
 
 
 def create_server() -> FastMCP:
@@ -21,6 +23,11 @@ def create_server() -> FastMCP:
     def brand_os_content_draft(request: BrandContentDraftRequest) -> BrandContentDraftResponse:
         """Run the Brand OS content-draft workflow from an MCP client."""
         return build_content_draft(request)
+
+    @server.tool()
+    def interview_os_brief(request: InterviewBriefRequest) -> InterviewBriefResponse:
+        """Run the Interview OS brief workflow from an MCP client."""
+        return build_interview_brief(request)
 
     return server
 

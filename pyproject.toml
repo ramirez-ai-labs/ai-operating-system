@@ -36,6 +36,8 @@ packages = [
   "brand_os.workflows",
   "director_os",
   "director_os.workflows",
+  "interview_os",
+  "interview_os.workflows",
   "packages",
   "packages.shared",
   "packages.shared.evaluations",

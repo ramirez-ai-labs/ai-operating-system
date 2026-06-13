@@ -1,0 +1,82 @@
+[
+  {
+    "id": "interview-brief-baseline",
+    "description": "Baseline interview brief should surface questions, talking points, and red flags from candidate and role notes.",
+    "inputs": {
+      "data_path": "data/local_only/interviews",
+      "focus": "candidate brief",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["candidate", "Interview OS brief"],
+      "expected_evidence_sources": [
+        "candidate_profile_alex_chen.md",
+        "role_brief_senior_ai_engineer.md"
+      ],
+      "minimum_section_counts": {
+        "key_questions": 1,
+        "talking_points": 1
+      },
+      "expected_min_source_count": 2
+    }
+  },
+  {
+    "id": "interview-red-flags-surfaced",
+    "description": "Red flag sections in candidate notes should appear in the red_flags section of the brief.",
+    "inputs": {
+      "data_path": "data/local_only/interviews",
+      "focus": "red flags concerns",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["Interview OS brief"],
+      "expected_evidence_sources": [
+        "candidate_profile_alex_chen.md"
+      ],
+      "minimum_section_counts": {
+        "red_flags": 1
+      },
+      "expected_min_source_count": 1
+    }
+  },
+  {
+    "id": "interview-multifile-retrieval",
+    "description": "A broad query should pull from both candidate profile and role brief — not collapse to a single file.",
+    "inputs": {
+      "data_path": "data/local_only/interviews",
+      "focus": "senior AI engineer interview",
+      "max_documents": 10
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["Interview OS brief"],
+      "expected_evidence_sources": [
+        "candidate_profile_alex_chen.md",
+        "role_brief_senior_ai_engineer.md"
+      ],
+      "minimum_section_counts": {
+        "key_questions": 1,
+        "talking_points": 1
+      },
+      "expected_min_source_count": 2
+    }
+  },
+  {
+    "id": "interview-behavioral-guide",
+    "description": "Behavioral guide content should surface behavioral questions in the brief.",
+    "inputs": {
+      "data_path": "data/local_only/interviews",
+      "focus": "behavioral interview questions",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["Interview OS brief"],
+      "expected_evidence_sources": [
+        "behavioral_interview_guide.md"
+      ],
+      "minimum_section_counts": {
+        "key_questions": 1
+      },
+      "expected_min_source_count": 1
+    }
+  }
+]
