@@ -24,7 +24,6 @@ from typing import Any
 
 from packages.shared.mcp.filesystem_server import (
     FilesystemMCPServer,
-    build_tool_result_message,
     get_tool_definitions,
 )
 from packages.shared.providers.claude_provider import ClaudeProvider, ProviderResponse
@@ -123,6 +122,9 @@ def run_with_mcp_tools(
         total_output += response.output_tokens
 
         if response.tool_calls:
+            tool_use_blocks: list[dict[str, Any]] = []
+            tool_result_contents: list[dict[str, Any]] = []
+
             for tool_call in response.tool_calls:
                 tool_name = tool_call["name"]
                 tool_input = tool_call["input"]
@@ -143,22 +145,29 @@ def run_with_mcp_tools(
                 round_trace["tool_calls"].append(call_record)
                 trace["mcp_tool_calls"].append(call_record)
 
-                # The Anthropic API requires tool interactions to be recorded as
-                # two consecutive messages: assistant declares the tool call, then
-                # user returns the result. Both must be present before the next
-                # Claude call or the API will reject the conversation history.
-                messages.append({
-                    "role": "assistant",
-                    "content": [
-                        {
-                            "type": "tool_use",
-                            "id": tool_id,
-                            "name": tool_name,
-                            "input": tool_input,
-                        }
-                    ],
+                tool_use_blocks.append({
+                    "type": "tool_use",
+                    "id": tool_id,
+                    "name": tool_name,
+                    "input": tool_input,
                 })
-                messages.append(build_tool_result_message(tool_id, tool_result))
+                content = (
+                    tool_result["result"] if tool_result["success"]
+                    else f"Error: {tool_result['error']}"
+                )
+                tool_result_contents.append({
+                    "type": "tool_result",
+                    "tool_use_id": tool_id,
+                    "content": content,
+                })
+
+            # The Anthropic API requires all tool_use blocks from a single
+            # response in ONE assistant message, followed by all tool_result
+            # blocks in ONE user message. Splitting them per-tool produces
+            # consecutive assistant messages and triggers a 400 role-alternation
+            # error on the next round when Claude returns parallel tool calls.
+            messages.append({"role": "assistant", "content": tool_use_blocks})
+            messages.append({"role": "user", "content": tool_result_contents})
 
             trace["rounds"].append(round_trace)
             continue
