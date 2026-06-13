@@ -34,10 +34,10 @@ enterprise AI work requires.
 
 ```mermaid
 flowchart TB
-    In([OrchestratorRequest]) --> CoS["Chief of Staff\n(keyword router)"]
+    In([OrchestratorRequest]) --> CoS["Chief of Staff\nOllama classification\n+ keyword fallback"]
 
-    CoS -->|brand keywords| Brand["Brand OS\nbrand_os.content_draft"]
-    CoS -->|leadership / default| Director["Director OS\ndirector_os.weekly_update"]
+    CoS -->|brand_os| Brand["Brand OS\nbrand_os.content_draft"]
+    CoS -->|director_os / default| Director["Director OS\ndirector_os.weekly_update"]
 
     Director --> Retrieval["Local Retrieval\nmarkdown evidence"]
     Brand --> BRetrieval["Local Retrieval\nbrand evidence"]
