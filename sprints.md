@@ -194,12 +194,84 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 10a — Bug Fixes
+
+**Objective:** Fix 7 confirmed defects surfaced by post-ship code review. All are in shipped v1.0.0 code. Fix before adding new scope.
+
+**Maps to:** plan.md Sprint 10a
+
+**Status: Not started**
+
+| Step | Status | PR |
+|---|---|---|
+| Fix multi-tool API protocol violation — batch all tool_use + tool_result into single message pair (`orchestrator_integration.py:125`) | Pending | — |
+| Fix path traversal bypass — replace `startswith` with `is_relative_to` (`filesystem_server.py:298`) | Pending | — |
+| Fix false routing — replace `"brand" in content` with strict `content == "brand_os"` + keyword fallback for unrecognised tokens (`chief_of_staff.py:180`) | Pending | — |
+| Fix silent exception — add per-exception logging and differentiated trace labels (`chief_of_staff.py:176`) | Pending | — |
+| Fix fragile tuple concatenation — explicit destructure in fallback (`chief_of_staff.py:177`) | Pending | — |
+| Fix `files_searched` cap — count all traversed files, not only successfully-read text files (`filesystem_server.py:249`) | Pending | — |
+| Add tests covering multi-tool-call round in orchestrator integration | Pending | — |
+
+---
+
+## Sprint 10b — Resolve `use_mcp` Design Gap
+
+**Objective:** Decide and implement whether `use_mcp=True` is trace-only or MCP-first synthesis. Currently `mcp_response.content` is discarded — the MCP synthesis call burns tokens and the trace misrepresents provenance.
+
+**Maps to:** plan.md Sprint 10b
+
+**Status: Pending design decision (Option A trace-only vs Option B MCP-first)**
+
+| Step | Status | PR |
+|---|---|---|
+| Decision: Option A (trace-only) or Option B (MCP-first synthesis) | Pending | — |
+| Option A: fix `use_mcp` field description, schema comments, README; skip synthesis call when `use_model=False` | Pending | — |
+| Option B: wire `mcp_response.content` into response, add schema field, skip redundant `_run_workflow` synthesis, propagate `request.provider` into `run_with_mcp_tools` | Pending | — |
+
+---
+
+## Sprint 10c — Eval Coverage
+
+**Objective:** Close the eval gap for the researcher→writer pipeline and align committed Claude results with the main eval case file.
+
+**Maps to:** plan.md Sprint 10c
+
+**Status: Not started**
+
+| Step | Status | PR |
+|---|---|---|
+| Add `evaluations/director_os/multiagent_cases.json` — eval cases for researcher→writer pipeline | Pending | — |
+| Align `run_director_os_evals_claude.py` to run against `weekly_update_cases.json` (fix case-ID mismatch) | Pending | — |
+| Commit updated `results_claude.json` covering all 7 cases with real Claude output | Pending | — |
+
+---
+
+## Sprint 10d — Third Workflow Domain
+
+**Objective:** Add a third OS workflow (Interview OS or Project OS) to make the multi-domain story credible. Shared infrastructure is already in place — this is pattern-match work.
+
+**Maps to:** plan.md Sprint 10d
+
+**Status: Not started**
+
+| Step | Status | PR |
+|---|---|---|
+| Define domain, request/response schemas in `packages/shared/schemas/` | Pending | — |
+| Build LangGraph state graph in `packages/shared/graphs/` | Pending | — |
+| Add workflow entry point and register route in `apps/api/main.py` | Pending | — |
+| Add routing logic in `chief_of_staff.py` | Pending | — |
+| Add realistic sample data under `data/local_only/` | Pending | — |
+| Add eval cases and tests | Pending | — |
+
+---
+
 ## Coordination notes
 
-- Sprint 1 is complete. Live Claude eval results committed in PR #56 — 3/3 cases, 100% signal and safety. All five JD requirements are now satisfied in the repo.
+- Sprint 1 is complete. Live Claude eval results committed in PR #56 — 3/3 cases, 100% signal and safety. All five JD requirements are satisfied in the repo.
 - Sprint 2 is complete. The standalone MCP server shipped in PR #50 with both workflow tools registered, tests passing, and Claude Desktop config included.
-- Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint 9.
-- Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint 9.
+- Sprint 3 remaining items (filesystem edge cases, CI coverage) rolled into Sprint 9.
+- Sprint 4 remaining items (README MCP section, topics, tag) rolled into Sprint 9.
 - Sprint 5 is complete (PR #57). ChromaDB + Ollama embedding infrastructure is in place. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script.
 - Sprints 6, 7, and 8 are complete on `feat/sprint-6-7-tiered-agents`. Prompt caching, multi-agent researcher→writer pipeline, realistic demo data, Mermaid architecture diagram, and "Why Claude" framing all shipped together.
-- Phase 5e Ollama routing is complete. `chief_of_staff.py` now calls Ollama `/api/chat` for classification with keyword fallback when Ollama is unreachable. `WorkflowTrace.routing_model` reflects the actual path. 168 tests passing.
+- Sprint 9 is complete. Phase 5e Ollama routing shipped. `WorkflowTrace.routing_model` reflects the actual routing path. v1.0.0 tagged and released. 174 tests passing.
+- Sprint 10 planning: post-ship code review (2026-06-13) surfaced 7 confirmed defects. Sprints 10a–10d defined. Bug fixes (10a) are the immediate next step before any new scope.

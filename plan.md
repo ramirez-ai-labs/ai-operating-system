@@ -464,17 +464,29 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–9 are complete. The system demonstrates local-first operation, cost-conscious tiered LLM architecture, grounded evidence-based outputs, ChromaDB semantic retrieval, prompt caching, and two-agent Claude-to-Claude orchestration. The remaining items are housekeeping — no new architectural work is needed for the showcase.
+Sprints 1–9 are complete. v1.0.0 is tagged and released. All v1.0 housekeeping is closed: release tag cut, branch protection active, stale branches cleaned.
 
-**Remaining to close out v1.0:**
-1. **Cut `v1.0` release tag** — the repo is functionally complete; one `gh release create v1.0.0` closes this out
-2. **Branch protection on `main`** — enforce PR-only merges in GitHub settings; signals a maintained project to any technical evaluator
-3. **Clean up stale merged branches** — ~10 merged branches remain on `origin`
+A post-ship code review surfaced 7 confirmed defects in the shipped code. Bug fixes come before new scope.
 
-**Sprint 10 candidates (post v1.0):**
-1. **Eval coverage for new paths** — add eval cases exercising the researcher→writer pipeline and ChromaDB retrieval; these paths are tested but not yet evaluated against committed scorers
-2. **Contributor docs** — close out the remaining Phase 7 hardening items (issue templates, contributor workflow doc)
-3. **Additional workflow domain** — a third OS workflow (e.g. Interview OS or Project OS) extends the multi-domain story beyond Director OS and Brand OS
+**Sprint 10a — Bug fixes:**
+1. **Multi-tool API protocol violation** — `orchestrator_integration.py:125`: when Claude returns multiple tool calls in one response, the loop creates N interleaved assistant/user pairs instead of one batched pair, causing a 400 from the Anthropic API on the next round
+2. **Path traversal bypass** — `filesystem_server.py:298`: `str.startswith` check is not path-separator-aware; a sibling directory sharing the root name as a prefix passes the guard; fix is `resolved.is_relative_to(self.root)` (Python 3.9+, always available at 3.11)
+3. **False routing on verbose Ollama response** — `chief_of_staff.py:180`: `"brand" in content` misroutes to Brand OS when the model returns a response containing the word "brand" anywhere; fix is strict `content == "brand_os"` with explicit keyword fallback for unrecognised tokens
+4. **Silent exception with misleading trace label** — `chief_of_staff.py:176`: bare `except Exception` swallows all Ollama failures — including model-not-found and malformed JSON — and labels them all "unreachable"; fix is per-exception logging and differentiated labels
+5. **Fragile tuple concatenation in fallback** — `chief_of_staff.py:177`: `_select_workflow_keyword(prompt) + (label,)` breaks silently if that function's return type changes; fix is explicit destructure
+
+**Sprint 10b — Design decision: `use_mcp` path:**
+`mcp_response.content` (Claude's synthesis after reading files) is currently discarded — only `mcp_tool_calls` from the trace is kept. The response always comes from `_run_workflow`, making the MCP synthesis call wasted tokens and the trace misleading. Resolve as one of:
+- **Option A (trace-only):** MCP adds tool call visibility but synthesis comes from the regular workflow. Fix the `use_mcp` field description, schema comments, and README to say so explicitly. Skip the synthesis call if `use_model=False`.
+- **Option B (MCP-first):** Wire `mcp_response.content` into the response, add a schema field, skip the redundant `_run_workflow` synthesis when `use_mcp=True`, and propagate `request.provider` into `run_with_mcp_tools`.
+
+**Sprint 10c — Eval coverage:**
+1. Add `evaluations/director_os/multiagent_cases.json` with eval cases for the researcher→writer pipeline — the most complex feature in the repo with zero eval backing
+2. Align `run_director_os_evals_claude.py` to run against `weekly_update_cases.json` (the committed Claude results use different case IDs than the main eval file)
+3. Commit updated `results_claude.json` covering all 7 cases
+
+**Sprint 10d — Third workflow domain:**
+A third OS workflow (Interview OS or Project OS) makes the "operating system" framing credible. The shared graph, schemas, retrieval, and evaluation patterns are already in place — this is pattern-match work, not architecture work.
 
 ## Definition of Success
 
