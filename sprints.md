@@ -200,17 +200,17 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Sprint 10a
 
-**Status: Not started**
+**Status: Complete — all 6 defects fixed + parallel tool-call test added in [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70). 175 tests passing.**
 
 | Step | Status | PR |
 |---|---|---|
-| Fix multi-tool API protocol violation — batch all tool_use + tool_result into single message pair (`orchestrator_integration.py:125`) | Pending | — |
-| Fix path traversal bypass — replace `startswith` with `is_relative_to` (`filesystem_server.py:298`) | Pending | — |
-| Fix false routing — replace `"brand" in content` with strict `content == "brand_os"` + keyword fallback for unrecognised tokens (`chief_of_staff.py:180`) | Pending | — |
-| Fix silent exception — add per-exception logging and differentiated trace labels (`chief_of_staff.py:176`) | Pending | — |
-| Fix fragile tuple concatenation — explicit destructure in fallback (`chief_of_staff.py:177`) | Pending | — |
-| Fix `files_searched` cap — count all traversed files, not only successfully-read text files (`filesystem_server.py:249`) | Pending | — |
-| Add tests covering multi-tool-call round in orchestrator integration | Pending | — |
+| Fix multi-tool API protocol violation — batch all tool_use + tool_result into single message pair (`orchestrator_integration.py:125`) | Done | [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70) |
+| Fix path traversal bypass — replace `startswith` with `is_relative_to` (`filesystem_server.py:298`) | Done | [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70) |
+| Fix false routing — replace `"brand" in content` with strict `content == "brand_os"` + keyword fallback for unrecognised tokens (`chief_of_staff.py:180`) | Done | [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70) |
+| Fix silent exception — add per-exception logging and differentiated trace labels (`chief_of_staff.py:176`) | Done | [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70) |
+| Fix fragile tuple concatenation — explicit destructure in fallback (`chief_of_staff.py:177`) | Done | [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70) |
+| Fix `files_searched` cap — count all traversed files, not only successfully-read text files (`filesystem_server.py:249`) | Done | [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70) |
+| Add tests covering multi-tool-call round in orchestrator integration | Done | [#70](https://github.com/ramirez-ai-labs/ai-operating-system/pull/70) |
 
 ---
 
@@ -274,4 +274,4 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 5 is complete (PR #57). ChromaDB + Ollama embedding infrastructure is in place. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script.
 - Sprints 6, 7, and 8 are complete on `feat/sprint-6-7-tiered-agents`. Prompt caching, multi-agent researcher→writer pipeline, realistic demo data, Mermaid architecture diagram, and "Why Claude" framing all shipped together.
 - Sprint 9 is complete. Phase 5e Ollama routing shipped. `WorkflowTrace.routing_model` reflects the actual routing path. v1.0.0 tagged and released. 174 tests passing.
-- Sprint 10 planning: post-ship code review (2026-06-13) surfaced 7 confirmed defects. Sprints 10a–10d defined. Bug fixes (10a) are the immediate next step before any new scope.
+- Sprint 10a is complete (PR #70, 2026-06-13). Post-ship code review surfaced 7 defects; 6 fixed, 7th (mcp_response.content discarded) is the Sprint 10b design decision. 175 tests passing.
