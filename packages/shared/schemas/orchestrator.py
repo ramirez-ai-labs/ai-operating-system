@@ -60,10 +60,13 @@ class OrchestratorRequest(BaseModel):
     use_mcp: bool = Field(
         default=False,
         description=(
-            "Run the filesystem MCP retrieval loop alongside the workflow. "
-            "When True, Claude reads project files via tool calls and the "
-            "mcp_tool_calls trace is populated in the response. "
-            "Requires ANTHROPIC_API_KEY."
+            "Run the filesystem MCP retrieval loop as the primary synthesis path. "
+            "When True, Claude reads project files via tool calls and produces the "
+            "synthesis — the result is returned in mcp_synthesis on the response. "
+            "The regular workflow still runs to produce structured evidence and "
+            "section counts, but its model-assisted synthesis is skipped to avoid "
+            "burning tokens on two calls. Requires ANTHROPIC_API_KEY. "
+            "MCP always uses the Claude provider regardless of the provider field."
         ),
     )
     claude_model: str = Field(
@@ -134,3 +137,8 @@ class OrchestratorResponse(BaseModel):
     # Populated when target_audience is set — the writer agent's audience-
     # formatted output alongside the structured workflow result.
     formatted_content: str | None = None
+    # Populated when use_mcp=True — Claude's free-form synthesis after reading
+    # project files via MCP tool calls. This is the primary synthesis output
+    # when MCP is enabled; the structured result field contains evidence and
+    # section counts from the deterministic workflow path.
+    mcp_synthesis: str | None = None

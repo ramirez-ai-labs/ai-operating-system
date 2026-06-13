@@ -52,12 +52,12 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
     else:
         workflow, rationale, routing_model = _select_workflow(request)
 
-    result = _run_workflow(request, workflow)
-
-    # When use_mcp=True, run the MCP retrieval loop so Claude reads project
-    # files via tool calls. The tool call log is surfaced in the trace so
-    # operators can see exactly what the agent read before synthesizing.
+    # When use_mcp=True, run the MCP retrieval loop first so Claude reads
+    # project files via tool calls and produces the primary synthesis.
+    # _run_workflow then runs with use_model forced off — we only need its
+    # structured evidence and section counts, not a redundant model call.
     mcp_tool_calls: list[dict] = []
+    mcp_synthesis: str | None = None
     if request.use_mcp:
         mcp_response = run_with_mcp_tools(
             prompt=request.prompt or request.focus or "Synthesize project status",
@@ -65,6 +65,14 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
             model=request.claude_model,
         )
         mcp_tool_calls = mcp_response.trace.get("mcp_tool_calls", [])
+        if mcp_response.success:
+            mcp_synthesis = mcp_response.content
+
+    result = _run_workflow(
+        request,
+        workflow,
+        use_model_override=False if request.use_mcp else None,
+    )
 
     # Researcher → writer multi-agent pipeline. Only runs when target_audience
     # is set. Both agents require ANTHROPIC_API_KEY — the ValueError raised by
@@ -100,18 +108,24 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
         ),
         result=result,
         formatted_content=formatted_content,
+        mcp_synthesis=mcp_synthesis,
     )
 
 
-def _run_workflow(request: OrchestratorRequest, workflow: str):
+def _run_workflow(
+    request: OrchestratorRequest,
+    workflow: str,
+    use_model_override: bool | None = None,
+):
     """Adapt the generic request into the selected workflow contract and execute it."""
+    effective_use_model = request.use_model if use_model_override is None else use_model_override
     if workflow == DIRECTOR_WORKFLOW:
         return build_weekly_update(
             WeeklyUpdateRequest(
                 data_path=request.data_path,
                 focus=request.focus or request.prompt,
                 max_documents=request.max_documents,
-                use_model=request.use_model,
+                use_model=effective_use_model,
                 fallback_to_deterministic=request.fallback_to_deterministic,
                 # Keep provider choice at the workflow boundary so routing can
                 # stay deterministic while synthesis remains explicitly opt-in.
