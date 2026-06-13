@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
@@ -15,12 +15,21 @@ class InterviewOSState(TypedDict, total=False):
     request: InterviewBriefRequest
     evidence: list[EvidenceItem]
     response: InterviewBriefResponse
+    used_model: bool
+    fallback_attempted: bool
+    provider_usage: dict[str, int]
 
 
 def run_interview_brief_graph(request: InterviewBriefRequest) -> InterviewBriefResponse:
     """Execute the Interview OS brief graph and return the public response."""
     graph = _get_interview_brief_graph()
-    final_state = graph.invoke({"request": request})
+    final_state = graph.invoke(
+        {
+            "request": request,
+            "used_model": request.use_model,
+            "fallback_attempted": False,
+        }
+    )
     return final_state["response"]
 
 
@@ -42,10 +51,53 @@ def retrieve_evidence(state: InterviewOSState) -> InterviewOSState:
 
 
 def build_response(state: InterviewOSState) -> InterviewOSState:
-    """Shape retrieved evidence into the Interview OS brief sections."""
+    """Shape retrieved evidence into the Interview OS brief sections (deterministic path)."""
     request = state["request"]
     evidence = state["evidence"]
-    response = InterviewBriefResponse(
+
+    if request.use_model and not state.get("fallback_attempted", False):
+        try:
+            response, usage = _build_model_response(request, evidence)
+            return {"response": response, "used_model": True, "provider_usage": usage}
+        except ValueError:
+            if not request.fallback_to_deterministic:
+                raise
+            return {"fallback_attempted": True}
+
+    response = _build_deterministic_response(request, evidence)
+    return {"response": response, "used_model": False}
+
+
+def route_after_build(
+    state: InterviewOSState,
+) -> Literal["build_response", END]:
+    """Retry with deterministic path if model synthesis failed and fallback is allowed."""
+    if state.get("fallback_attempted", False) and state.get("used_model", False):
+        return "build_response"
+    return END
+
+
+def _build_model_response(
+    request: InterviewBriefRequest,
+    evidence: list[EvidenceItem],
+) -> tuple[InterviewBriefResponse, dict[str, int]]:
+    """Use Claude to synthesize a structured brief from evidence."""
+    provider = _build_provider(request)
+    response = provider.generate_interview_brief(request.focus, evidence)
+    return response, provider.get_last_usage()
+
+
+def _build_provider(request: InterviewBriefRequest):
+    """Select the synthesis provider. Patchable in tests and evals."""
+    from packages.shared.providers.interview_os import ClaudeInterviewBriefProvider
+    return ClaudeInterviewBriefProvider(model=request.claude_model)
+
+
+def _build_deterministic_response(
+    request: InterviewBriefRequest,
+    evidence: list[EvidenceItem],
+) -> InterviewBriefResponse:
+    return InterviewBriefResponse(
         candidate_summary=_build_summary(request, evidence),
         key_questions=_collect_items(
             evidence,
@@ -67,7 +119,6 @@ def build_response(state: InterviewOSState) -> InterviewOSState:
         ),
         evidence=evidence,
     )
-    return {"response": response}
 
 
 def _build_summary(request: InterviewBriefRequest, evidence: list[EvidenceItem]) -> str:
@@ -115,7 +166,14 @@ def _build_interview_brief_graph():
     graph.add_node("build_response", build_response)
     graph.add_edge(START, "retrieve_evidence")
     graph.add_edge("retrieve_evidence", "build_response")
-    graph.add_edge("build_response", END)
+    graph.add_conditional_edges(
+        "build_response",
+        route_after_build,
+        {
+            "build_response": "build_response",
+            END: END,
+        },
+    )
     return graph.compile()
 
 

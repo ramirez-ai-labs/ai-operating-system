@@ -300,6 +300,30 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 12 — Interview OS CI Parity + Claude Provider
+
+**Objective:** Bring Interview OS to full parity with Director OS and Brand OS: eval library, CI gate, and Claude-backed synthesis path. The third domain was complete in Sprint 10d but lacked the eval runner and model-assisted path that the other two domains have.
+
+**Maps to:** plan.md Sprint 12
+
+**Status: Complete — shipped on `feat/sprint-12-interview-os-completeness`. 192 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Add `packages/shared/evaluations/interview_os.py` — 5 scorers: summary terms, expected sources, section minimums, source diversity, grounding | Done | feat/sprint-12-interview-os-completeness |
+| Add `scripts/run_interview_os_evals.py` — CLI runner matching Brand OS pattern | Done | feat/sprint-12-interview-os-completeness |
+| Wire Interview OS eval runner into CI `.github/workflows/ci.yml` | Done | feat/sprint-12-interview-os-completeness |
+| Fix `compileall` step in CI to include `interview_os` package | Done | feat/sprint-12-interview-os-completeness |
+| Add `ClaudeInterviewBriefProvider` in `packages/shared/providers/interview_os.py` — forced tool use, evidence citation grounding, prompt caching | Done | feat/sprint-12-interview-os-completeness |
+| Add `use_model`, `provider`, `claude_model`, `fallback_to_deterministic` fields to `InterviewBriefRequest` | Done | feat/sprint-12-interview-os-completeness |
+| Update `packages/shared/graphs/interview_os.py` — model-assisted path with deterministic fallback, `route_after_build` conditional edge | Done | feat/sprint-12-interview-os-completeness |
+| Add `tests/test_interview_os_evals.py` — 11 tests for eval library scorers and runner | Done | feat/sprint-12-interview-os-completeness |
+| Add 2 tests to `test_interview_os_graph.py` — provider call verified, fallback on error | Done | feat/sprint-12-interview-os-completeness |
+| Calibrate `evaluations/interview_os/interview_cases.json` against actual retrieval output | Done | feat/sprint-12-interview-os-completeness |
+| Update `plan.md` Current State and Recommended Next Steps | Done | feat/sprint-12-interview-os-completeness |
+
+---
+
 ## Coordination notes
 
 - Sprint 1 is complete. Live Claude eval results committed in PR #56 — 3/3 cases, 100% signal and safety. All five JD requirements are satisfied in the repo.
@@ -312,3 +336,4 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 10a is complete (PR #70, 2026-06-13). Post-ship code review surfaced 7 defects; 6 fixed, 7th (mcp_response.content discarded) is the Sprint 10b design decision. 175 tests passing.
 - Sprint 10b is complete (PR #72, 2026-06-13). MCP-first synthesis implemented. `mcp_synthesis` schema field added. Provider clarity docstring added. 178 tests passing.
 - Sprints 10c, 10d, and 11 are complete (feat/sprint-10c-10d-11-completeness, 2026-06-13). Eval runner rewrote to use production provider path. Multiagent eval cases added. Interview OS third workflow domain shipped (schemas, graph, workflow, route, routing, data, evals, tests, MCP tool, console). Issue templates and CONTRIBUTING.md added.
+- Sprint 12 is complete (feat/sprint-12-interview-os-completeness, 2026-06-13). Interview OS eval library, CI gate, and Claude provider path added. All three workflow domains now have full eval coverage in CI and a model-backed synthesis option. 192 tests passing.
