@@ -176,7 +176,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 6 (UI), Phase 7 (hardening)
 
-**Status: In progress — FastAPI compatibility fixed; v1.0 tag and filesystem edge cases remain**
+**Status: In progress — v1.0 tag remains; all code items done**
 
 | Step | Status | PR |
 |---|---|---|
@@ -184,11 +184,12 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | Operator console: cache hit metrics in Execution Trace card | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
 | Operator console: agent pipeline card (researcher → writer with token counts) | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
 | Operator console: formatted content card (writer output) | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
-| Update `plan.md` Current State section to reflect actual repo | Done | [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62) |
-| Fix FastAPI / Starlette version incompatibility (test_api.py, test_import_integrity.py) | Done | docs/sprints-status-update |
+| Fix FastAPI / Starlette version incompatibility (test_api.py, test_import_integrity.py) | Done | [#63](https://github.com/ramirez-ai-labs/ai-operating-system/pull/63) |
+| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Done | [#63](https://github.com/ramirez-ai-labs/ai-operating-system/pull/63) |
 | GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Done | — |
+| Update `plan.md` — mark phases 5d–5h complete, rewrite Next Steps | Done | feat/phase-5e-ollama-routing-and-plan-update |
+| Phase 5e: Replace keyword router with Ollama classification + keyword fallback | Done | feat/phase-5e-ollama-routing-and-plan-update |
 | Cut `v1.0` release tag with description | Pending | — |
-| Add tests for remaining `packages/shared/mcp/filesystem_server.py` edge cases | Done | docs/sprints-status-update |
 
 ---
 
@@ -199,4 +200,5 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 3 remaining items (filesystem edge cases, CI coverage) roll into Sprint 9.
 - Sprint 4 remaining items (README MCP section, topics, tag) roll into Sprint 9.
 - Sprint 5 is complete (PR #57). ChromaDB + Ollama embedding infrastructure is in place. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script.
-- Sprints 6, 7, and 8 are complete on `feat/sprint-6-7-tiered-agents`. Prompt caching, multi-agent researcher→writer pipeline, realistic demo data, Mermaid architecture diagram, and "Why Claude" framing all shipped together. 122 tests passing.
+- Sprints 6, 7, and 8 are complete on `feat/sprint-6-7-tiered-agents`. Prompt caching, multi-agent researcher→writer pipeline, realistic demo data, Mermaid architecture diagram, and "Why Claude" framing all shipped together.
+- Phase 5e Ollama routing is complete. `chief_of_staff.py` now calls Ollama `/api/chat` for classification with keyword fallback when Ollama is unreachable. `WorkflowTrace.routing_model` reflects the actual path. 168 tests passing.
