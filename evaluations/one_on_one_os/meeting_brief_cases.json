@@ -1,0 +1,74 @@
+[
+  {
+    "id": "one-on-one-baseline",
+    "description": "Baseline brief from a named direct report should surface action items and talking points.",
+    "inputs": {
+      "data_path": "data/local_only/one_on_one",
+      "focus": "Sarah SRE",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["One-on-One OS brief"],
+      "expected_evidence_sources": ["1on1_sarah_sre_lead.md"],
+      "minimum_section_counts": {
+        "action_items": 1,
+        "talking_points": 1
+      },
+      "expected_min_source_count": 1
+    }
+  },
+  {
+    "id": "one-on-one-blockers-surfaced",
+    "description": "Blockers noted in 1:1 notes should surface in the blockers section.",
+    "inputs": {
+      "data_path": "data/local_only/one_on_one",
+      "focus": "blockers blocked",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["One-on-One OS brief"],
+      "expected_evidence_sources": ["1on1_sarah_sre_lead.md"],
+      "minimum_section_counts": {
+        "blockers": 1
+      },
+      "expected_min_source_count": 1
+    }
+  },
+  {
+    "id": "one-on-one-kudos-surfaced",
+    "description": "Recognition and wins noted in 1:1 notes should surface in the kudos section.",
+    "inputs": {
+      "data_path": "data/local_only/one_on_one",
+      "focus": "kudos recognition wins",
+      "max_documents": 5
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["One-on-One OS brief"],
+      "expected_evidence_sources": ["1on1_sarah_sre_lead.md"],
+      "minimum_section_counts": {
+        "kudos": 1
+      },
+      "expected_min_source_count": 1
+    }
+  },
+  {
+    "id": "one-on-one-multifile-retrieval",
+    "description": "A broad team query should pull from multiple 1:1 note files.",
+    "inputs": {
+      "data_path": "data/local_only/one_on_one",
+      "focus": "team action items blockers",
+      "max_documents": 10
+    },
+    "reference_outputs": {
+      "required_summary_terms": ["One-on-One OS brief"],
+      "expected_evidence_sources": [
+        "1on1_sarah_sre_lead.md",
+        "1on1_marcus_devex_lead.md"
+      ],
+      "minimum_section_counts": {
+        "action_items": 1
+      },
+      "expected_min_source_count": 2
+    }
+  }
+]

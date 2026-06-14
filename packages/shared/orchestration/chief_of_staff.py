@@ -8,12 +8,14 @@ from urllib import request as urllib_request
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
 from interview_os.workflows.interview_brief import build_interview_brief
+from one_on_one_os.workflows.meeting_brief import build_meeting_brief
 from packages.shared.agents.researcher import ResearcherAgent
 from packages.shared.agents.writer import WriterAgent
 from packages.shared.mcp.orchestrator_integration import run_with_mcp_tools
 from packages.shared.schemas.brand_os import BrandContentDraftRequest
 from packages.shared.schemas.director_os import WeeklyUpdateRequest
 from packages.shared.schemas.interview_os import InterviewBriefRequest
+from packages.shared.schemas.one_on_one_os import OneOnOneRequest
 from packages.shared.schemas.orchestrator import (
     AgentCall,
     OrchestratorRequest,
@@ -26,6 +28,7 @@ logger = logging.getLogger(__name__)
 DIRECTOR_WORKFLOW = "director_os.weekly_update"
 BRAND_WORKFLOW = "brand_os.content_draft"
 INTERVIEW_WORKFLOW = "interview_os.brief"
+ONE_ON_ONE_WORKFLOW = "one_on_one_os.brief"
 DETERMINISTIC_SUMMARY_PREFIX = "Weekly update synthesized from local project evidence"
 BRAND_ROUTING_KEYWORDS = (
     "podcast",
@@ -43,14 +46,25 @@ INTERVIEW_ROUTING_KEYWORDS = (
     "screening",
     "debrief",
 )
+ONE_ON_ONE_ROUTING_KEYWORDS = (
+    "1:1",
+    "1on1",
+    "one-on-one",
+    "direct report",
+    "meeting prep",
+    "check-in",
+)
 
 _ROUTING_SYSTEM_PROMPT = (
     "You are a workflow router. Reply with exactly one word — either "
-    "'director_os', 'brand_os', or 'interview_os' — with no punctuation or explanation.\n"
+    "'director_os', 'brand_os', 'interview_os', or 'one_on_one_os' — with no punctuation "
+    "or explanation.\n"
     "Use 'brand_os' for: content creation, LinkedIn posts, podcasts, thought "
     "leadership, brand strategy, writing, or social media.\n"
     "Use 'interview_os' for: interview prep, candidate briefs, hiring questions, "
     "screening notes, or candidate research.\n"
+    "Use 'one_on_one_os' for: 1:1 meeting prep, direct report check-ins, manager "
+    "notes, action item tracking, team health, or meeting briefs.\n"
     "Use 'director_os' for everything else: status updates, project reviews, "
     "leadership summaries, risk tracking, or weekly updates."
 )
@@ -167,9 +181,18 @@ def _run_workflow(
             )
         )
 
+    if workflow == ONE_ON_ONE_WORKFLOW:
+        return build_meeting_brief(
+            OneOnOneRequest(
+                data_path=request.data_path,
+                focus=request.focus or request.prompt,
+                max_documents=request.max_documents,
+            )
+        )
+
     raise ValueError(
         "Unsupported workflow. Current supported workflows: "
-        f"{DIRECTOR_WORKFLOW}, {BRAND_WORKFLOW}, {INTERVIEW_WORKFLOW}."
+        f"{DIRECTOR_WORKFLOW}, {BRAND_WORKFLOW}, {INTERVIEW_WORKFLOW}, {ONE_ON_ONE_WORKFLOW}."
     )
 
 
@@ -254,6 +277,12 @@ def _classify_with_ollama(
             f"Selected {INTERVIEW_WORKFLOW} via Ollama classification ({model}).",
             routing_model_id,
         )
+    if content == "one_on_one_os":
+        return (
+            ONE_ON_ONE_WORKFLOW,
+            f"Selected {ONE_ON_ONE_WORKFLOW} via Ollama classification ({model}).",
+            routing_model_id,
+        )
     # Model did not return a recognised token — fall back to keyword rules.
     logger.warning(
         "Ollama returned unexpected routing token %r — falling back to keyword routing",
@@ -266,6 +295,12 @@ def _classify_with_ollama(
 def _select_workflow_keyword(prompt: str | None) -> tuple[str, str]:
     """Keyword fallback router — used when Ollama is unavailable."""
     lowered = (prompt or "").lower()
+    for keyword in ONE_ON_ONE_ROUTING_KEYWORDS:
+        if keyword in lowered:
+            return (
+                ONE_ON_ONE_WORKFLOW,
+                f"Selected {ONE_ON_ONE_WORKFLOW} because the prompt matched '{keyword}'.",
+            )
     for keyword in INTERVIEW_ROUTING_KEYWORDS:
         if keyword in lowered:
             return (
@@ -337,12 +372,26 @@ def _build_trace(
         model_id_used = None
         cache_read = 0
         cache_creation = 0
-    else:
+    elif workflow == INTERVIEW_WORKFLOW:
         fallback_used = False
         section_counts = {
             "key_questions": len(result.key_questions),
             "talking_points": len(result.talking_points),
             "red_flags": len(result.red_flags),
+        }
+        model_supported = False
+        model_used = False
+        provider_used = None
+        model_id_used = None
+        cache_read = 0
+        cache_creation = 0
+    else:
+        fallback_used = False
+        section_counts = {
+            "action_items": len(result.action_items),
+            "talking_points": len(result.talking_points),
+            "blockers": len(result.blockers),
+            "kudos": len(result.kudos),
         }
         model_supported = False
         model_used = False

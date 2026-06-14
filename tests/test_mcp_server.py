@@ -13,6 +13,7 @@ def test_mcp_server_registers_expected_tools() -> None:
             "director_os_weekly_update",
             "brand_os_content_draft",
             "interview_os_brief",
+            "one_on_one_os_brief",
         }
 
     asyncio.run(_run())

@@ -38,6 +38,8 @@ packages = [
   "director_os.workflows",
   "interview_os",
   "interview_os.workflows",
+  "one_on_one_os",
+  "one_on_one_os.workflows",
   "packages",
   "packages.shared",
   "packages.shared.evaluations",

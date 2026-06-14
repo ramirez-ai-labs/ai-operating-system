@@ -57,7 +57,7 @@ jobs:
 
       - name: Compile Python sources
         run: |
-          for path in apps brand_os director_os interview_os packages scripts tests; do
+          for path in apps brand_os director_os interview_os one_on_one_os packages scripts tests; do
             if [ -d "$path" ]; then
               python -m compileall "$path"
             fi
@@ -69,11 +69,17 @@ jobs:
       - name: Run Director OS local evaluation set
         run: python scripts/run_director_os_evals.py
 
+      - name: Run Director OS multi-agent evaluation set
+        run: python scripts/run_director_os_evals.py --cases-path evaluations/director_os/multiagent_cases.json
+
       - name: Run Brand OS local evaluation set
         run: python scripts/run_brand_os_evals.py
 
       - name: Run Interview OS local evaluation set
         run: python scripts/run_interview_os_evals.py
+
+      - name: Run One-on-One OS local evaluation set
+        run: python scripts/run_one_on_one_os_evals.py
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
