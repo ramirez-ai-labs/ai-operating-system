@@ -1,12 +1,13 @@
 # AI Operating System (AI-OS)
 
 AI-OS is a production-grade multi-agent system that helps technical leaders
-synthesize fragmented information — project status, team signals, brand work —
-into structured, actionable output.
+synthesize fragmented information — project status, team signals, brand work,
+candidate briefs, and 1:1 meeting prep — into structured, actionable output.
 
-Built on **Claude** (Anthropic) with **LangGraph orchestration**, an
-in-process filesystem tool loop, and a **standalone MCP server** for workflow
-entry points.
+Four workflow domains: **Director OS**, **Brand OS**, **Interview OS**, and
+**One-on-One OS**. Built on **Claude** (Anthropic) with **LangGraph
+orchestration**, an in-process filesystem tool loop, and a **standalone MCP
+server** for workflow entry points.
 
 ---
 
@@ -15,12 +16,13 @@ entry points.
 | Capability | Implementation |
 |---|---|
 | Production Claude integration | `packages/shared/providers/claude_provider.py` |
+| Four workflow domains | Director OS, Brand OS, Interview OS, One-on-One OS |
 | In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `packages/shared/mcp/orchestrator_integration.py` |
-| Standalone MCP server | `apps/mcp/server.py` |
-| LLM evaluation framework | `scripts/run_director_os_evals_claude.py` + committed results |
+| Standalone MCP server | `apps/mcp/server.py` — exports all 4 domain entry points as MCP tools |
+| LLM evaluation framework | per-domain eval harness with committed results |
 | Operator trace / observability | `trace.mcp_tool_calls` in every `/orchestrate` response |
 | Repeatable deployment pattern | `docs/DEPLOYMENT.md` — secrets, eval gate, rollback, MCP adapters |
-| LangGraph state graphs | `packages/shared/graphs/director_os.py`, `brand_os.py` |
+| LangGraph state graphs | `packages/shared/graphs/director_os.py`, `brand_os.py`, `interview_os.py`, `one_on_one_os.py` |
 | LangSmith tracing | Optional — `LANGSMITH_API_KEY` + `--langsmith` flag |
 
 The architecture is designed to be adapted. The provider layer, the
@@ -38,9 +40,13 @@ flowchart TB
 
     CoS -->|brand_os| Brand["Brand OS\nbrand_os.content_draft"]
     CoS -->|director_os / default| Director["Director OS\ndirector_os.weekly_update"]
+    CoS -->|interview_os| Interview["Interview OS\ninterview_os.brief"]
+    CoS -->|one_on_one_os| OneOnOne["One-on-One OS\none_on_one_os.brief"]
 
     Director --> Retrieval["Local Retrieval\nmarkdown evidence"]
     Brand --> BRetrieval["Local Retrieval\nbrand evidence"]
+    Interview --> IRetrieval["Local Retrieval\ncandidate / JD evidence"]
+    OneOnOne --> ORetrieval["Local Retrieval\n1:1 notes evidence"]
 
     Retrieval --> Draft{"use_model?"}
     Draft -->|"provider: claude"| ClaudeProvider["Claude Haiku\ntool use + prompt cache\ncache_control ephemeral"]
@@ -51,6 +57,8 @@ flowchart TB
     OllamaProvider --> Val
     Det --> Val
     BRetrieval --> BFmt["Section formatter"]
+    IRetrieval --> IBrief["Interview brief\ngrounded extraction"]
+    ORetrieval --> OBrief["Meeting brief\ngrounded extraction"]
 
     Val --> TA{"target_audience?"}
     TA -->|set| Researcher["ResearcherAgent\nClaude Haiku  tool use\nstructured synthesis"]
@@ -58,6 +66,8 @@ flowchart TB
     Writer --> RespA(["OrchestratorResponse\nformatted_content + agent_calls + trace"])
     TA -->|not set| RespB(["OrchestratorResponse\nWorkflowTrace + cache metrics"])
     BFmt --> RespB
+    IBrief --> RespB
+    OBrief --> RespB
 
     style ClaudeProvider fill:#e8f5e9,stroke:#388e3c
     style Researcher fill:#e8f5e9,stroke:#388e3c
@@ -81,8 +91,11 @@ cp .env.example .env
 # Run the API
 uvicorn apps.api.main:app --reload --env-file .env
 
-# Run Director OS evals — local, no API key required
+# Run all evals — local, no API key required
 python scripts/run_director_os_evals.py
+python scripts/run_brand_os_evals.py
+python scripts/run_interview_os_evals.py
+python scripts/run_one_on_one_os_evals.py
 
 # Run tests (Claude tests skipped without API key)
 pytest tests/ -v
@@ -132,11 +145,13 @@ what data was retrieved, and token counts:
 
 ## MCP entry points
 
-AI-OS currently supports two MCP-related paths:
+AI-OS supports two MCP-related paths:
 
 1. The in-process filesystem tool loop used by the FastAPI `/orchestrate` flow.
-2. The standalone MCP server in `apps/mcp/server.py`, which exports the real
-   workflow entry points as MCP tools for Claude Desktop or Claude Code.
+2. The standalone MCP server in `apps/mcp/server.py`, which exports all four
+   workflow domains as MCP tools for Claude Desktop or Claude Code:
+   `director_os.weekly_update`, `brand_os.content_draft`,
+   `interview_os.brief`, and `one_on_one_os.brief`.
 
 The filesystem loop exposes three tools Claude can invoke during synthesis:
 
@@ -154,8 +169,20 @@ continues until Claude produces a final text response.
 
 ## Eval results
 
-Eval results against Claude are committed to `evaluations/director_os/`.
-Run the eval set and commit updated results before any production deployment:
+Each domain has a checked-in eval case set. Director OS additionally has
+committed live-Claude results in `evaluations/director_os/results_claude.json`,
+which records grounded output from the production synthesis path.
+
+Run all local evals (no API key required):
+
+```bash
+python scripts/run_director_os_evals.py
+python scripts/run_brand_os_evals.py
+python scripts/run_interview_os_evals.py
+python scripts/run_one_on_one_os_evals.py
+```
+
+Update and commit Director OS live-Claude results (requires `ANTHROPIC_API_KEY`):
 
 ```bash
 python scripts/run_director_os_evals_claude.py
