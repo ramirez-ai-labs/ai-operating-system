@@ -475,8 +475,14 @@ Added eval library, eval runner, CI gate, and `ClaudeInterviewBriefProvider` for
 **Sprint 13 — One-on-One OS + multiagent CI gate (complete):**
 Added the fourth workflow domain: One-on-One OS (meeting briefs with action items, talking points, blockers, kudos). Wired `evaluations/director_os/multiagent_cases.json` into CI as a separate eval step. All four domains have full eval runners in CI and a Claude-backed synthesis path.
 
-**What's next — Gap 1 (runtime action only):**
-Run `python scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` to regenerate `evaluations/director_os/results_claude.json` covering all 7 canonical cases against the production `ClaudeWeeklyUpdateProvider` path. No code changes required — the runner is correct.
+**Sprint 14 — Live Claude eval results + v1.1.0 tag (in progress):**
+Claude eval runners for Interview OS (`scripts/run_interview_os_evals_claude.py`) and One-on-One OS (`scripts/run_one_on_one_os_evals_claude.py`) were added in PR #77. README updated to reflect all four domains. Three runtime actions remain — all blocked on `ANTHROPIC_API_KEY` in `.env`:
+
+1. `python scripts/run_director_os_evals_claude.py` — regenerate `evaluations/director_os/results_claude.json` covering all 7 cases (currently 5)
+2. `python scripts/run_interview_os_evals_claude.py` — commit `evaluations/interview_os/results_claude.json` (4 cases)
+3. `python scripts/run_one_on_one_os_evals_claude.py` — commit `evaluations/one_on_one_os/results_claude.json` (4 cases)
+
+After committing the three result files, cut `v1.1.0` tag. Brand OS remains deterministic-only; adding a Claude synthesis path is Phase 8 scope.
 
 **What's next — Phase 8 (optional):**
 A fifth workflow domain or a dedicated `apps/web` frontend. Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.

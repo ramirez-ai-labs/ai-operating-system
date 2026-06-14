@@ -353,6 +353,27 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 14 — Live Claude Eval Results + v1.1.0 Release
+
+**Objective:** Commit live-Claude eval results for all three model-capable domains and cut the v1.1.0 release tag. No code changes required — the runners are correct and the API key is the only blocker.
+
+**Maps to:** plan.md Gap 1 / Gap 2 close-out
+
+**Status: In progress — runners ready, blocked on `ANTHROPIC_API_KEY` in `.env`**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Merge PR #77 — README 4-domain update + new Claude eval runner scripts | Pending | [#77](https://github.com/ramirez-ai-labs/ai-operating-system/pull/77) |
+| Run `python scripts/run_director_os_evals_claude.py` — regenerate `results_claude.json` covering all 7 cases (was 5) | Pending | — |
+| Run `python scripts/run_interview_os_evals_claude.py` — commit `evaluations/interview_os/results_claude.json` (4 cases) | Pending | — |
+| Run `python scripts/run_one_on_one_os_evals_claude.py` — commit `evaluations/one_on_one_os/results_claude.json` (4 cases) | Pending | — |
+| Commit the three `results_claude.json` files | Pending | — |
+| Cut `v1.1.0` tag — milestone: four domains, multiagent CI gate, 21 new tests since v1.0.0 | Pending | — |
+
+> **To unblock:** Add `ANTHROPIC_API_KEY=<key>` to `.env`, then run the three eval scripts back-to-back, commit results, and tag.
+
+---
+
 ## Coordination notes
 
 - Sprint 1 is complete. Live Claude eval results committed in PR #56 — 3/3 cases, 100% signal and safety. All five JD requirements are satisfied in the repo.
