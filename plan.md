@@ -18,19 +18,20 @@ This is meant to keep the project grounded, avoid scope creep, and preserve alig
 The repository currently includes:
 
 - project documentation in `README.md` with Mermaid architecture diagram and "Why Claude" section
-- three workflow domains on a shared LangGraph foundation:
+- four workflow domains on a shared LangGraph foundation:
   - `Director OS` — evidence-grounded weekly leadership updates with Claude tool use, prompt caching, Ollama fallback, and deterministic baseline
   - `Brand OS` — content drafts (LinkedIn posts, podcast angles, repo improvements) from local brand notes
   - `Interview OS` — candidate prep briefs (key questions, talking points, red flags) from local interview notes; Claude-backed synthesis path available
-- a Chief of Staff orchestration layer with Ollama LLM classification routing and keyword fallback, supporting all three domains
+  - `One-on-One OS` — meeting briefs for 1:1s (action items, talking points, blockers, kudos) from direct-report notes; Claude-backed synthesis path available
+- a Chief of Staff orchestration layer with Ollama LLM classification routing and keyword fallback, supporting all four domains
 - ChromaDB semantic retrieval backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
 - a `ResearcherAgent → WriterAgent` multi-agent pipeline for audience-targeted content formatting
 - prompt caching on the Claude provider with cache metrics surfaced in every `WorkflowTrace`
 - an in-process Claude filesystem tool loop for MCP-style local retrieval traces
-- a standalone MCP server under `apps/mcp` exposing all three workflow domains as tools for Claude Desktop / Claude Code
-- realistic enterprise scenario datasets under `data/local_only/` for all three domains
+- a standalone MCP server under `apps/mcp` exposing all four workflow domains as tools for Claude Desktop / Claude Code
+- realistic enterprise scenario datasets under `data/local_only/` for all four domains
 - a local operator console at `/` with provider selection, target audience, `use_mcp` toggle, cache hit display, and agent pipeline visualization
-- 22 test files, 192 tests passing; local evals for all three workflow domains running in CI
+- 24 test files, 213 tests passing; local evals for all four workflow domains running in CI
 - optional LangSmith tracing
 - issue templates, `CONTRIBUTING.md`, and branch protection on `main`
 
@@ -163,7 +164,7 @@ Use the shared foundation to support multi-domain routing while keeping workflow
 
 ### Status
 
-- Implemented: Chief of Staff routing plus graph-backed `Director OS`, `Brand OS`, and `Interview OS` workflows on the shared foundation
+- Implemented: Chief of Staff routing plus graph-backed `Director OS`, `Brand OS`, `Interview OS`, and `One-on-One OS` workflows on the shared foundation
 - Remaining work: decide where additional graph-backed domains add enough value to justify the pattern-match work
 
 ## Phase 5: Improve Model Reliability and Bounded Agentic Behavior
@@ -466,19 +467,19 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–11 are complete. v1.0.0 is tagged and released. Three workflow domains (Director OS, Brand OS, Interview OS) are live with full eval coverage in CI. 192 tests passing.
+Sprints 1–13 are complete. v1.0.0 is tagged and released. Four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) are live with full eval coverage in CI. 213 tests passing.
 
-**Sprint 12a — Interview OS CI parity (complete):**
-Added `packages/shared/evaluations/interview_os.py`, `scripts/run_interview_os_evals.py`, and wired the eval runner into CI. Fixed the `compileall` step to include `interview_os`. Interview OS now has the same CI gate as Director OS and Brand OS.
+**Sprint 12 — Interview OS CI parity + Claude provider (complete):**
+Added eval library, eval runner, CI gate, and `ClaudeInterviewBriefProvider` for Interview OS. All three original domains now have identical eval coverage depth.
 
-**Sprint 12c — Interview OS Claude provider (complete):**
-Added `ClaudeInterviewBriefProvider` in `packages/shared/providers/interview_os.py` with forced tool use and evidence citation grounding. Added `use_model`, `provider`, `claude_model`, and `fallback_to_deterministic` fields to `InterviewBriefRequest`. Updated the Interview OS graph with a model-assisted path and deterministic fallback. Added 2 new tests (provider call verified, fallback on error).
+**Sprint 13 — One-on-One OS + multiagent CI gate (complete):**
+Added the fourth workflow domain: One-on-One OS (meeting briefs with action items, talking points, blockers, kudos). Wired `evaluations/director_os/multiagent_cases.json` into CI as a separate eval step. All four domains have full eval runners in CI and a Claude-backed synthesis path.
 
-**What's next — Sprint 12d:**
-Run `python scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` to generate `evaluations/director_os/results_claude.json` covering all 7 canonical cases. This is a runtime action, not a code change — the runner is already correct.
+**What's next — Gap 1 (runtime action only):**
+Run `python scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` to regenerate `evaluations/director_os/results_claude.json` covering all 7 canonical cases against the production `ClaudeWeeklyUpdateProvider` path. No code changes required — the runner is correct.
 
-**What's next — Sprint 13 (optional):**
-A fourth workflow domain (e.g. Recruiting OS, Finance OS, One-on-One OS) following the now-established pattern. Use `.github/ISSUE_TEMPLATE/workflow.md` to propose before building.
+**What's next — Phase 8 (optional):**
+A fifth workflow domain or a dedicated `apps/web` frontend. Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
 
 ## Definition of Success
 

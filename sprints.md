@@ -324,6 +324,35 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 13 — One-on-One OS + Multiagent CI Gate
+
+**Objective:** Add One-on-One OS as a fourth workflow domain and wire the orphaned `multiagent_cases.json` into CI. All shared infrastructure was in place — this is pattern-match work.
+
+**Maps to:** plan.md Phase 4 (multi-domain expansion)
+
+**Status: Complete — shipped in [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75). 213 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Add `data/local_only/one_on_one/` — 4 realistic 1:1 note files with Action:/Blocker:/Kudos: prefixes | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Define `OneOnOneRequest` / `OneOnOneResponse` schemas in `packages/shared/schemas/one_on_one_os.py` | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Build LangGraph state graph in `packages/shared/graphs/one_on_one_os.py` — model path + deterministic fallback | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add `ClaudeOneOnOneProvider` in `packages/shared/providers/one_on_one_os.py` — forced tool use, citation grounding | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add workflow entry point in `one_on_one_os/workflows/meeting_brief.py` | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Register `/one-on-one/brief` route in `apps/api/main.py` | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add routing in `chief_of_staff.py` — `ONE_ON_ONE_ROUTING_KEYWORDS` + Ollama classification + `_build_trace` | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Update `packages/shared/schemas/orchestrator.py` — add `OneOnOneResponse` to result union | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Expose `one_on_one_os_brief` as an MCP tool in `apps/mcp/server.py` | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add `packages/shared/evaluations/one_on_one_os.py` — 5 scorers | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add `evaluations/one_on_one_os/meeting_brief_cases.json` — 4 eval cases | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add `scripts/run_one_on_one_os_evals.py` — CLI runner | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Wire One-on-One OS eval runner + multiagent eval step into CI | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add `tests/test_one_on_one_os_graph.py` — 12 tests | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Add `tests/test_one_on_one_os_evals.py` — 10 tests | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+| Register `one_on_one_os` packages in `pyproject.toml` | Done | [#75](https://github.com/ramirez-ai-labs/ai-operating-system/pull/75) |
+
+---
+
 ## Coordination notes
 
 - Sprint 1 is complete. Live Claude eval results committed in PR #56 — 3/3 cases, 100% signal and safety. All five JD requirements are satisfied in the repo.
@@ -336,4 +365,5 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 10a is complete (PR #70, 2026-06-13). Post-ship code review surfaced 7 defects; 6 fixed, 7th (mcp_response.content discarded) is the Sprint 10b design decision. 175 tests passing.
 - Sprint 10b is complete (PR #72, 2026-06-13). MCP-first synthesis implemented. `mcp_synthesis` schema field added. Provider clarity docstring added. 178 tests passing.
 - Sprints 10c, 10d, and 11 are complete (feat/sprint-10c-10d-11-completeness, 2026-06-13). Eval runner rewrote to use production provider path. Multiagent eval cases added. Interview OS third workflow domain shipped (schemas, graph, workflow, route, routing, data, evals, tests, MCP tool, console). Issue templates and CONTRIBUTING.md added.
-- Sprint 12 is complete (feat/sprint-12-interview-os-completeness, 2026-06-13). Interview OS eval library, CI gate, and Claude provider path added. All three workflow domains now have full eval coverage in CI and a model-backed synthesis option. 192 tests passing.
+- Sprint 12 is complete (feat/sprint-12-interview-os-completeness, 2026-06-13). Interview OS eval library, CI gate, and Claude provider path added. All three original workflow domains now have full eval coverage in CI and a model-backed synthesis option. 192 tests passing.
+- Sprint 13 is complete (PR #75, 2026-06-13). One-on-One OS fourth workflow domain shipped (schemas, graph, provider, workflow, route, routing, data, evals, tests, MCP tool). Multiagent CI gate wired for `multiagent_cases.json`. All four domains have full eval runners in CI and a Claude-backed synthesis path. 213 tests passing.
