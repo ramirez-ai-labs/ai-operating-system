@@ -5,9 +5,11 @@ from mcp.server.fastmcp import FastMCP
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
 from interview_os.workflows.interview_brief import build_interview_brief
+from one_on_one_os.workflows.meeting_brief import build_meeting_brief
 from packages.shared.schemas.brand_os import BrandContentDraftRequest, BrandContentDraftResponse
 from packages.shared.schemas.director_os import WeeklyUpdateRequest, WeeklyUpdateResponse
 from packages.shared.schemas.interview_os import InterviewBriefRequest, InterviewBriefResponse
+from packages.shared.schemas.one_on_one_os import OneOnOneRequest, OneOnOneResponse
 
 
 def create_server() -> FastMCP:
@@ -28,6 +30,11 @@ def create_server() -> FastMCP:
     def interview_os_brief(request: InterviewBriefRequest) -> InterviewBriefResponse:
         """Run the Interview OS brief workflow from an MCP client."""
         return build_interview_brief(request)
+
+    @server.tool()
+    def one_on_one_os_brief(request: OneOnOneRequest) -> OneOnOneResponse:
+        """Run the One-on-One OS meeting brief workflow from an MCP client."""
+        return build_meeting_brief(request)
 
     return server
 

@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse
 from brand_os.workflows.content_draft import build_content_draft
 from director_os.workflows.weekly_update import build_weekly_update
 from interview_os.workflows.interview_brief import build_interview_brief
+from one_on_one_os.workflows.meeting_brief import build_meeting_brief
 from packages.shared.orchestration.chief_of_staff import route_request
 from packages.shared.schemas.brand_os import (
     BrandContentDraftRequest,
@@ -18,6 +19,7 @@ from packages.shared.schemas.interview_os import (
     InterviewBriefRequest,
     InterviewBriefResponse,
 )
+from packages.shared.schemas.one_on_one_os import OneOnOneRequest, OneOnOneResponse
 from packages.shared.schemas.orchestrator import (
     OrchestratorRequest,
     OrchestratorResponse,
@@ -394,6 +396,7 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
                 <option value="director_os.weekly_update">director_os.weekly_update</option>
                 <option value="brand_os.content_draft">brand_os.content_draft</option>
                 <option value="interview_os.brief">interview_os.brief</option>
+                <option value="one_on_one_os.brief">one_on_one_os.brief</option>
               </select>
             </label>
             <label>
@@ -558,6 +561,11 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
         if (!promptInput.value.trim()) {
           promptInput.value = "Prepare an interview brief for the candidate";
         }
+      } else if (workflowInput.value === "one_on_one_os.brief") {
+        dataPathInput.value = "data/local_only/one_on_one";
+        if (!promptInput.value.trim()) {
+          promptInput.value = "Prepare my 1:1 meeting briefs";
+        }
       }
     });
 
@@ -632,14 +640,20 @@ OPERATOR_CONSOLE_HTML = """<!DOCTYPE html>
           .join("");
 
         const result = body.result || {};
-        const summary = result.summary || result.insight_summary || result.candidate_summary || "";
-        const wins = result.wins || result.post_outline || result.key_questions || [];
-        const risks = result.risks || result.red_flags || [];
-        const nextSteps = result.next_steps || result.podcast_angles || result.talking_points || [];
+        const summary = result.summary || result.insight_summary
+          || result.candidate_summary || result.meeting_summary || "";
+        const wins = result.wins || result.post_outline
+          || result.key_questions || result.action_items || [];
+        const risks = result.risks || result.red_flags || result.blockers || [];
+        const nextSteps = result.next_steps || result.podcast_angles
+          || result.talking_points || result.kudos || [];
 
-        const winsLabel = result.key_questions ? "Key Questions" : "Wins / Insights";
-        const risksLabel = result.red_flags ? "Red Flags" : "Risks";
-        const nextLabel = result.talking_points ? "Talking Points" : "Next Steps";
+        const winsLabel = result.key_questions ? "Key Questions"
+          : result.action_items ? "Action Items" : "Wins / Insights";
+        const risksLabel = result.red_flags ? "Red Flags"
+          : result.blockers ? "Blockers" : "Risks";
+        const nextLabel = result.kudos ? "Kudos"
+          : result.talking_points ? "Talking Points" : "Next Steps";
 
         let detailHtml = summary
           ? `<p class="result-summary-text">${summary}</p>` : "";
@@ -789,5 +803,18 @@ def create_interview_brief(request: InterviewBriefRequest) -> InterviewBriefResp
     """Run the Interview OS brief workflow against local candidate and role notes."""
     try:
         return build_interview_brief(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post(
+    "/one-on-one/brief",
+    response_model=OneOnOneResponse,
+    responses={400: {"model": ErrorResponse}},
+)
+def create_one_on_one_brief(request: OneOnOneRequest) -> OneOnOneResponse:
+    """Run the One-on-One OS brief workflow against local 1:1 notes."""
+    try:
+        return build_meeting_brief(request)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
