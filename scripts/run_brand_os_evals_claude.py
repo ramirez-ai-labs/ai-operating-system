@@ -62,6 +62,7 @@ def run_evals(ci_mode: bool = False) -> int:
         return 1
 
     from packages.shared.evaluations.brand_os import (
+        BRAND_OS_CLAUDE_EVALUATORS,
         BrandContentDraftEvalCase,
         load_brand_os_eval_cases,
         run_local_brand_os_evaluations,
@@ -78,9 +79,6 @@ def run_evals(ci_mode: bool = False) -> int:
                         "claude_model": _CLAUDE_MODEL,
                     }
                 ),
-                "reference_outputs": case.reference_outputs.model_copy(
-                    update={"expected_empty_sections": []}
-                ),
             }
         )
         for case in base_cases
@@ -91,7 +89,7 @@ def run_evals(ci_mode: bool = False) -> int:
         len(claude_cases),
     )
 
-    results = run_local_brand_os_evaluations(claude_cases)
+    results = run_local_brand_os_evaluations(claude_cases, evaluators=BRAND_OS_CLAUDE_EVALUATORS)
 
     passed = sum(1 for r in results if r["passed"])
     failed = len(results) - passed

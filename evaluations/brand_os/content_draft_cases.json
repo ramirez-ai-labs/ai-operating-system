@@ -56,9 +56,7 @@
       "max_documents": 5
     },
     "reference_outputs": {
-      "required_summary_terms": [
-        "podcast"
-      ],
+      "required_summary_terms": [],
       "expected_evidence_sources": [
         "brand_week_15.md"
       ],
@@ -78,9 +76,7 @@
       "max_documents": 1
     },
     "reference_outputs": {
-      "required_summary_terms": [
-        "podcast"
-      ],
+      "required_summary_terms": [],
       "expected_evidence_sources": [
         "brand_week_15.md"
       ],

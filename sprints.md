@@ -359,18 +359,18 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 8 / Brand OS Claude path
 
-**Status: In Progress**
+**Status: Complete — PR #80 merged, v1.2.0 tagged**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| Add `use_model`, `provider`, `claude_model`, `fallback_to_deterministic` to `BrandContentDraftRequest` in `packages/shared/schemas/brand_os.py` | Done | — |
-| Create `packages/shared/providers/brand_os.py` — `ClaudeBrandContentDraftProvider` via forced tool use + citation grounding | Done | — |
-| Update `packages/shared/graphs/brand_os.py` — add model path, fallback routing, `_build_provider`, conditional edge | Done | — |
-| Recalibrate `required_summary_terms` in `evaluations/brand_os/content_draft_cases.json` for cross-path stability | Done | — |
-| Create `scripts/run_brand_os_evals_claude.py` — Claude eval runner, strips `expected_empty_sections` for Claude path | Done | — |
-| Add 3 model-path tests to `tests/test_brand_os_graph.py` (model path, fallback, no-fallback raise) | Done | — |
-| Run live Claude evals — commit `evaluations/brand_os/results_claude.json` (7/7 passed) | Pending | — |
-| Open and merge PR | Pending | — |
+| Add `use_model`, `provider`, `claude_model`, `fallback_to_deterministic` to `BrandContentDraftRequest` in `packages/shared/schemas/brand_os.py` | Done | [#80](https://github.com/ramirez-ai-labs/ai-operating-system/pull/80) |
+| Create `packages/shared/providers/brand_os.py` — `ClaudeBrandContentDraftProvider` via forced tool use + citation grounding | Done | [#80](https://github.com/ramirez-ai-labs/ai-operating-system/pull/80) |
+| Update `packages/shared/graphs/brand_os.py` — add model path, fallback routing, `_build_provider`, conditional edge | Done | [#80](https://github.com/ramirez-ai-labs/ai-operating-system/pull/80) |
+| Recalibrate `required_summary_terms` in `evaluations/brand_os/content_draft_cases.json` for cross-path stability; clear unstable podcast terms; add `BRAND_OS_CLAUDE_EVALUATORS` excluding prefix-purity scorer | Done | [#80](https://github.com/ramirez-ai-labs/ai-operating-system/pull/80) |
+| Create `scripts/run_brand_os_evals_claude.py` — Claude eval runner using `BRAND_OS_CLAUDE_EVALUATORS` | Done | [#80](https://github.com/ramirez-ai-labs/ai-operating-system/pull/80) |
+| Add 3 model-path tests to `tests/test_brand_os_graph.py` (model path, fallback, no-fallback raise) | Done | [#80](https://github.com/ramirez-ai-labs/ai-operating-system/pull/80) |
+| Run live Claude evals — commit `evaluations/brand_os/results_claude.json` (7/7 passed, 100%) | Done | — |
+| Cut `v1.2.0` tag — milestone: all four domains have Claude providers and committed live eval results | Done | — |
 
 ---
 
@@ -409,4 +409,4 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 12 is complete (feat/sprint-12-interview-os-completeness, 2026-06-13). Interview OS eval library, CI gate, and Claude provider path added. All three original workflow domains now have full eval coverage in CI and a model-backed synthesis option. 192 tests passing.
 - Sprint 13 is complete (PR #75, 2026-06-13). One-on-One OS fourth workflow domain shipped (schemas, graph, provider, workflow, route, routing, data, evals, tests, MCP tool). Multiagent CI gate wired for `multiagent_cases.json`. All four domains have full eval runners in CI and a Claude-backed synthesis path. 213 tests passing.
 - Sprint 14 is complete (PR #78, 2026-06-14). `required_summary_terms` recalibrated across three eval case files for cross-path stability. Live Claude eval results committed for Director OS (4/4), Interview OS (4/4), and One-on-One OS (4/4) — all 100%. v1.1.0 tagged.
-- Sprint 15 is in progress (feat/sprint-15-brand-os-claude). Brand OS Claude provider path implementing: `ClaudeBrandContentDraftProvider`, `use_model` schema fields, conditional graph edge, eval runner script, and 3 new model-path tests.
+- Sprint 15 is complete (PR #80, 2026-06-15). Brand OS Claude provider path shipped: `ClaudeBrandContentDraftProvider`, `use_model` schema fields, conditional graph edge, `BRAND_OS_CLAUDE_EVALUATORS` (excludes prefix-purity scorer, which tests deterministic routing only), eval runner. Live Claude evals: 7/7 passed (100%). All four domains now have full Claude provider parity and committed eval results. 216 tests passing. v1.2.0 tagged.

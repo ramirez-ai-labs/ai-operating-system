@@ -467,19 +467,18 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–14 are complete. v1.1.0 is tagged and released. Four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) are live with full eval coverage in CI and committed Claude results. 213 tests passing.
+Sprints 1–15 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, committed live eval results (100% pass rate each), and CI eval gates. 216 tests passing.
 
-**Sprint 14 — Live Claude eval results + v1.1.0 tag (complete, PR #78):**
-Recalibrated `required_summary_terms` across Director OS, Interview OS, and One-on-One OS eval cases so scorer terms are stable across both the deterministic and Claude paths. Committed `results_claude.json` for all three model-capable domains — 4/4 passed (100%) each. Cut `v1.1.0` release tag.
+**Sprint 15 — Brand OS Claude provider path + v1.2.0 tag (complete, PR #80):**
+Added `ClaudeBrandContentDraftProvider` with forced tool use and citation grounding. Added `BRAND_OS_CLAUDE_EVALUATORS` (excludes prefix-purity scorer, which tests deterministic routing behavior not applicable to Claude synthesis). Committed `evaluations/brand_os/results_claude.json` — 7/7 passed (100%). Cut `v1.2.0` release tag — first milestone where all four domains have live Claude results.
 
 **What's next — Phase 8:**
 
 | Candidate | Value | Effort |
 |---|---|---|
-| Brand OS Claude provider path | Parity with the other three domains; currently the only domain without model-assisted synthesis | Low — same pattern, existing infrastructure |
-| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal | High |
-| ChromaDB eval coverage | Local eval cases that exercise `RETRIEVAL_BACKEND=chroma` end-to-end | Medium |
+| ChromaDB eval coverage | Closes an untested claim: `RETRIEVAL_BACKEND=chroma` is live since Sprint 5 but no eval exercises it end-to-end | Medium |
 | Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS | Medium |
+| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal | High |
 
 Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
 

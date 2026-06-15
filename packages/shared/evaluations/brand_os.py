@@ -218,19 +218,31 @@ BRAND_OS_EVALUATORS = [
     score_brand_expected_empty_sections,
 ]
 
+# Claude synthesizes by semantic meaning, not prefix rules, so prefix purity and empty-section
+# constraints only apply to the deterministic path.
+BRAND_OS_CLAUDE_EVALUATORS = [
+    score_brand_summary_terms,
+    score_brand_expected_sources,
+    score_brand_section_minimums,
+    score_brand_source_diversity,
+]
+
 
 def run_local_brand_os_evaluations(
     cases: list[BrandContentDraftEvalCase] | None = None,
+    *,
+    evaluators: list | None = None,
 ) -> list[dict[str, Any]]:
     """Run the checked-in Brand OS evaluation cases without remote dependencies."""
     eval_cases = cases or load_brand_os_eval_cases()
+    active_evaluators = evaluators if evaluators is not None else BRAND_OS_EVALUATORS
     results: list[dict[str, Any]] = []
     for case in eval_cases:
         outputs = run_brand_os_eval_target(case.inputs.model_dump())
         reference_outputs = case.reference_outputs.model_dump()
         evaluator_results = [
             evaluator(outputs=outputs, reference_outputs=reference_outputs)
-            for evaluator in BRAND_OS_EVALUATORS
+            for evaluator in active_evaluators
         ]
         results.append(
             {
@@ -246,6 +258,7 @@ def run_local_brand_os_evaluations(
 
 
 __all__ = [
+    "BRAND_OS_CLAUDE_EVALUATORS",
     "BRAND_OS_EVALUATORS",
     "BrandContentDraftEvalCase",
     "BrandContentDraftEvalReference",
