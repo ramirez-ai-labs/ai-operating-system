@@ -1,6 +1,6 @@
 from packages.shared.graphs.brand_os import run_content_draft_graph
-from packages.shared.schemas.brand_os import BrandContentDraftRequest
-from packages.shared.schemas.director_os import EvidenceItem
+from packages.shared.schemas.brand_os import BrandContentDraftRequest, BrandContentDraftResponse
+from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 
 
 def test_brand_os_graph_runs_end_to_end() -> None:
@@ -81,3 +81,140 @@ def test_brand_os_graph_routes_prefixed_evidence_into_matching_sections(monkeypa
     assert [item.text for item in result.repo_improvements] == [
         "Improve: add a visible validation summary to the content trace."
     ]
+
+
+def test_brand_os_graph_uses_model_when_requested(monkeypatch) -> None:
+    """When use_model=True, the graph should call the provider and return its response."""
+    from packages.shared.graphs import brand_os as graph_module
+
+    fake_evidence = [
+        EvidenceItem(
+            source="brand_week_x.md",
+            line_number=3,
+            title="Brand Week X",
+            excerpt="Insight: local-first AI makes grounded content drafts tractable.",
+        )
+    ]
+
+    def fake_retrieve_relevant_documents(*, base_path, query, limit):
+        return fake_evidence
+
+    fake_response = BrandContentDraftResponse(
+        insight_summary="Claude-synthesized brand insight about local-first workflows.",
+        post_outline=[
+            GroundedItem(
+                text="Insight: local-first AI makes grounded content drafts tractable.",
+                source="brand_week_x.md",
+                line_number=3,
+            )
+        ],
+        podcast_angles=[],
+        repo_improvements=[],
+        evidence=fake_evidence,
+    )
+
+    class FakeProvider:
+        def generate_brand_content_draft(self, focus, evidence):
+            return fake_response
+
+        def get_last_usage(self):
+            return {"input_tokens": 100, "output_tokens": 50}
+
+    monkeypatch.setattr(
+        graph_module, "retrieve_relevant_documents", fake_retrieve_relevant_documents
+    )
+    monkeypatch.setattr(graph_module, "_build_provider", lambda request: FakeProvider())
+
+    result = run_content_draft_graph(
+        BrandContentDraftRequest(
+            data_path="data/local_only/brand",
+            focus="local-first ai",
+            max_documents=5,
+            use_model=True,
+        )
+    )
+
+    assert result.insight_summary == "Claude-synthesized brand insight about local-first workflows."
+    assert len(result.post_outline) == 1
+
+
+def test_brand_os_graph_falls_back_to_deterministic_on_model_error(monkeypatch) -> None:
+    """When the model raises ValueError and fallback_to_deterministic=True, the graph succeeds."""
+    from packages.shared.graphs import brand_os as graph_module
+
+    def fake_retrieve_relevant_documents(*, base_path, query, limit):
+        return [
+            EvidenceItem(
+                source="brand_week_x.md",
+                line_number=3,
+                title="Brand Week X",
+                excerpt="Insight: local-first AI makes grounded content drafts tractable.",
+            )
+        ]
+
+    class FailingProvider:
+        def generate_brand_content_draft(self, focus, evidence):
+            raise ValueError("ANTHROPIC_API_KEY is not set.")
+
+        def get_last_usage(self):
+            return {}
+
+    monkeypatch.setattr(
+        graph_module, "retrieve_relevant_documents", fake_retrieve_relevant_documents
+    )
+    monkeypatch.setattr(graph_module, "_build_provider", lambda request: FailingProvider())
+
+    result = run_content_draft_graph(
+        BrandContentDraftRequest(
+            data_path="data/local_only/brand",
+            focus="local-first ai",
+            max_documents=5,
+            use_model=True,
+            fallback_to_deterministic=True,
+        )
+    )
+
+    assert result.insight_summary
+    assert result.evidence
+
+
+def test_brand_os_graph_raises_when_fallback_disabled_and_model_fails(monkeypatch) -> None:
+    """When fallback_to_deterministic=False and the model fails, the error should propagate."""
+    from packages.shared.graphs import brand_os as graph_module
+
+    def fake_retrieve_relevant_documents(*, base_path, query, limit):
+        return [
+            EvidenceItem(
+                source="brand_week_x.md",
+                line_number=3,
+                title="Brand Week X",
+                excerpt="Insight: local-first AI makes grounded content drafts tractable.",
+            )
+        ]
+
+    class FailingProvider:
+        def generate_brand_content_draft(self, focus, evidence):
+            raise ValueError("ANTHROPIC_API_KEY is not set.")
+
+        def get_last_usage(self):
+            return {}
+
+    monkeypatch.setattr(
+        graph_module, "retrieve_relevant_documents", fake_retrieve_relevant_documents
+    )
+    monkeypatch.setattr(graph_module, "_build_provider", lambda request: FailingProvider())
+
+    try:
+        run_content_draft_graph(
+            BrandContentDraftRequest(
+                data_path="data/local_only/brand",
+                focus="local-first ai",
+                max_documents=5,
+                use_model=True,
+                fallback_to_deterministic=False,
+            )
+        )
+    except ValueError as exc:
+        assert "anthropic_api_key" in str(exc).lower()
+    else:
+        raise AssertionError("Expected ValueError when fallback is disabled and model fails.")

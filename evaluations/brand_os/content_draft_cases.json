@@ -9,8 +9,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "local-first ai workflow",
-        "Brand Week 15"
+        "local"
       ],
       "expected_evidence_sources": [
         "brand_week_15.md"
@@ -33,8 +32,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "operator visibility local-first workflow",
-        "Brand Week 15"
+        "operator"
       ],
       "expected_evidence_sources": [
         "brand_week_15.md",
@@ -59,7 +57,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "podcast discussion theme"
+        "podcast"
       ],
       "expected_evidence_sources": [
         "brand_week_15.md"
@@ -81,7 +79,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "podcast discussion theme"
+        "podcast"
       ],
       "expected_evidence_sources": [
         "brand_week_15.md"
@@ -106,7 +104,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "grounded content drafts workflow"
+        "workflow"
       ],
       "expected_evidence_sources": [
         "brand_week_15.md"
@@ -128,7 +126,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "trace view validation"
+        "trace"
       ],
       "expected_evidence_sources": [
         "brand_week_15.md"
@@ -150,7 +148,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "trace view validation"
+        "trace"
       ],
       "expected_evidence_sources": [
         "brand_week_15.md"

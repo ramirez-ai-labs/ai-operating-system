@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
@@ -18,12 +18,21 @@ class BrandOSState(TypedDict, total=False):
     request: BrandContentDraftRequest
     evidence: list[EvidenceItem]
     response: BrandContentDraftResponse
+    used_model: bool
+    fallback_attempted: bool
+    provider_usage: dict[str, int]
 
 
 def run_content_draft_graph(request: BrandContentDraftRequest) -> BrandContentDraftResponse:
     """Execute the Brand OS content-draft graph and return the public response."""
     graph = _get_content_draft_graph()
-    final_state = graph.invoke({"request": request})
+    final_state = graph.invoke(
+        {
+            "request": request,
+            "used_model": request.use_model,
+            "fallback_attempted": False,
+        }
+    )
     return final_state["response"]
 
 
@@ -44,10 +53,54 @@ def retrieve_evidence(state: BrandOSState) -> BrandOSState:
 
 
 def build_response(state: BrandOSState) -> BrandOSState:
-    """Shape the retrieved evidence into the current Brand OS draft sections."""
+    """Shape retrieved evidence into Brand OS draft sections."""
     request = state["request"]
     evidence = state["evidence"]
-    response = BrandContentDraftResponse(
+
+    if request.use_model and not state.get("fallback_attempted", False):
+        try:
+            response, usage = _build_model_response(request, evidence)
+            return {"response": response, "used_model": True, "provider_usage": usage}
+        except ValueError:
+            if not request.fallback_to_deterministic:
+                raise
+            return {"fallback_attempted": True}
+
+    response = _build_deterministic_response(request, evidence)
+    return {"response": response, "used_model": False}
+
+
+def route_after_build(
+    state: BrandOSState,
+) -> Literal["build_response", "__end__"]:
+    """Retry with deterministic path if model synthesis failed and fallback is allowed."""
+    if state.get("fallback_attempted", False) and state.get("used_model", False):
+        return "build_response"
+    return END
+
+
+def _build_model_response(
+    request: BrandContentDraftRequest,
+    evidence: list[EvidenceItem],
+) -> tuple[BrandContentDraftResponse, dict[str, int]]:
+    """Use Claude to synthesize a structured content draft from evidence."""
+    provider = _build_provider(request)
+    response = provider.generate_brand_content_draft(request.focus, evidence)
+    return response, provider.get_last_usage()
+
+
+def _build_provider(request: BrandContentDraftRequest):
+    """Select the synthesis provider. Patchable in tests and evals."""
+    from packages.shared.providers.brand_os import ClaudeBrandContentDraftProvider
+
+    return ClaudeBrandContentDraftProvider(model=request.claude_model)
+
+
+def _build_deterministic_response(
+    request: BrandContentDraftRequest,
+    evidence: list[EvidenceItem],
+) -> BrandContentDraftResponse:
+    return BrandContentDraftResponse(
         insight_summary=_build_summary(request.focus, evidence),
         post_outline=_collect_items(
             evidence,
@@ -72,7 +125,6 @@ def build_response(state: BrandOSState) -> BrandOSState:
         ),
         evidence=evidence,
     )
-    return {"response": response}
 
 
 def _build_content_draft_graph():
@@ -82,7 +134,14 @@ def _build_content_draft_graph():
 
     graph.add_edge(START, "retrieve_evidence")
     graph.add_edge("retrieve_evidence", "build_response")
-    graph.add_edge("build_response", END)
+    graph.add_conditional_edges(
+        "build_response",
+        route_after_build,
+        {
+            "build_response": "build_response",
+            END: END,
+        },
+    )
     return graph.compile()
 
 
