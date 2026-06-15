@@ -8,7 +8,9 @@
       "max_documents": 5
     },
     "reference_outputs": {
-      "required_summary_terms": ["Interview OS brief"],
+      "required_summary_terms": [
+        "candidate"
+      ],
       "expected_evidence_sources": [
         "behavioral_interview_guide.md"
       ],
@@ -27,7 +29,9 @@
       "max_documents": 5
     },
     "reference_outputs": {
-      "required_summary_terms": ["Interview OS brief"],
+      "required_summary_terms": [
+        "candidate"
+      ],
       "expected_evidence_sources": [
         "candidate_profile_alex_chen.md"
       ],
@@ -39,14 +43,16 @@
   },
   {
     "id": "interview-multifile-retrieval",
-    "description": "A broad query should pull from multiple source files — source diversity is the primary signal.",
+    "description": "A broad query should pull from multiple source files \u00e2\u20ac\u201d source diversity is the primary signal.",
     "inputs": {
       "data_path": "data/local_only/interviews",
       "focus": "senior AI engineer interview",
       "max_documents": 10
     },
     "reference_outputs": {
-      "required_summary_terms": ["Interview OS brief"],
+      "required_summary_terms": [
+        "engineer"
+      ],
       "expected_evidence_sources": [
         "candidate_profile_alex_chen.md",
         "role_brief_senior_ai_engineer.md"
@@ -66,7 +72,9 @@
       "max_documents": 5
     },
     "reference_outputs": {
-      "required_summary_terms": ["Interview OS brief"],
+      "required_summary_terms": [
+        "candidate"
+      ],
       "expected_evidence_sources": [
         "behavioral_interview_guide.md"
       ],

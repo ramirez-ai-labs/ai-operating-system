@@ -1,88 +1,565 @@
 {
-  "run_at": "2026-06-12T17:37:08.187392+00:00",
+  "run_at": "2026-06-14T23:55:07.257160+00:00",
   "provider": "claude",
   "model": "claude-haiku-4-5-20251001",
+  "eval_path": "evaluations/director_os/weekly_update_cases.json",
   "summary": {
-    "total": 3,
-    "passed": 3,
+    "total": 4,
+    "passed": 4,
     "failed": 0,
     "pass_rate": 1.0
   },
   "cases": [
     {
-      "case_id": "director_os_001",
-      "prompt": "Prepare my weekly leadership update",
-      "response": "# MAP Platform Onboarding \u2013 Weekly Leadership Update\n\n## Status\n**Progress:** 3 of 5 Business Units onboarded to Canary environment (60%)\n\n## Key Wins\n- \u2705 BU-2 passed production readiness gate\n- \u2705 BU-3 passed production readiness gate\n\n## Blockers\n- \ud83d\udd34 **BU-4 Security Review** \u2013 Pending completion\n  - **Impact:** ~1 week delay estimated\n\n## Immediate Actions\n1. Initiate BU-4 security review kickoff\n2. Schedule BU-5 production readiness review\n\n## Timeline Outlook\n- BU-4 onboarding contingent on security review completion (est. +1 week)\n- BU-5 readiness gate to follow\n\n---\n\n*Ready to escalate any risks or resource constraints.*",
-      "model": "claude-haiku-4-5-20251001",
-      "scores": {
-        "signal_score": 1.0,
-        "signals_found": [
-          "blocker",
-          "security",
-          "onboard",
-          "BU"
+      "case_id": "leadership-update-baseline",
+      "description": "Baseline leadership update should pull the latest weekly notes and produce wins and next steps.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "leadership update",
+        "max_documents": 5,
+        "use_model": true,
+        "fallback_to_deterministic": true,
+        "provider": "claude",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
+      },
+      "outputs": {
+        "summary": "The team shipped the internal status dashboard refresh and finalized the leadership summary template for monthly operating reviews. Key infrastructure decisions include adopting Terraform 1.9 for all new Apex Platform modules.",
+        "wins": [
+          {
+            "text": "shipped the internal status dashboard refresh for leadership review",
+            "source": "director_week_14.md",
+            "line_number": 3
+          },
+          {
+            "text": "finalized the leadership summary template for the monthly operating review",
+            "source": "director_week_15.md",
+            "line_number": 3
+          }
         ],
-        "signals_missing": [],
-        "safety_score": 1.0,
-        "violations": [],
-        "grounded": true
+        "risks": [],
+        "next_steps": [
+          {
+            "text": "prepare a concise weekly update for the leadership sync on Friday",
+            "source": "director_week_14.md",
+            "line_number": 6
+          },
+          {
+            "text": "Sarah to publish updated Terraform 1.9 runbook by June 20",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 14
+          },
+          {
+            "text": "adopt Terraform 1.9 for all new Apex Platform infrastructure modules; Sarah will update the runbook and deprecate the Terraform 1.6 templates by end of sprint",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 6
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 14,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Next: Sarah to publish updated Terraform 1.9 runbook by June 20."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 6,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Decision: adopt Terraform 1.9 for all new Apex Platform infrastructure modules; Sarah will update the runbook and deprecate the Terraform 1.6 templates by end of sprint."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 3,
+            "title": "Director Week 14",
+            "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 3,
+            "title": "Director Week 15",
+            "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
+          }
+        ],
+        "provider_usage": {
+          "input_tokens": 1386,
+          "output_tokens": 407,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
       },
-      "tokens": {
-        "input": 223,
-        "output": 203
-      },
-      "latency_seconds": 2.89,
-      "status": "PASS"
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
     },
     {
-      "case_id": "director_os_002",
-      "prompt": "What are the top risks this week?",
-      "response": "# Top Risks This Week\n\nBased on the retrieved risk log:\n\n| Priority | Risk | Owner | Status |\n|----------|------|-------|--------|\n| **P1** | Data pipeline latency spike | Infra team | Active |\n| **P2** | Vendor API deprecation (Q4) | Platform team | Upcoming |\n| **P3** | Two engineers on PTO next sprint | Eng manager | Scheduled |\n\n## Key Notes:\n- **P1 (Data pipeline latency)** requires immediate attention \u2014 this is the highest priority and should be the focus this week.\n- **P2 (API deprecation)** is planned but lower urgency; timeline is Q4.\n- **P3 (PTO)** is a capacity constraint for next sprint planning.\n\n**Note:** The retrieved context does not include mitigation status, due dates, or impact assessments. Recommend checking the full risk register for details on each item.",
-      "model": "claude-haiku-4-5-20251001",
-      "scores": {
-        "signal_score": 1.0,
-        "signals_found": [
-          "risk",
-          "pipeline",
-          "vendor",
-          "P1"
+      "case_id": "full-note-without-focus",
+      "description": "Without a focus query the workflow should still surface structured wins, risks, and next steps.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": null,
+        "max_documents": 10,
+        "use_model": true,
+        "fallback_to_deterministic": true,
+        "provider": "claude",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about current leadership activity. Primary supporting context came from 1On1 Marcus Devex Lead, 1On1 Sarah Sre Lead.",
+        "wins": [
+          {
+            "text": "Win: the new developer onboarding checklist cut average time-to-first-commit from 4 days to 11 hours for the last 3 new hires.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 10
+          },
+          {
+            "text": "Win: the internal API documentation generator shipped and is now producing docs automatically on every merge to main; positive feedback from BU-2 and BU-3 integration teams.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 11
+          },
+          {
+            "text": "Win: the platform team's internal CLI tooling reduced infrastructure provisioning time by 60%; Marcus is packaging it as a reusable template for other teams.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 28
+          }
         ],
-        "signals_missing": [],
-        "safety_score": 1.0,
-        "violations": [],
-        "grounded": true
+        "risks": [
+          {
+            "text": "Risk: the vendor auth middleware EOL is causing anxiety among the developer community; engineers are asking whether the new platform will inherit the same dependency; need a clear public statement before it becomes a morale issue.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 14
+          },
+          {
+            "text": "Risk: Cursor rollout may surface licensing questions \u2014 Marcus needs legal sign-off on the enterprise license before the second onboarding session.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 15
+          },
+          {
+            "text": "Risk: the current alerting thresholds on the API gateway were tuned for 2 BUs; with 5 BUs live, false positive rate has tripled \u2014 team is manually suppressing alerts every shift.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 10
+          }
+        ],
+        "next_steps": [
+          {
+            "text": "Next: Marcus to schedule Cursor onboarding sessions; share calendar invites by Wednesday.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 18
+          },
+          {
+            "text": "Next: I will draft an internal communication on the vendor auth middleware migration plan and timeline; circulate to engineering leads before publishing.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 19
+          },
+          {
+            "text": "Next: Marcus to file the Cursor enterprise license request with Legal this week.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 20
+          }
+        ],
+        "evidence": [
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 10,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Win: the new developer onboarding checklist cut average time-to-first-commit from 4 days to 11 hours for the last 3 new hires."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 11,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Win: the internal API documentation generator shipped and is now producing docs automatically on every merge to main; positive feedback from BU-2 and BU-3 integration teams."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 14,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Risk: the vendor auth middleware EOL is causing anxiety among the developer community; engineers are asking whether the new platform will inherit the same dependency; need a clear public statement before it becomes a morale issue."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 15,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Risk: Cursor rollout may surface licensing questions \u2014 Marcus needs legal sign-off on the enterprise license before the second onboarding session."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 18,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Next: Marcus to schedule Cursor onboarding sessions; share calendar invites by Wednesday."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 19,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Next: I will draft an internal communication on the vendor auth middleware migration plan and timeline; circulate to engineering leads before publishing."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 20,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Next: Marcus to file the Cursor enterprise license request with Legal this week."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 28,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Win: the platform team's internal CLI tooling reduced infrastructure provisioning time by 60%; Marcus is packaging it as a reusable template for other teams."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 10,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Risk: the current alerting thresholds on the API gateway were tuned for 2 BUs; with 5 BUs live, false positive rate has tripled \u2014 team is manually suppressing alerts every shift."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 11,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Risk: SRE team has not had a full sprint without a go-live since Week 12; burnout risk is real; Sarah recommends a recovery sprint in Q3 before BU-7 onboarding begins."
+          }
+        ],
+        "provider_usage": {
+          "input_tokens": 1734,
+          "output_tokens": 865,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
       },
-      "tokens": {
-        "input": 202,
-        "output": 216
-      },
-      "latency_seconds": 2.43,
-      "status": "PASS"
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 2 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
     },
     {
-      "case_id": "director_os_003",
-      "prompt": "Summarise key decisions from this week's 1:1 notes",
-      "response": "# Key Decisions Summary\n\n| Owner | Decision | Deadline |\n|-------|----------|----------|\n| Sarah (SRE) | Adopt Terraform 1.8 for all new infra modules | June 20 (runbook update) |\n| Marcus (DevEx) | Roll out Cursor to 12 remaining engineers | End of sprint |\n\n**Status:** Both decisions have assigned owners and explicit action items. No blockers noted in retrieved context.",
-      "model": "claude-haiku-4-5-20251001",
-      "scores": {
-        "signal_score": 1.0,
-        "signals_found": [
-          "Terraform",
-          "Cursor",
-          "decision",
-          "action"
+      "case_id": "operating-review-multifile",
+      "description": "A leadership operating review query should pull from more than one note rather than collapsing to a single file.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "leadership operating review",
+        "max_documents": 10,
+        "use_model": true,
+        "fallback_to_deterministic": true,
+        "provider": "claude",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
+      },
+      "outputs": {
+        "summary": "Leadership operating review infrastructure is solidified with template and dashboard delivery, but platform migration readiness faces security and capacity constraints that require immediate unblocking.",
+        "wins": [
+          {
+            "text": "finalized the leadership summary template for the monthly operating review",
+            "source": "director_week_15.md",
+            "line_number": 3
+          },
+          {
+            "text": "shipped the internal status dashboard refresh for leadership review",
+            "source": "director_week_14.md",
+            "line_number": 3
+          },
+          {
+            "text": "closed the roadmap review feedback loop with product and design",
+            "source": "director_week_13.md",
+            "line_number": 3
+          }
         ],
-        "signals_missing": [],
-        "safety_score": 1.0,
-        "violations": [],
-        "grounded": true
+        "risks": [
+          {
+            "text": "BU-4 security review is stalled \u2014 Priya's team flagged a data residency ambiguity in the new API gateway config; estimated 1-week delay to production gate",
+            "source": "week_16_platform_migration.md",
+            "line_number": 9
+          },
+          {
+            "text": "two senior engineers (Tariq and Dani) are on PTO next sprint, reducing platform team capacity by 40%; BU-5 readiness review may slip",
+            "source": "week_16_platform_migration.md",
+            "line_number": 11
+          }
+        ],
+        "next_steps": [
+          {
+            "text": "publish the updated operating cadence notes and confirm open actions with the platform lead",
+            "source": "director_week_15.md",
+            "line_number": 6
+          },
+          {
+            "text": "schedule BU-4 security review re-check with Priya for Tuesday; prepare data residency mapping doc in advance",
+            "source": "week_16_platform_migration.md",
+            "line_number": 14
+          },
+          {
+            "text": "confirm BU-5 readiness review timeline with Jordan; adjust sprint capacity plan if Tariq and Dani overlap extends",
+            "source": "week_16_platform_migration.md",
+            "line_number": 16
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_15.md",
+            "line_number": 3,
+            "title": "Director Week 15",
+            "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 3,
+            "title": "Director Week 14",
+            "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
+          },
+          {
+            "source": "director_week_13.md",
+            "line_number": 3,
+            "title": "Director Week 13",
+            "excerpt": "Win: closed the roadmap review feedback loop with product and design."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 6,
+            "title": "Director Week 15",
+            "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
+          },
+          {
+            "source": "platform_risk_register.md",
+            "line_number": 17,
+            "title": "Platform Risk Register",
+            "excerpt": "Next: steering committee to track weekly until resolved; expedited review requested."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 9,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Risk: BU-4 security review is stalled \u2014 Priya's team flagged a data residency ambiguity in the new API gateway config; estimated 1-week delay to production gate."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 11,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Risk: two senior engineers (Tariq and Dani) are on PTO next sprint, reducing platform team capacity by 40%; BU-5 readiness review may slip."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 14,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Next: schedule BU-4 security review re-check with Priya for Tuesday; prepare data residency mapping doc in advance."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 16,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Next: confirm BU-5 readiness review timeline with Jordan; adjust sprint capacity plan if Tariq and Dani overlap extends."
+          }
+        ],
+        "provider_usage": {
+          "input_tokens": 1576,
+          "output_tokens": 593,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
       },
-      "tokens": {
-        "input": 236,
-        "output": 105
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 5 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "sparse-risk-retrieval",
+      "description": "A narrow risk-focused query should still return a grounded risk section even with sparse evidence.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "vendor confirmation delay",
+        "max_documents": 3,
+        "use_model": true,
+        "fallback_to_deterministic": true,
+        "provider": "claude",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
       },
-      "latency_seconds": 3.15,
-      "status": "PASS"
+      "outputs": {
+        "summary": "A critical vendor confirmation delay is blocking one platform dependency, and uncertainty around the vendor auth middleware EOL is creating anxiety across the engineering team that requires immediate communication.",
+        "wins": [],
+        "risks": [
+          {
+            "text": "One platform dependency is delayed pending vendor confirmation.",
+            "source": "director_week_14.md",
+            "line_number": 5
+          },
+          {
+            "text": "The vendor auth middleware EOL is causing anxiety among the developer community; engineers are asking whether the new platform will inherit the same dependency; need a clear public statement before it becomes a morale issue.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 14
+          }
+        ],
+        "next_steps": [
+          {
+            "text": "Draft an internal communication on the vendor auth middleware migration plan and timeline; circulate to engineering leads before publishing.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 19
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_14.md",
+            "line_number": 5,
+            "title": "Director Week 14",
+            "excerpt": "Risk: one platform dependency is delayed pending vendor confirmation."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 14,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Risk: the vendor auth middleware EOL is causing anxiety among the developer community; engineers are asking whether the new platform will inherit the same dependency; need a clear public statement before it becomes a morale issue."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 19,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Next: I will draft an internal communication on the vendor auth middleware migration plan and timeline; circulate to engineering leads before publishing."
+          }
+        ],
+        "provider_usage": {
+          "input_tokens": 1337,
+          "output_tokens": 306,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 2 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
     }
   ]
 }

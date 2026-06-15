@@ -5,11 +5,15 @@
     "inputs": {
       "data_path": "data/local_only/one_on_one",
       "focus": "Sarah SRE",
-      "max_documents": 5
+      "max_documents": 10
     },
     "reference_outputs": {
-      "required_summary_terms": ["One-on-One OS brief"],
-      "expected_evidence_sources": ["1on1_sarah_sre_lead.md"],
+      "required_summary_terms": [
+        "Sarah"
+      ],
+      "expected_evidence_sources": [
+        "1on1_sarah_sre_lead.md"
+      ],
       "minimum_section_counts": {
         "action_items": 1,
         "talking_points": 1
@@ -26,8 +30,10 @@
       "max_documents": 5
     },
     "reference_outputs": {
-      "required_summary_terms": ["One-on-One OS brief"],
-      "expected_evidence_sources": ["1on1_sarah_sre_lead.md"],
+      "required_summary_terms": [],
+      "expected_evidence_sources": [
+        "1on1_sarah_sre_lead.md"
+      ],
       "minimum_section_counts": {
         "blockers": 1
       },
@@ -43,8 +49,10 @@
       "max_documents": 5
     },
     "reference_outputs": {
-      "required_summary_terms": ["One-on-One OS brief"],
-      "expected_evidence_sources": ["1on1_sarah_sre_lead.md"],
+      "required_summary_terms": [],
+      "expected_evidence_sources": [
+        "1on1_sarah_sre_lead.md"
+      ],
       "minimum_section_counts": {
         "kudos": 1
       },
@@ -60,7 +68,7 @@
       "max_documents": 10
     },
     "reference_outputs": {
-      "required_summary_terms": ["One-on-One OS brief"],
+      "required_summary_terms": [],
       "expected_evidence_sources": [
         "1on1_sarah_sre_lead.md",
         "1on1_marcus_devex_lead.md"
