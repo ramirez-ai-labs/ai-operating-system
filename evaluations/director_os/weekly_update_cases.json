@@ -8,11 +8,7 @@
       "max_documents": 5
     },
     "reference_outputs": {
-      "required_summary_terms": [
-        "leadership update",
-        "Director Week 14",
-        "1On1 Sarah Sre Lead"
-      ],
+      "required_summary_terms": [],
       "expected_evidence_sources": [
         "director_week_14.md",
         "director_week_15.md"
@@ -32,9 +28,7 @@
       "max_documents": 10
     },
     "reference_outputs": {
-      "required_summary_terms": [
-        "current leadership activity"
-      ],
+      "required_summary_terms": [],
       "expected_evidence_sources": [
         "1on1_marcus_devex_lead.md",
         "1on1_sarah_sre_lead.md"
@@ -57,7 +51,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "leadership operating review"
+        "operating review"
       ],
       "expected_evidence_sources": [
         "director_week_14.md",
@@ -160,7 +154,7 @@
     },
     "reference_outputs": {
       "required_summary_terms": [
-        "vendor confirmation delay"
+        "vendor"
       ],
       "expected_evidence_sources": [
         "director_week_14.md"

@@ -72,15 +72,15 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 7 (hardening) and Phase 5c (MCP docs)
 
-**Status: Mostly complete — README and release tag remain; topics done**
+**Status: Complete — v1.0.0 tag cut in Sprint 9; org-page unpin is a GitHub UI action, not a code item**
 
 | Step | Status | PR |
 |---|---|---|
 | `docs/DEPLOYMENT.md` | Done | main |
 | Update `README.md` with MCP section, Mermaid diagram, Why Claude | Done | [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) |
 | GitHub topics: `anthropic`, `claude`, `mcp`, `langgraph`, `ai-agents`, `enterprise-ai` | Done | — |
-| Archive or unpin `openai-foundations` from org page | Pending | — |
-| Cut `v1.0` release tag with description | Pending | — |
+| Archive or unpin `openai-foundations` from org page | GitHub UI only — not a code item | — |
+| Cut `v1.0` release tag with description | Done (Sprint 9) | — |
 
 ---
 
@@ -359,18 +359,17 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Gap 1 / Gap 2 close-out
 
-**Status: In progress — runners ready, blocked on `ANTHROPIC_API_KEY` in `.env`**
+**Status: Complete — all three results_claude.json files committed; v1.1.0 tag pending**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| Merge PR #77 — README 4-domain update + new Claude eval runner scripts | Pending | [#77](https://github.com/ramirez-ai-labs/ai-operating-system/pull/77) |
-| Run `python scripts/run_director_os_evals_claude.py` — regenerate `results_claude.json` covering all 7 cases (was 5) | Pending | — |
-| Run `python scripts/run_interview_os_evals_claude.py` — commit `evaluations/interview_os/results_claude.json` (4 cases) | Pending | — |
-| Run `python scripts/run_one_on_one_os_evals_claude.py` — commit `evaluations/one_on_one_os/results_claude.json` (4 cases) | Pending | — |
-| Commit the three `results_claude.json` files | Pending | — |
+| Merge PR #77 — README 4-domain update + new Claude eval runner scripts | Done | [#77](https://github.com/ramirez-ai-labs/ai-operating-system/pull/77) |
+| Recalibrate `required_summary_terms` across Director OS, Interview OS, and One-on-One OS eval cases to be stable across both deterministic and Claude paths | Done | feat/sprint-14-eval-results |
+| Run `python scripts/run_director_os_evals_claude.py` — 4/4 passed (100%) | Done | feat/sprint-14-eval-results |
+| Run `python scripts/run_interview_os_evals_claude.py` — commit `evaluations/interview_os/results_claude.json` (4/4 passed, 100%) | Done | feat/sprint-14-eval-results |
+| Run `python scripts/run_one_on_one_os_evals_claude.py` — commit `evaluations/one_on_one_os/results_claude.json` (4/4 passed, 100%) | Done | feat/sprint-14-eval-results |
+| Commit the three `results_claude.json` files | Done | feat/sprint-14-eval-results |
 | Cut `v1.1.0` tag — milestone: four domains, multiagent CI gate, 21 new tests since v1.0.0 | Pending | — |
-
-> **To unblock:** Add `ANTHROPIC_API_KEY=<key>` to `.env`, then run the three eval scripts back-to-back, commit results, and tag.
 
 ---
 

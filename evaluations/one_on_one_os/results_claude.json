@@ -1,0 +1,539 @@
+{
+  "run_at": "2026-06-14T23:59:44.033108+00:00",
+  "provider": "claude",
+  "model": "claude-haiku-4-5-20251001",
+  "eval_path": "evaluations/one_on_one_os/meeting_brief_cases.json",
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "pass_rate": 1.0
+  },
+  "cases": [
+    {
+      "case_id": "one-on-one-baseline",
+      "description": "Baseline brief from a named direct report should surface action items and talking points.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "Sarah SRE",
+        "direct_report": null,
+        "max_documents": 10,
+        "use_model": true,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "Victor and Sarah discussed Sarah's capacity constraints from managing concurrent incident response and the Terraform 1.9 upgrade initiative. The meeting covered workload rebalancing, on-call rotation coverage gaps, and dependencies blocking the broader SRE roadmap.",
+        "action_items": [
+          {
+            "text": "Sarah to publish the updated Terraform 1.9 runbook by June 20",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 15
+          },
+          {
+            "text": "Sarah to hand off Monday on-call shift to Marcus to reduce context switching",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 16
+          },
+          {
+            "text": "Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          }
+        ],
+        "talking_points": [
+          {
+            "text": "Review Sarah's current workload split \u2014 incident response vs. platform migration",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 9
+          },
+          {
+            "text": "Check in on the on-call rotation coverage \u2014 Marcus flagged last week that the SRE rotation is thin",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 11
+          }
+        ],
+        "blockers": [
+          {
+            "text": "Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 22
+          },
+          {
+            "text": "Marcus's engineers can't start integration testing until the staging environment is stable \u2014 SRE owns this and it's been flaky",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 22
+          }
+        ],
+        "kudos": [
+          {
+            "text": "Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 26
+          }
+        ],
+        "evidence": [
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 3,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "**Attendees:** Victor (Manager), Sarah (SRE Lead)"
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 22,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 22,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Blocker: Marcus's engineers can't start integration testing until the staging environment is stable \u2014 SRE owns this and it's been flaky."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 7,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Sarah has been managing incident response while also leading the Terraform 1.9 upgrade. Both tracks are active concurrently which is creating context-switching overhead."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 9,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Talking Point: Review Sarah's current workload split \u2014 incident response vs. platform migration."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 11,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Talking Point: Check in on the on-call rotation coverage \u2014 Marcus flagged last week that the SRE rotation is thin."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 15,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Sarah to publish the updated Terraform 1.9 runbook by June 20."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 16,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Sarah to hand off Monday on-call shift to Marcus to reduce context switching."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 26,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed."
+          }
+        ]
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 2 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "one-on-one-blockers-surfaced",
+      "description": "Blockers noted in 1:1 notes should surface in the blockers section.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "blockers blocked",
+        "direct_report": null,
+        "max_documents": 5,
+        "use_model": true,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "Sarah's Terraform state migration is blocked on security team approval, with a ticket pending for 12 days without response.",
+        "action_items": [],
+        "talking_points": [
+          {
+            "text": "The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21
+          }
+        ],
+        "blockers": [
+          {
+            "text": "The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21
+          }
+        ],
+        "kudos": [
+          {
+            "text": "Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval.",
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 27
+          }
+        ],
+        "evidence": [
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 27,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Blocker: The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 27,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Kudos: Priya \u2014 40% cost reduction via prompt caching, CISO presentation unblocked data residency."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 2,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "**Date:** Week of June 9, 2026"
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 3,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "**Attendees:** Victor (Manager), Marcus (DevEx Lead)"
+          }
+        ]
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 4 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "one-on-one-kudos-surfaced",
+      "description": "Recognition and wins noted in 1:1 notes should surface in the kudos section.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "kudos recognition wins",
+        "direct_report": null,
+        "max_documents": 5,
+        "use_model": true,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "This brief focuses on recognizing exceptional wins and achievements across the team this quarter, highlighting both individual contributor excellence and leadership impact.",
+        "action_items": [],
+        "talking_points": [],
+        "blockers": [],
+        "kudos": [
+          {
+            "text": "Marcus shipped the internal CLI tool that reduced environment setup time from 4 hours to 20 minutes \u2014 three teams have adopted it.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 26
+          },
+          {
+            "text": "Marcus mentored two junior engineers through their first production deployments this quarter.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 27
+          },
+          {
+            "text": "Priya's prompt caching implementation on the Claude provider reduced per-request cost by 40% in load testing.",
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 26
+          },
+          {
+            "text": "Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval.",
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 27
+          },
+          {
+            "text": "Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 26
+          }
+        ],
+        "evidence": [
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 26,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Kudos: Marcus shipped the internal CLI tool that reduced environment setup time from 4 hours to 20 minutes \u2014 three teams have adopted it."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 27,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Kudos: Marcus mentored two junior engineers through their first production deployments this quarter."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 26,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Kudos: Priya's prompt caching implementation on the Claude provider reduced per-request cost by 40% in load testing."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 27,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 26,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed."
+          }
+        ]
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "one-on-one-multifile-retrieval",
+      "description": "A broad team query should pull from multiple 1:1 note files.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "team action items blockers",
+        "direct_report": null,
+        "max_documents": 10,
+        "use_model": true,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "This 1:1 covers team action items and blockers, focusing on DevEx portal rebuild scope management, cross-team alignment, and addressing context-switching concerns within the engineering team.",
+        "action_items": [
+          {
+            "text": "Marcus to set up 30-minute syncs with each product team lead to align on portal requirements.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 16
+          },
+          {
+            "text": "Priya to document the LangSmith dataset schema so other teams can contribute eval cases.",
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 16
+          },
+          {
+            "text": "Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          },
+          {
+            "text": "Victor to draft a \"no ad-hoc demo\" policy and share with the sales team lead.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 13
+          },
+          {
+            "text": "Victor to schedule a team retrospective for end of June to address context-switching concerns.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 14
+          },
+          {
+            "text": "Marcus to draft the DevEx intake RFC and share with Victor for review by June 16.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 15
+          },
+          {
+            "text": "Victor to escalate the DevEx headcount request to the VP before the June budget freeze.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 17
+          }
+        ],
+        "talking_points": [
+          {
+            "text": "Team morale survey results due June 14 \u2014 schedule time to review with the team before sharing with the VP.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 8
+          },
+          {
+            "text": "The intake process for DevEx requests needs to be formalized \u2014 teams are going directly to Marcus's engineers.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 10
+          }
+        ],
+        "blockers": [
+          {
+            "text": "Marcus is driving the developer portal rebuild while managing incoming requests from three product teams. Scope is at risk of expanding without a formal intake process.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 7
+          }
+        ],
+        "kudos": [],
+        "evidence": [
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 16,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Action: Marcus to set up 30-minute syncs with each product team lead to align on portal requirements."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 16,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Action: Priya to document the LangSmith dataset schema so other teams can contribute eval cases."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 8,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Talking Point: Team morale survey results due June 14 \u2014 schedule time to review with the team before sharing with the VP."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 13,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Action: Victor to draft a \"no ad-hoc demo\" policy and share with the sales team lead."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 14,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Action: Victor to schedule a team retrospective for end of June to address context-switching concerns."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 7,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Marcus is driving the developer portal rebuild while managing incoming requests from three product teams. Scope is at risk of expanding without a formal intake process."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 10,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Talking Point: The intake process for DevEx requests needs to be formalized \u2014 teams are going directly to Marcus's engineers."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 15,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Action: Marcus to draft the DevEx intake RFC and share with Victor for review by June 16."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 17,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Action: Victor to escalate the DevEx headcount request to the VP before the June budget freeze."
+          }
+        ]
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 4 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    }
+  ]
+}
