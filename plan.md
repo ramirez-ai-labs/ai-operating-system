@@ -467,25 +467,21 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–13 are complete. v1.0.0 is tagged and released. Four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) are live with full eval coverage in CI. 213 tests passing.
+Sprints 1–14 are complete. v1.1.0 is tagged and released. Four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) are live with full eval coverage in CI and committed Claude results. 213 tests passing.
 
-**Sprint 12 — Interview OS CI parity + Claude provider (complete):**
-Added eval library, eval runner, CI gate, and `ClaudeInterviewBriefProvider` for Interview OS. All three original domains now have identical eval coverage depth.
+**Sprint 14 — Live Claude eval results + v1.1.0 tag (complete, PR #78):**
+Recalibrated `required_summary_terms` across Director OS, Interview OS, and One-on-One OS eval cases so scorer terms are stable across both the deterministic and Claude paths. Committed `results_claude.json` for all three model-capable domains — 4/4 passed (100%) each. Cut `v1.1.0` release tag.
 
-**Sprint 13 — One-on-One OS + multiagent CI gate (complete):**
-Added the fourth workflow domain: One-on-One OS (meeting briefs with action items, talking points, blockers, kudos). Wired `evaluations/director_os/multiagent_cases.json` into CI as a separate eval step. All four domains have full eval runners in CI and a Claude-backed synthesis path.
+**What's next — Phase 8:**
 
-**Sprint 14 — Live Claude eval results + v1.1.0 tag (in progress):**
-Claude eval runners for Interview OS (`scripts/run_interview_os_evals_claude.py`) and One-on-One OS (`scripts/run_one_on_one_os_evals_claude.py`) were added in PR #77. README updated to reflect all four domains. Three runtime actions remain — all blocked on `ANTHROPIC_API_KEY` in `.env`:
+| Candidate | Value | Effort |
+|---|---|---|
+| Brand OS Claude provider path | Parity with the other three domains; currently the only domain without model-assisted synthesis | Low — same pattern, existing infrastructure |
+| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal | High |
+| ChromaDB eval coverage | Local eval cases that exercise `RETRIEVAL_BACKEND=chroma` end-to-end | Medium |
+| Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS | Medium |
 
-1. `python scripts/run_director_os_evals_claude.py` — regenerate `evaluations/director_os/results_claude.json` covering all 7 cases (currently 5)
-2. `python scripts/run_interview_os_evals_claude.py` — commit `evaluations/interview_os/results_claude.json` (4 cases)
-3. `python scripts/run_one_on_one_os_evals_claude.py` — commit `evaluations/one_on_one_os/results_claude.json` (4 cases)
-
-After committing the three result files, cut `v1.1.0` tag. Brand OS remains deterministic-only; adding a Claude synthesis path is Phase 8 scope.
-
-**What's next — Phase 8 (optional):**
-A fifth workflow domain or a dedicated `apps/web` frontend. Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
+Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
 
 ## Definition of Success
 
