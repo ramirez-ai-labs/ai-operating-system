@@ -359,17 +359,17 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Gap 1 / Gap 2 close-out
 
-**Status: Complete — all three results_claude.json files committed; v1.1.0 tag pending**
+**Status: Complete — PR #78 merged, v1.1.0 tagged**
 
 | Step | Status | PR |
 | --- | --- | --- |
 | Merge PR #77 — README 4-domain update + new Claude eval runner scripts | Done | [#77](https://github.com/ramirez-ai-labs/ai-operating-system/pull/77) |
-| Recalibrate `required_summary_terms` across Director OS, Interview OS, and One-on-One OS eval cases to be stable across both deterministic and Claude paths | Done | feat/sprint-14-eval-results |
-| Run `python scripts/run_director_os_evals_claude.py` — 4/4 passed (100%) | Done | feat/sprint-14-eval-results |
-| Run `python scripts/run_interview_os_evals_claude.py` — commit `evaluations/interview_os/results_claude.json` (4/4 passed, 100%) | Done | feat/sprint-14-eval-results |
-| Run `python scripts/run_one_on_one_os_evals_claude.py` — commit `evaluations/one_on_one_os/results_claude.json` (4/4 passed, 100%) | Done | feat/sprint-14-eval-results |
-| Commit the three `results_claude.json` files | Done | feat/sprint-14-eval-results |
-| Cut `v1.1.0` tag — milestone: four domains, multiagent CI gate, 21 new tests since v1.0.0 | Pending | — |
+| Recalibrate `required_summary_terms` across Director OS, Interview OS, and One-on-One OS eval cases to be stable across both deterministic and Claude paths | Done | [#78](https://github.com/ramirez-ai-labs/ai-operating-system/pull/78) |
+| Run `python scripts/run_director_os_evals_claude.py` — 4/4 passed (100%) | Done | [#78](https://github.com/ramirez-ai-labs/ai-operating-system/pull/78) |
+| Run `python scripts/run_interview_os_evals_claude.py` — commit `evaluations/interview_os/results_claude.json` (4/4 passed, 100%) | Done | [#78](https://github.com/ramirez-ai-labs/ai-operating-system/pull/78) |
+| Run `python scripts/run_one_on_one_os_evals_claude.py` — commit `evaluations/one_on_one_os/results_claude.json` (4/4 passed, 100%) | Done | [#78](https://github.com/ramirez-ai-labs/ai-operating-system/pull/78) |
+| Commit the three `results_claude.json` files | Done | [#78](https://github.com/ramirez-ai-labs/ai-operating-system/pull/78) |
+| Cut `v1.1.0` tag — milestone: four domains, multiagent CI gate, committed Claude results for all three model-capable domains | Done | — |
 
 ---
 
@@ -387,3 +387,4 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprints 10c, 10d, and 11 are complete (feat/sprint-10c-10d-11-completeness, 2026-06-13). Eval runner rewrote to use production provider path. Multiagent eval cases added. Interview OS third workflow domain shipped (schemas, graph, workflow, route, routing, data, evals, tests, MCP tool, console). Issue templates and CONTRIBUTING.md added.
 - Sprint 12 is complete (feat/sprint-12-interview-os-completeness, 2026-06-13). Interview OS eval library, CI gate, and Claude provider path added. All three original workflow domains now have full eval coverage in CI and a model-backed synthesis option. 192 tests passing.
 - Sprint 13 is complete (PR #75, 2026-06-13). One-on-One OS fourth workflow domain shipped (schemas, graph, provider, workflow, route, routing, data, evals, tests, MCP tool). Multiagent CI gate wired for `multiagent_cases.json`. All four domains have full eval runners in CI and a Claude-backed synthesis path. 213 tests passing.
+- Sprint 14 is complete (PR #78, 2026-06-14). `required_summary_terms` recalibrated across three eval case files for cross-path stability. Live Claude eval results committed for Director OS (4/4), Interview OS (4/4), and One-on-One OS (4/4) — all 100%. v1.1.0 tagged.
