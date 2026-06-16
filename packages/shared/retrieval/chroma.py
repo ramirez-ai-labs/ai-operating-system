@@ -179,9 +179,10 @@ def _parse_results(results: dict) -> list[EvidenceItem]:
     for doc, meta in zip(documents, metadatas):
         if not doc:
             continue
+        raw_path = meta.get("relative_path", "unknown")
         evidence.append(
             EvidenceItem(
-                source=meta.get("relative_path", "unknown"),
+                source=Path(raw_path).name if raw_path != "unknown" else raw_path,
                 line_number=int(meta.get("line_number", 0)),
                 title=meta.get("title", ""),
                 excerpt=doc[:280],

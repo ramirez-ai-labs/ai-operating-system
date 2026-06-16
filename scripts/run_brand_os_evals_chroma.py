@@ -70,6 +70,7 @@ def run_evals(ci_mode: bool = False) -> int:
     os.environ["RETRIEVAL_BACKEND"] = "chroma"
 
     from packages.shared.evaluations.brand_os import (
+        BRAND_OS_CHROMA_EVALUATORS,
         load_brand_os_eval_cases,
         run_local_brand_os_evaluations,
     )
@@ -80,7 +81,7 @@ def run_evals(ci_mode: bool = False) -> int:
         len(cases),
     )
 
-    results = run_local_brand_os_evaluations(cases)
+    results = run_local_brand_os_evaluations(cases, evaluators=BRAND_OS_CHROMA_EVALUATORS)
 
     passed = sum(1 for r in results if r["passed"])
     failed = len(results) - passed

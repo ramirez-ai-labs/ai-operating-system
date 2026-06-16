@@ -1,0 +1,518 @@
+{
+  "run_at": "2026-06-16T23:19:33.596403+00:00",
+  "retrieval_backend": "chroma",
+  "eval_path": "evaluations/brand_os/content_draft_cases.json",
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "pass_rate": 1.0
+  },
+  "cases": [
+    {
+      "case_id": "local-first-content-baseline",
+      "description": "A local-first query should produce a grounded draft from the checked-in notes.",
+      "inputs": {
+        "data_path": "data/local_only/brand",
+        "focus": "local-first ai workflow",
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "insight_summary": "Brand OS draft synthesized from local evidence about local-first ai workflow. Primary supporting context came from Brand Week 16, Brand Week 15.",
+        "post_outline": [
+          {
+            "text": "Insight: operators trust local-first AI systems more when routing and evidence are visible during execution.",
+            "source": "brand_week_16.md",
+            "line_number": 3
+          },
+          {
+            "text": "\"From Keyword Matching to Agentic Retrieval: Building AI-Native Developer Platforms\"",
+            "source": "conference_talk_prep.md",
+            "line_number": 6
+          }
+        ],
+        "podcast_angles": [
+          {
+            "text": "Podcast: explore how local-first AI workflows avoid cloud lock-in while staying useful.",
+            "source": "brand_week_15.md",
+            "line_number": 4
+          }
+        ],
+        "repo_improvements": [],
+        "evidence": [
+          {
+            "source": "brand_week_16.md",
+            "line_number": 3,
+            "title": "Brand Week 16",
+            "excerpt": "Insight: operators trust local-first AI systems more when routing and evidence are visible during execution."
+          },
+          {
+            "source": "brand_week_15.md",
+            "line_number": 4,
+            "title": "Brand Week 15",
+            "excerpt": "Podcast: explore how local-first AI workflows avoid cloud lock-in while staying useful."
+          },
+          {
+            "source": "conference_talk_prep.md",
+            "line_number": 9,
+            "title": "Conference Talk Prep",
+            "excerpt": "Most enterprise AI integrations are wrappers around a single LLM call. The real unlock is building systems where AI has structured access to your internal knowledge \u2014 project notes, risk logs, 1:1s \u2014 and can retrieve, synthesize, and route that information with observable, audita"
+          },
+          {
+            "source": "conference_talk_prep.md",
+            "line_number": 6,
+            "title": "Conference Talk Prep",
+            "excerpt": "\"From Keyword Matching to Agentic Retrieval: Building AI-Native Developer Platforms\""
+          },
+          {
+            "source": "conference_talk_prep.md",
+            "line_number": 20,
+            "title": "Conference Talk Prep",
+            "excerpt": "Close with the eval results JSON \u2014 \"this is what production AI accountability looks like.\""
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "operator-visibility-multifile",
+      "description": "A broader operator visibility query should use more than one brand note.",
+      "inputs": {
+        "data_path": "data/local_only/brand",
+        "focus": "operator visibility local-first workflow",
+        "max_documents": 6,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "insight_summary": "Brand OS draft synthesized from local evidence about operator visibility local-first workflow. Primary supporting context came from Brand Week 16, Brand Week 15.",
+        "post_outline": [
+          {
+            "text": "Insight: operators trust local-first AI systems more when routing and evidence are visible during execution.",
+            "source": "brand_week_16.md",
+            "line_number": 3
+          },
+          {
+            "text": "Workflow: keep expanding evaluation coverage before adding more workflow breadth.",
+            "source": "brand_week_16.md",
+            "line_number": 6
+          }
+        ],
+        "podcast_angles": [
+          {
+            "text": "Podcast: explore how local-first AI workflows avoid cloud lock-in while staying useful.",
+            "source": "brand_week_15.md",
+            "line_number": 4
+          }
+        ],
+        "repo_improvements": [
+          {
+            "text": "Improve: add clearer first-run guidance so new users know which prompt, workflow, and data path to try first.",
+            "source": "brand_week_16.md",
+            "line_number": 5
+          },
+          {
+            "text": "Improve: add a lightweight trace view so the operator can see routing, evidence, and validation in one place.",
+            "source": "brand_week_15.md",
+            "line_number": 5
+          }
+        ],
+        "evidence": [
+          {
+            "source": "brand_week_16.md",
+            "line_number": 3,
+            "title": "Brand Week 16",
+            "excerpt": "Insight: operators trust local-first AI systems more when routing and evidence are visible during execution."
+          },
+          {
+            "source": "brand_week_16.md",
+            "line_number": 5,
+            "title": "Brand Week 16",
+            "excerpt": "Improve: add clearer first-run guidance so new users know which prompt, workflow, and data path to try first."
+          },
+          {
+            "source": "brand_week_16.md",
+            "line_number": 6,
+            "title": "Brand Week 16",
+            "excerpt": "Workflow: keep expanding evaluation coverage before adding more workflow breadth."
+          },
+          {
+            "source": "brand_week_15.md",
+            "line_number": 5,
+            "title": "Brand Week 15",
+            "excerpt": "Improve: add a lightweight trace view so the operator can see routing, evidence, and validation in one place."
+          },
+          {
+            "source": "brand_week_15.md",
+            "line_number": 4,
+            "title": "Brand Week 15",
+            "excerpt": "Podcast: explore how local-first AI workflows avoid cloud lock-in while staying useful."
+          },
+          {
+            "source": "conference_talk_prep.md",
+            "line_number": 12,
+            "title": "Conference Talk Prep",
+            "excerpt": "Win: the layered model approach (local Ollama for routing, Claude for synthesis) cuts API costs without sacrificing output quality \u2014 show the token comparison."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "podcast-content-angle",
+      "description": "A podcast-oriented query should surface at least one grounded podcast angle.",
+      "inputs": {
+        "data_path": "data/local_only/brand",
+        "focus": "podcast discussion theme",
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "insight_summary": "Brand OS draft synthesized from local evidence about podcast discussion theme. Primary supporting context came from Brand Week 18, Podcast Pipeline.",
+        "post_outline": [],
+        "podcast_angles": [
+          {
+            "text": "Podcast: compare operator consoles with trace platforms like LangSmith for teams that want local control and debuggability.",
+            "source": "brand_week_16.md",
+            "line_number": 4
+          }
+        ],
+        "repo_improvements": [
+          {
+            "text": "Next: evaluate podcast editing services this week; budget cap is $200/episode.",
+            "source": "podcast_pipeline.md",
+            "line_number": 33
+          }
+        ],
+        "evidence": [
+          {
+            "source": "brand_week_18.md",
+            "line_number": 7,
+            "title": "Brand Week 18",
+            "excerpt": "Win: Oakland Tech Summit talk submission accepted \u2014 35-minute slot confirmed for July; demo prep begins this week."
+          },
+          {
+            "source": "podcast_pipeline.md",
+            "line_number": 9,
+            "title": "Podcast Pipeline",
+            "excerpt": "Win: episode outline approved; research notes complete."
+          },
+          {
+            "source": "podcast_pipeline.md",
+            "line_number": 33,
+            "title": "Podcast Pipeline",
+            "excerpt": "Next: evaluate podcast editing services this week; budget cap is $200/episode."
+          },
+          {
+            "source": "brand_week_16.md",
+            "line_number": 4,
+            "title": "Brand Week 16",
+            "excerpt": "Podcast: compare operator consoles with trace platforms like LangSmith for teams that want local control and debuggability."
+          },
+          {
+            "source": "brand_week_18.md",
+            "line_number": 4,
+            "title": "Brand Week 18",
+            "excerpt": "Win: EP-20 hit 1,840 downloads in 30 days \u2014 highest-performing episode of the year; strong signal that RAG content resonates with the audience."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "podcast-angle-sparse",
+      "description": "A narrow podcast query with a tight limit should keep other sections empty.",
+      "inputs": {
+        "data_path": "data/local_only/brand",
+        "focus": "podcast discussion theme",
+        "max_documents": 1,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "insight_summary": "Brand OS draft synthesized from local evidence about podcast discussion theme. Primary supporting context came from Brand Week 18.",
+        "post_outline": [],
+        "podcast_angles": [],
+        "repo_improvements": [],
+        "evidence": [
+          {
+            "source": "brand_week_18.md",
+            "line_number": 7,
+            "title": "Brand Week 18",
+            "excerpt": "Win: Oakland Tech Summit talk submission accepted \u2014 35-minute slot confirmed for July; demo prep begins this week."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 1 unique evidence sources."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "workflow-outline-focus",
+      "description": "A workflow-focused query should surface post-outline items without leakage.",
+      "inputs": {
+        "data_path": "data/local_only/brand",
+        "focus": "grounded content drafts workflow",
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "insight_summary": "Brand OS draft synthesized from local evidence about grounded content drafts workflow. Primary supporting context came from Brand Week 15, Linkedin Content Queue.",
+        "post_outline": [
+          {
+            "text": "Workflow: turn grounded project notes into content drafts without inventing unsupported claims.",
+            "source": "brand_week_15.md",
+            "line_number": 6
+          }
+        ],
+        "podcast_angles": [],
+        "repo_improvements": [
+          {
+            "text": "Next: write full draft by June 20.",
+            "source": "linkedin_content_queue.md",
+            "line_number": 15
+          },
+          {
+            "text": "Next: draft by June 28.",
+            "source": "linkedin_content_queue.md",
+            "line_number": 22
+          }
+        ],
+        "evidence": [
+          {
+            "source": "brand_week_15.md",
+            "line_number": 6,
+            "title": "Brand Week 15",
+            "excerpt": "Workflow: turn grounded project notes into content drafts without inventing unsupported claims."
+          },
+          {
+            "source": "linkedin_content_queue.md",
+            "line_number": 15,
+            "title": "Linkedin Content Queue",
+            "excerpt": "Next: write full draft by June 20."
+          },
+          {
+            "source": "podcast_pipeline.md",
+            "line_number": 13,
+            "title": "Podcast Pipeline",
+            "excerpt": "Status: Outline in progress"
+          },
+          {
+            "source": "linkedin_content_queue.md",
+            "line_number": 22,
+            "title": "Linkedin Content Queue",
+            "excerpt": "Next: draft by June 28."
+          },
+          {
+            "source": "linkedin_content_queue.md",
+            "line_number": 6,
+            "title": "Linkedin Content Queue",
+            "excerpt": "Status: Draft complete \u2014 needs final review"
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "repo-improvement-focus",
+      "description": "A trace-view improvement query should surface repo-improvement items.",
+      "inputs": {
+        "data_path": "data/local_only/brand",
+        "focus": "trace view validation",
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "insight_summary": "Brand OS draft synthesized from local evidence about trace view validation. Primary supporting context came from Brand Week 15, Linkedin Content Queue.",
+        "post_outline": [],
+        "podcast_angles": [
+          {
+            "text": "Podcast: compare operator consoles with trace platforms like LangSmith for teams that want local control and debuggability.",
+            "source": "brand_week_16.md",
+            "line_number": 4
+          }
+        ],
+        "repo_improvements": [
+          {
+            "text": "Improve: add a lightweight trace view so the operator can see routing, evidence, and validation in one place.",
+            "source": "brand_week_15.md",
+            "line_number": 5
+          }
+        ],
+        "evidence": [
+          {
+            "source": "brand_week_15.md",
+            "line_number": 5,
+            "title": "Brand Week 15",
+            "excerpt": "Improve: add a lightweight trace view so the operator can see routing, evidence, and validation in one place."
+          },
+          {
+            "source": "linkedin_content_queue.md",
+            "line_number": 8,
+            "title": "Linkedin Content Queue",
+            "excerpt": "Key points: path traversal protection matters more than you think; the trace is the product for enterprise buyers; deterministic fallback is not optional; eval gates before every deployment; the MCP spec is simpler than the marketing suggests."
+          },
+          {
+            "source": "conference_talk_prep.md",
+            "line_number": 19,
+            "title": "Conference Talk Prep",
+            "excerpt": "Trigger `use_mcp=true` \u2014 show Claude reading files via tool calls in the operator trace."
+          },
+          {
+            "source": "conference_talk_prep.md",
+            "line_number": 17,
+            "title": "Conference Talk Prep",
+            "excerpt": "Start with a cold `/orchestrate` call against toy data \u2014 show the trace."
+          },
+          {
+            "source": "brand_week_16.md",
+            "line_number": 4,
+            "title": "Brand Week 16",
+            "excerpt": "Podcast: compare operator consoles with trace platforms like LangSmith for teams that want local control and debuggability."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 4 unique evidence sources."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "repo-improvement-sparse",
+      "description": "A narrow trace-view query with a tight limit should keep other sections empty.",
+      "inputs": {
+        "data_path": "data/local_only/brand",
+        "focus": "trace view validation",
+        "max_documents": 1,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "insight_summary": "Brand OS draft synthesized from local evidence about trace view validation. Primary supporting context came from Brand Week 15.",
+        "post_outline": [],
+        "podcast_angles": [],
+        "repo_improvements": [
+          {
+            "text": "Improve: add a lightweight trace view so the operator can see routing, evidence, and validation in one place.",
+            "source": "brand_week_15.md",
+            "line_number": 5
+          }
+        ],
+        "evidence": [
+          {
+            "source": "brand_week_15.md",
+            "line_number": 5,
+            "title": "Brand Week 15",
+            "excerpt": "Improve: add a lightweight trace view so the operator can see routing, evidence, and validation in one place."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 1 unique evidence sources."
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

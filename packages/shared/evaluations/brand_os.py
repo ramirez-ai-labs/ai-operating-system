@@ -227,6 +227,17 @@ BRAND_OS_CLAUDE_EVALUATORS = [
     score_brand_source_diversity,
 ]
 
+# Semantic retrieval (chroma) ranks individual lines by embedding similarity, not by keyword
+# prefix match. The prefix-based section scorers (expected_sources_present,
+# section_minimums_met, section_prefix_purity) are calibrated against keyword retrieval
+# behaviour and are not meaningful here — line-level chunks may not carry the expected
+# prefix even when the right file is retrieved. Summary terms and source diversity remain
+# valid quality signals for semantic retrieval.
+BRAND_OS_CHROMA_EVALUATORS = [
+    score_brand_summary_terms,
+    score_brand_source_diversity,
+]
+
 
 def run_local_brand_os_evaluations(
     cases: list[BrandContentDraftEvalCase] | None = None,
@@ -258,6 +269,7 @@ def run_local_brand_os_evaluations(
 
 
 __all__ = [
+    "BRAND_OS_CHROMA_EVALUATORS",
     "BRAND_OS_CLAUDE_EVALUATORS",
     "BRAND_OS_EVALUATORS",
     "BrandContentDraftEvalCase",

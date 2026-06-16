@@ -1,0 +1,862 @@
+{
+  "run_at": "2026-06-16T23:16:11.661315+00:00",
+  "retrieval_backend": "chroma",
+  "eval_path": "evaluations/director_os/weekly_update_cases.json",
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "pass_rate": 1.0
+  },
+  "cases": [
+    {
+      "case_id": "leadership-update-baseline",
+      "description": "Baseline leadership update should pull the latest weekly notes and produce wins and next steps.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "leadership update",
+        "max_documents": 5,
+        "use_model": false,
+        "fallback_to_deterministic": true,
+        "provider": "ollama",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about leadership update. Primary supporting context came from Director Week 14, Director Week 15.",
+        "wins": [
+          {
+            "text": "Win: finalized the leadership summary template for the monthly operating review.",
+            "source": "director_week_15.md",
+            "line_number": 3
+          },
+          {
+            "text": "Win: shipped the internal status dashboard refresh for leadership review.",
+            "source": "director_week_14.md",
+            "line_number": 3
+          }
+        ],
+        "risks": [],
+        "next_steps": [
+          {
+            "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
+            "source": "director_week_14.md",
+            "line_number": 6
+          },
+          {
+            "text": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 17
+          },
+          {
+            "text": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead.",
+            "source": "director_week_15.md",
+            "line_number": 6
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 3,
+            "title": "Director Week 15",
+            "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 3,
+            "title": "Director Week 14",
+            "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 17,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 6,
+            "title": "Director Week 15",
+            "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "full-note-without-focus",
+      "description": "Without a focus query the workflow should still surface structured wins, risks, and next steps.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": null,
+        "max_documents": 10,
+        "use_model": false,
+        "fallback_to_deterministic": true,
+        "provider": "ollama",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about current leadership activity. Primary supporting context came from 1On1 Marcus Devex Lead, 1On1 Sarah Sre Lead.",
+        "wins": [
+          {
+            "text": "Win: the internal API documentation generator shipped and is now producing docs automatically on every merge to main; positive feedback from BU-2 and BU-3 integration teams.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 11
+          },
+          {
+            "text": "Win: the platform team's internal CLI tooling reduced infrastructure provisioning time by 60%; Marcus is packaging it as a reusable template for other teams.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 28
+          },
+          {
+            "text": "Win: BU-4 security review re-check completed \u2014 Priya's team approved the updated data residency mapping; BU-4 is cleared for production gate next week.",
+            "source": "week_17_platform_migration.md",
+            "line_number": 4
+          }
+        ],
+        "risks": [
+          {
+            "text": "Risk: BU-4 security review is stalled \u2014 Priya's team flagged a data residency ambiguity in the new API gateway config; estimated 1-week delay to production gate.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 9
+          }
+        ],
+        "next_steps": [
+          {
+            "text": "Next: Sarah to publish updated Terraform 1.9 runbook by June 20.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 14
+          },
+          {
+            "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
+            "source": "director_week_14.md",
+            "line_number": 6
+          }
+        ],
+        "evidence": [
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 11,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Win: the internal API documentation generator shipped and is now producing docs automatically on every merge to main; positive feedback from BU-2 and BU-3 integration teams."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 7,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Decision: deprecate the internal developer portal v1 after BU-6 goes live; v2 with Apex Platform integration is stable enough to be the default."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 14,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Next: Sarah to publish updated Terraform 1.9 runbook by June 20."
+          },
+          {
+            "source": "platform_risk_register.md",
+            "line_number": 22,
+            "title": "Platform Risk Register",
+            "excerpt": "Status: Mitigating \u2014 alerting thresholds recalibration in progress"
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 28,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Win: the platform team's internal CLI tooling reduced infrastructure provisioning time by 60%; Marcus is packaging it as a reusable template for other teams."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 6,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Decision: roll out Cursor IDE to the remaining 14 engineers who are still on VS Code; Marcus to run two onboarding sessions \u2014 one for backend engineers, one for platform engineers \u2014 by end of June."
+          },
+          {
+            "source": "platform_risk_register.md",
+            "line_number": 30,
+            "title": "Platform Risk Register",
+            "excerpt": "Detail: 3 failing edge cases in the product integration test suite against the new API schema. Resolved by Jordan's team; production gate cleared Week 17."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 9,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Risk: BU-4 security review is stalled \u2014 Priya's team flagged a data residency ambiguity in the new API gateway config; estimated 1-week delay to production gate."
+          },
+          {
+            "source": "week_17_platform_migration.md",
+            "line_number": 4,
+            "title": "Week 17 Platform Migration",
+            "excerpt": "Win: BU-4 security review re-check completed \u2014 Priya's team approved the updated data residency mapping; BU-4 is cleared for production gate next week."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 6 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "operating-review-multifile",
+      "description": "A leadership operating review query should pull from more than one note rather than collapsing to a single file.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "leadership operating review",
+        "max_documents": 10,
+        "use_model": false,
+        "fallback_to_deterministic": true,
+        "provider": "ollama",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about leadership operating review. Primary supporting context came from Director Week 15, Director Week 14.",
+        "wins": [
+          {
+            "text": "Win: finalized the leadership summary template for the monthly operating review.",
+            "source": "director_week_15.md",
+            "line_number": 3
+          },
+          {
+            "text": "Win: shipped the internal status dashboard refresh for leadership review.",
+            "source": "director_week_14.md",
+            "line_number": 3
+          },
+          {
+            "text": "Win: closed the roadmap review feedback loop with product and design.",
+            "source": "director_week_13.md",
+            "line_number": 3
+          }
+        ],
+        "risks": [],
+        "next_steps": [
+          {
+            "text": "Next: steering committee to track weekly until resolved; expedited review requested.",
+            "source": "platform_risk_register.md",
+            "line_number": 17
+          },
+          {
+            "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
+            "source": "director_week_14.md",
+            "line_number": 6
+          },
+          {
+            "text": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 17
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_15.md",
+            "line_number": 3,
+            "title": "Director Week 15",
+            "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 3,
+            "title": "Director Week 14",
+            "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
+          },
+          {
+            "source": "platform_risk_register.md",
+            "line_number": 17,
+            "title": "Platform Risk Register",
+            "excerpt": "Next: steering committee to track weekly until resolved; expedited review requested."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "platform_risk_register.md",
+            "line_number": 34,
+            "title": "Platform Risk Register",
+            "excerpt": "Owner: Ops / Platform Team"
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 17,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday."
+          },
+          {
+            "source": "director_week_13.md",
+            "line_number": 3,
+            "title": "Director Week 13",
+            "excerpt": "Win: closed the roadmap review feedback loop with product and design."
+          },
+          {
+            "source": "platform_risk_register.md",
+            "line_number": 16,
+            "title": "Platform Risk Register",
+            "excerpt": "Detail: BU-6 onboarding surfaced PII fields in the new API gateway that were not in the original data inventory. Legal review SLA is 10 business days. Escalated to platform steering committee in Week 18."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 6,
+            "title": "Director Week 15",
+            "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
+          },
+          {
+            "source": "week_17_platform_migration.md",
+            "line_number": 4,
+            "title": "Week 17 Platform Migration",
+            "excerpt": "Win: BU-4 security review re-check completed \u2014 Priya's team approved the updated data residency mapping; BU-4 is cleared for production gate next week."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 6 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "model-provider-failure-fallback",
+      "description": "A provider failure should fall back to the deterministic weekly update when fallback is enabled.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "leadership update",
+        "max_documents": 5,
+        "use_model": true,
+        "fallback_to_deterministic": true,
+        "provider": "ollama",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "provider_scenario": "provider_failure"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about leadership update. Primary supporting context came from Director Week 14, Director Week 15.",
+        "wins": [
+          {
+            "text": "Win: finalized the leadership summary template for the monthly operating review.",
+            "source": "director_week_15.md",
+            "line_number": 3
+          },
+          {
+            "text": "Win: shipped the internal status dashboard refresh for leadership review.",
+            "source": "director_week_14.md",
+            "line_number": 3
+          }
+        ],
+        "risks": [],
+        "next_steps": [
+          {
+            "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
+            "source": "director_week_14.md",
+            "line_number": 6
+          },
+          {
+            "text": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 17
+          },
+          {
+            "text": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead.",
+            "source": "director_week_15.md",
+            "line_number": 6
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 3,
+            "title": "Director Week 15",
+            "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 3,
+            "title": "Director Week 14",
+            "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 17,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 6,
+            "title": "Director Week 15",
+            "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Deterministic summary fallback was observed as expected."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "weak-model-output-fallback",
+      "description": "Weak model output should be rejected and replaced with the deterministic baseline.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "leadership update",
+        "max_documents": 5,
+        "use_model": true,
+        "fallback_to_deterministic": true,
+        "provider": "ollama",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "provider_scenario": "weak_model_output"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about leadership update. Primary supporting context came from Director Week 14, Director Week 15.",
+        "wins": [
+          {
+            "text": "Win: finalized the leadership summary template for the monthly operating review.",
+            "source": "director_week_15.md",
+            "line_number": 3
+          },
+          {
+            "text": "Win: shipped the internal status dashboard refresh for leadership review.",
+            "source": "director_week_14.md",
+            "line_number": 3
+          }
+        ],
+        "risks": [],
+        "next_steps": [
+          {
+            "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
+            "source": "director_week_14.md",
+            "line_number": 6
+          },
+          {
+            "text": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 17
+          },
+          {
+            "text": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead.",
+            "source": "director_week_15.md",
+            "line_number": 6
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 3,
+            "title": "Director Week 15",
+            "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 3,
+            "title": "Director Week 14",
+            "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 17,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 6,
+            "title": "Director Week 15",
+            "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Deterministic summary fallback was observed as expected."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "unsupported-claim-fallback",
+      "description": "Unsupported grounded claims from the model path should fail validation and fall back to deterministic output.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "leadership update",
+        "max_documents": 5,
+        "use_model": true,
+        "fallback_to_deterministic": true,
+        "provider": "ollama",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "provider_scenario": "unsupported_grounded_claim"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about leadership update. Primary supporting context came from Director Week 14, Director Week 15.",
+        "wins": [
+          {
+            "text": "Win: finalized the leadership summary template for the monthly operating review.",
+            "source": "director_week_15.md",
+            "line_number": 3
+          },
+          {
+            "text": "Win: shipped the internal status dashboard refresh for leadership review.",
+            "source": "director_week_14.md",
+            "line_number": 3
+          }
+        ],
+        "risks": [],
+        "next_steps": [
+          {
+            "text": "Next: prepare a concise weekly update for the leadership sync on Friday.",
+            "source": "director_week_14.md",
+            "line_number": 6
+          },
+          {
+            "text": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 17
+          },
+          {
+            "text": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead.",
+            "source": "director_week_15.md",
+            "line_number": 6
+          }
+        ],
+        "evidence": [
+          {
+            "source": "director_week_14.md",
+            "line_number": 6,
+            "title": "Director Week 14",
+            "excerpt": "Next: prepare a concise weekly update for the leadership sync on Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 3,
+            "title": "Director Week 15",
+            "excerpt": "Win: finalized the leadership summary template for the monthly operating review."
+          },
+          {
+            "source": "director_week_14.md",
+            "line_number": 3,
+            "title": "Director Week 14",
+            "excerpt": "Win: shipped the internal status dashboard refresh for leadership review."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 17,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Next: publish the Week 16 leadership summary to the platform steering committee by Friday."
+          },
+          {
+            "source": "director_week_15.md",
+            "line_number": 6,
+            "title": "Director Week 15",
+            "excerpt": "Next: publish the updated operating cadence notes and confirm open actions with the platform lead."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Deterministic summary fallback was observed as expected."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "sparse-risk-retrieval",
+      "description": "A narrow risk-focused query should still return a grounded risk section even with sparse evidence.",
+      "inputs": {
+        "data_path": "data/local_only/projects",
+        "focus": "vendor confirmation delay",
+        "max_documents": 3,
+        "use_model": false,
+        "fallback_to_deterministic": true,
+        "provider": "ollama",
+        "ollama_url": "http://127.0.0.1:11434",
+        "ollama_model": "llama3.2",
+        "claude_model": "claude-haiku-4-5-20251001"
+      },
+      "outputs": {
+        "summary": "Weekly update synthesized from local project evidence about vendor confirmation delay. Primary supporting context came from Director Week 14, Week 16 Platform Migration.",
+        "wins": [],
+        "risks": [
+          {
+            "text": "Risk: one platform dependency is delayed pending vendor confirmation.",
+            "source": "director_week_14.md",
+            "line_number": 5
+          },
+          {
+            "text": "Risk: BU-4 security review is stalled \u2014 Priya's team flagged a data residency ambiguity in the new API gateway config; estimated 1-week delay to production gate.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 9
+          },
+          {
+            "text": "Risk: vendor API deprecation notice received for the legacy auth middleware \u2014 EOL is Q4 2026, earlier than the original Q1 2027 estimate; migration path not yet scoped.",
+            "source": "week_16_platform_migration.md",
+            "line_number": 10
+          }
+        ],
+        "next_steps": [],
+        "evidence": [
+          {
+            "source": "director_week_14.md",
+            "line_number": 5,
+            "title": "Director Week 14",
+            "excerpt": "Risk: one platform dependency is delayed pending vendor confirmation."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 9,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Risk: BU-4 security review is stalled \u2014 Priya's team flagged a data residency ambiguity in the new API gateway config; estimated 1-week delay to production gate."
+          },
+          {
+            "source": "week_16_platform_migration.md",
+            "line_number": 10,
+            "title": "Week 16 Platform Migration",
+            "excerpt": "Risk: vendor API deprecation notice received for the legacy auth middleware \u2014 EOL is Q4 2026, earlier than the original Q1 2027 estimate; migration path not yet scoped."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "expected_sources_present",
+          "score": true,
+          "comment": "All expected evidence sources were retrieved."
+        },
+        {
+          "key": "section_minimums_met",
+          "score": true,
+          "comment": "All minimum section counts were met."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 2 unique evidence sources."
+        },
+        {
+          "key": "section_prefix_purity",
+          "score": true,
+          "comment": "Section prefixes stayed aligned with their output sections."
+        },
+        {
+          "key": "expected_summary_mode",
+          "score": true,
+          "comment": "Case did not require deterministic fallback."
+        }
+      ],
+      "passed": true
+    }
+  ]
+}
