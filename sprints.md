@@ -353,6 +353,25 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 16 — ChromaDB Eval Coverage
+
+**Objective:** Close the untested claim that `RETRIEVAL_BACKEND=chroma` produces valid grounded output. Since Sprint 5, the chroma backend has been live in production but exercised by zero eval cases. Sprint 16 adds end-to-end eval coverage, live chroma runners, CI gates, and an `is_index_ready()` helper that runners and tests share.
+
+**Maps to:** plan.md Phase 8 / ChromaDB eval coverage
+
+**Status: In progress**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Add `is_index_ready()` to `packages/shared/retrieval/chroma.py` — shared pre-flight check for runners and tests | Done | — |
+| Create `scripts/run_director_os_evals_chroma.py` — Director OS live runner; skips gracefully with `--ci` when index absent | Done | — |
+| Create `scripts/run_brand_os_evals_chroma.py` — Brand OS live runner; skips gracefully with `--ci` when index absent | Done | — |
+| Add `tests/test_chroma_eval_integration.py` — 8 tests: graph routing, full eval pipeline, index ready check, runner CI skip logic | Done | — |
+| Wire chroma eval steps into `.github/workflows/ci.yml` (both runners with `--ci` flag) | Done | — |
+| Run live chroma evals — commit `evaluations/director_os/results_chroma.json` and `evaluations/brand_os/results_chroma.json` | Pending (requires Ollama + ingest) | — |
+
+---
+
 ## Sprint 15 — Brand OS Claude Provider Path
 
 **Objective:** Add the Claude provider path to Brand OS — the last domain without model-backed synthesis. Achieves full parity: all four domains have `use_model`, a Claude provider, a fallback graph, and a committed eval results file.

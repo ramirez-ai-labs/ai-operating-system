@@ -20,7 +20,7 @@ The repository currently includes:
 - project documentation in `README.md` with Mermaid architecture diagram and "Why Claude" section
 - four workflow domains on a shared LangGraph foundation:
   - `Director OS` — evidence-grounded weekly leadership updates with Claude tool use, prompt caching, Ollama fallback, and deterministic baseline
-  - `Brand OS` — content drafts (LinkedIn posts, podcast angles, repo improvements) from local brand notes
+  - `Brand OS` — content drafts (LinkedIn posts, podcast angles, repo improvements) from local brand notes; Claude-backed synthesis path available
   - `Interview OS` — candidate prep briefs (key questions, talking points, red flags) from local interview notes; Claude-backed synthesis path available
   - `One-on-One OS` — meeting briefs for 1:1s (action items, talking points, blockers, kudos) from direct-report notes; Claude-backed synthesis path available
 - a Chief of Staff orchestration layer with Ollama LLM classification routing and keyword fallback, supporting all four domains
@@ -31,7 +31,7 @@ The repository currently includes:
 - a standalone MCP server under `apps/mcp` exposing all four workflow domains as tools for Claude Desktop / Claude Code
 - realistic enterprise scenario datasets under `data/local_only/` for all four domains
 - a local operator console at `/` with provider selection, target audience, `use_mcp` toggle, cache hit display, and agent pipeline visualization
-- 24 test files, 213 tests passing; local evals for all four workflow domains running in CI
+- 25 test files, 224 tests passing; local evals for all four workflow domains running in CI
 - optional LangSmith tracing
 - issue templates, `CONTRIBUTING.md`, and branch protection on `main`
 
@@ -467,16 +467,18 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–15 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, committed live eval results (100% pass rate each), and CI eval gates. 216 tests passing.
+Sprints 1–15 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, committed live eval results (100% pass rate each), and CI eval gates. Sprint 16 (ChromaDB eval coverage) is in progress. 224 tests passing.
 
 **Sprint 15 — Brand OS Claude provider path + v1.2.0 tag (complete, PR #80):**
 Added `ClaudeBrandContentDraftProvider` with forced tool use and citation grounding. Added `BRAND_OS_CLAUDE_EVALUATORS` (excludes prefix-purity scorer, which tests deterministic routing behavior not applicable to Claude synthesis). Committed `evaluations/brand_os/results_claude.json` — 7/7 passed (100%). Cut `v1.2.0` release tag — first milestone where all four domains have live Claude results.
+
+**Sprint 16 — ChromaDB eval coverage (in progress):**
+Added `is_index_ready()` to `chroma.py`, chroma eval runners for Director OS and Brand OS, 8 integration tests, and CI gates. Live eval results pending (requires Ollama + ingest run).
 
 **What's next — Phase 8:**
 
 | Candidate | Value | Effort |
 |---|---|---|
-| ChromaDB eval coverage | Closes an untested claim: `RETRIEVAL_BACKEND=chroma` is live since Sprint 5 but no eval exercises it end-to-end | Medium |
 | Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS | Medium |
 | `apps/web` Next.js frontend | Makes the system demonstrable without a terminal | High |
 

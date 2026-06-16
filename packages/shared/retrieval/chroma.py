@@ -158,6 +158,12 @@ def _embed(text: str, model: str, ollama_url: str) -> list[float]:
     return data["embedding"]
 
 
+def is_index_ready() -> bool:
+    """Return True if the ChromaDB index directory exists and contains files."""
+    path = Path(CHROMA_DB_PATH)
+    return path.exists() and any(path.iterdir())
+
+
 def _parse_results(results: dict) -> list[EvidenceItem]:
     """
     Convert raw ChromaDB query results to EvidenceItem objects.
