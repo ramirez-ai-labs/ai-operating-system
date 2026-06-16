@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -10,6 +11,8 @@ from packages.shared.schemas.brand_os import (
     BrandContentDraftResponse,
 )
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+
+logger = logging.getLogger(__name__)
 
 
 class BrandOSState(TypedDict, total=False):
@@ -60,10 +63,14 @@ def build_response(state: BrandOSState) -> BrandOSState:
     if request.use_model and not state.get("fallback_attempted", False):
         try:
             response, usage = _build_model_response(request, evidence)
+            response.provider_usage = usage
             return {"response": response, "used_model": True, "provider_usage": usage}
-        except ValueError:
+        except ValueError as exc:
             if not request.fallback_to_deterministic:
                 raise
+            logger.warning(
+                "Brand OS model synthesis failed — falling back to deterministic path: %s", exc
+            )
             return {"fallback_attempted": True}
 
     response = _build_deterministic_response(request, evidence)
@@ -91,6 +98,11 @@ def _build_model_response(
 
 def _build_provider(request: BrandContentDraftRequest):
     """Select the synthesis provider. Patchable in tests and evals."""
+    if request.provider != "claude":
+        raise ValueError(
+            f"Brand OS model synthesis requires provider='claude'. "
+            f"Got: {request.provider!r}. Ollama synthesis is not available for Brand OS."
+        )
     from packages.shared.providers.brand_os import ClaudeBrandContentDraftProvider
 
     return ClaudeBrandContentDraftProvider(model=request.claude_model)

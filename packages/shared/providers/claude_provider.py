@@ -98,7 +98,9 @@ Rules:
     ) -> None:
         self.model = model
         self.max_tokens = max_tokens
-        self._api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        # Use the explicit key when provided (even if empty — empty means "no key / stub mode").
+        # Only fall back to the environment variable when no key argument was passed at all.
+        self._api_key = api_key if api_key is not None else os.getenv("ANTHROPIC_API_KEY")
         self._client: Any = None
 
         if _SDK_AVAILABLE and self._api_key:

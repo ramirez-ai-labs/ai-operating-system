@@ -51,7 +51,7 @@ def test_orchestrator_routes_brand_os_prompt() -> None:
     assert response.selected_workflow == "brand_os.content_draft"
     assert "podcast" in response.rationale.lower()
     assert response.result.post_outline
-    assert not response.trace.model_supported
+    assert response.trace.model_supported
     assert response.trace.section_counts["post_outline"] == len(response.result.post_outline)
 
 

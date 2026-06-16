@@ -47,7 +47,9 @@ class OrchestratorRequest(BaseModel):
         # so no code change is required when the key is not available.
         default="claude",
         description=(
-            "Model provider for Director OS synthesis when use_model is enabled. "
+            "Model provider for synthesis when use_model is enabled. "
+            "Director OS supports 'ollama' or 'claude'. "
+            "Brand OS, Interview OS, and One-on-One OS require 'claude'. "
             "Falls back to deterministic output when ANTHROPIC_API_KEY is absent."
         ),
     )
@@ -74,9 +76,9 @@ class OrchestratorRequest(BaseModel):
     claude_model: str = Field(
         default="claude-haiku-4-5-20251001",
         description=(
-            "Claude model ID used for Director OS synthesis when provider is "
-            "'claude', for MCP-backed synthesis when use_mcp is True, and for "
-            "researcher and writer agents when target_audience is set."
+            "Claude model ID used for synthesis across all four workflow domains "
+            "when provider is 'claude', for MCP-backed synthesis when use_mcp is True, "
+            "and for researcher and writer agents when target_audience is set."
         ),
     )
     target_audience: str | None = Field(

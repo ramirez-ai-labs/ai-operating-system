@@ -222,8 +222,8 @@ def test_orchestrate_honors_explicit_brand_workflow() -> None:
     assert "explicitly requested" in body["rationale"].lower()
 
 
-def test_orchestrate_reports_brand_model_request_as_unsupported() -> None:
-    """Brand OS should report model requests without claiming model support."""
+def test_orchestrate_brand_model_request_falls_back_without_api_key() -> None:
+    """Brand OS supports Claude synthesis but falls back to deterministic when no API key is set."""
     response = client.post(
         "/orchestrate",
         json={
@@ -239,9 +239,9 @@ def test_orchestrate_reports_brand_model_request_as_unsupported() -> None:
     body = response.json()
     assert body["selected_workflow"] == "brand_os.content_draft"
     assert body["trace"]["model_requested"] is True
-    assert body["trace"]["model_supported"] is False
+    assert body["trace"]["model_supported"] is True
     assert body["trace"]["model_used"] is False
-    assert body["trace"]["fallback_used"] is False
+    assert body["trace"]["fallback_used"] is True
 
 
 def test_orchestrate_reports_director_fallback_in_api_trace(monkeypatch) -> None:

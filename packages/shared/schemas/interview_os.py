@@ -54,3 +54,4 @@ class InterviewBriefResponse(BaseModel):
     talking_points: list[GroundedItem]
     red_flags: list[GroundedItem]
     evidence: list[EvidenceItem]
+    provider_usage: dict[str, int] = Field(default_factory=dict)
