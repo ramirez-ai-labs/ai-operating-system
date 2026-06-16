@@ -169,6 +169,10 @@ def _run_workflow(
                 data_path=request.data_path,
                 focus=request.focus or request.prompt,
                 max_documents=request.max_documents,
+                use_model=effective_use_model,
+                provider=request.provider,
+                claude_model=request.claude_model,
+                fallback_to_deterministic=request.fallback_to_deterministic,
             )
         )
 
@@ -178,6 +182,10 @@ def _run_workflow(
                 data_path=request.data_path,
                 focus=request.focus or request.prompt,
                 max_documents=request.max_documents,
+                use_model=effective_use_model,
+                provider=request.provider,
+                claude_model=request.claude_model,
+                fallback_to_deterministic=request.fallback_to_deterministic,
             )
         )
 
@@ -187,6 +195,10 @@ def _run_workflow(
                 data_path=request.data_path,
                 focus=request.focus or request.prompt,
                 max_documents=request.max_documents,
+                use_model=effective_use_model,
+                provider=request.provider,
+                claude_model=request.claude_model,
+                fallback_to_deterministic=request.fallback_to_deterministic,
             )
         )
 
@@ -355,50 +367,52 @@ def _build_trace(
             provider_used = None
             model_id_used = None
 
-        # Surface prompt-cache savings when the Claude provider was used.
         usage = getattr(result, "provider_usage", {})
         cache_read = usage.get("cache_read_input_tokens", 0)
         cache_creation = usage.get("cache_creation_input_tokens", 0)
     elif workflow == BRAND_WORKFLOW:
-        fallback_used = False
+        usage = getattr(result, "provider_usage", {})
+        model_used = bool(usage)
+        fallback_used = request.use_model and not model_used
         section_counts = {
             "post_outline": len(result.post_outline),
             "podcast_angles": len(result.podcast_angles),
             "repo_improvements": len(result.repo_improvements),
         }
-        model_supported = False
-        model_used = False
-        provider_used = None
-        model_id_used = None
-        cache_read = 0
-        cache_creation = 0
+        model_supported = True
+        provider_used = request.provider if model_used else None
+        model_id_used = request.claude_model if model_used else None
+        cache_read = usage.get("cache_read_input_tokens", 0)
+        cache_creation = usage.get("cache_creation_input_tokens", 0)
     elif workflow == INTERVIEW_WORKFLOW:
-        fallback_used = False
+        usage = getattr(result, "provider_usage", {})
+        model_used = bool(usage)
+        fallback_used = request.use_model and not model_used
         section_counts = {
             "key_questions": len(result.key_questions),
             "talking_points": len(result.talking_points),
             "red_flags": len(result.red_flags),
         }
-        model_supported = False
-        model_used = False
-        provider_used = None
-        model_id_used = None
-        cache_read = 0
-        cache_creation = 0
+        model_supported = True
+        provider_used = request.provider if model_used else None
+        model_id_used = request.claude_model if model_used else None
+        cache_read = usage.get("cache_read_input_tokens", 0)
+        cache_creation = usage.get("cache_creation_input_tokens", 0)
     else:
-        fallback_used = False
+        usage = getattr(result, "provider_usage", {})
+        model_used = bool(usage)
+        fallback_used = request.use_model and not model_used
         section_counts = {
             "action_items": len(result.action_items),
             "talking_points": len(result.talking_points),
             "blockers": len(result.blockers),
             "kudos": len(result.kudos),
         }
-        model_supported = False
-        model_used = False
-        provider_used = None
-        model_id_used = None
-        cache_read = 0
-        cache_creation = 0
+        model_supported = True
+        provider_used = request.provider if model_used else None
+        model_id_used = request.claude_model if model_used else None
+        cache_read = usage.get("cache_read_input_tokens", 0)
+        cache_creation = usage.get("cache_creation_input_tokens", 0)
 
     return WorkflowTrace(
         data_path=request.data_path,

@@ -51,3 +51,4 @@ class OneOnOneResponse(BaseModel):
     blockers: list[GroundedItem]
     kudos: list[GroundedItem]
     evidence: list[EvidenceItem]
+    provider_usage: dict[str, int] = Field(default_factory=dict)

@@ -46,3 +46,4 @@ class BrandContentDraftResponse(BaseModel):
     podcast_angles: list[GroundedItem]
     repo_improvements: list[GroundedItem]
     evidence: list[EvidenceItem]
+    provider_usage: dict[str, int] = Field(default_factory=dict)

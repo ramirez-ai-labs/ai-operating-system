@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -7,6 +8,8 @@ from langgraph.graph import END, START, StateGraph
 from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.interview_os import InterviewBriefRequest, InterviewBriefResponse
+
+logger = logging.getLogger(__name__)
 
 
 class InterviewOSState(TypedDict, total=False):
@@ -58,10 +61,14 @@ def build_response(state: InterviewOSState) -> InterviewOSState:
     if request.use_model and not state.get("fallback_attempted", False):
         try:
             response, usage = _build_model_response(request, evidence)
+            response.provider_usage = usage
             return {"response": response, "used_model": True, "provider_usage": usage}
-        except ValueError:
+        except ValueError as exc:
             if not request.fallback_to_deterministic:
                 raise
+            logger.warning(
+                "Interview OS model synthesis failed — falling back to deterministic path: %s", exc
+            )
             return {"fallback_attempted": True}
 
     response = _build_deterministic_response(request, evidence)
@@ -89,6 +96,11 @@ def _build_model_response(
 
 def _build_provider(request: InterviewBriefRequest):
     """Select the synthesis provider. Patchable in tests and evals."""
+    if request.provider != "claude":
+        raise ValueError(
+            f"Interview OS model synthesis requires provider='claude'. "
+            f"Got: {request.provider!r}. Ollama synthesis is not available for Interview OS."
+        )
     from packages.shared.providers.interview_os import ClaudeInterviewBriefProvider
     return ClaudeInterviewBriefProvider(model=request.claude_model)
 

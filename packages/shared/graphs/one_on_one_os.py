@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -7,6 +8,8 @@ from langgraph.graph import END, START, StateGraph
 from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.one_on_one_os import OneOnOneRequest, OneOnOneResponse
+
+logger = logging.getLogger(__name__)
 
 
 class OneOnOneOSState(TypedDict, total=False):
@@ -58,10 +61,15 @@ def build_response(state: OneOnOneOSState) -> OneOnOneOSState:
     if request.use_model and not state.get("fallback_attempted", False):
         try:
             response, usage = _build_model_response(request, evidence)
+            response.provider_usage = usage
             return {"response": response, "used_model": True, "provider_usage": usage}
-        except ValueError:
+        except ValueError as exc:
             if not request.fallback_to_deterministic:
                 raise
+            logger.warning(
+                "One-on-One OS model synthesis failed — falling back to deterministic path: %s",
+                exc,
+            )
             return {"fallback_attempted": True}
 
     response = _build_deterministic_response(request, evidence)
@@ -88,6 +96,11 @@ def _build_model_response(
 
 def _build_provider(request: OneOnOneRequest):
     """Select the synthesis provider. Patchable in tests and evals."""
+    if request.provider != "claude":
+        raise ValueError(
+            f"One-on-One OS model synthesis requires provider='claude'. "
+            f"Got: {request.provider!r}. Ollama synthesis is not available for One-on-One OS."
+        )
     from packages.shared.providers.one_on_one_os import ClaudeOneOnOneProvider
     return ClaudeOneOnOneProvider(model=request.claude_model)
 
