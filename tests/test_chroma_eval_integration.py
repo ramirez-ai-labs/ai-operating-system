@@ -197,6 +197,18 @@ def test_is_index_ready_returns_true_when_index_present(monkeypatch, tmp_path) -
 # ---------------------------------------------------------------------------
 
 
+def _load_runner_by_path(script_name: str):
+    """Load a scripts/ runner by file path — avoids namespace-package import issues in CI."""
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parent.parent / "scripts" / f"{script_name}.py"
+    spec = importlib.util.spec_from_file_location(script_name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_director_os_chroma_runner_skips_in_ci_when_index_absent(monkeypatch) -> None:
     """Director OS chroma runner returns 0 in CI mode when the index is not built."""
     monkeypatch.setattr(
@@ -204,11 +216,7 @@ def test_director_os_chroma_runner_skips_in_ci_when_index_absent(monkeypatch) ->
         lambda: False,
     )
 
-    import importlib
-
-    runner = importlib.import_module("scripts.run_director_os_evals_chroma")
-    importlib.reload(runner)
-
+    runner = _load_runner_by_path("run_director_os_evals_chroma")
     exit_code = runner.run_evals(ci_mode=True)
     assert exit_code == 0
 
@@ -220,10 +228,6 @@ def test_brand_os_chroma_runner_skips_in_ci_when_index_absent(monkeypatch) -> No
         lambda: False,
     )
 
-    import importlib
-
-    runner = importlib.import_module("scripts.run_brand_os_evals_chroma")
-    importlib.reload(runner)
-
+    runner = _load_runner_by_path("run_brand_os_evals_chroma")
     exit_code = runner.run_evals(ci_mode=True)
     assert exit_code == 0
