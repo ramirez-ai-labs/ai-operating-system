@@ -33,9 +33,7 @@ app = FastAPI(
     description="Local-first multi-domain AI-OS API for workflow execution and orchestration.",
 )
 
-OPERATOR_CONSOLE_HTML = (
-    Path(__file__).parent / "templates" / "console.html"
-).read_text(encoding="utf-8")
+_CONSOLE_HTML_PATH = Path(__file__).parent / "templates" / "console.html"
 
 
 @app.get("/health")
@@ -47,7 +45,7 @@ def health() -> dict[str, str]:
 @app.get("/", response_class=HTMLResponse)
 def operator_console() -> HTMLResponse:
     """Serve a minimal operator-facing console for trace-first local workflow inspection."""
-    return HTMLResponse(OPERATOR_CONSOLE_HTML)
+    return HTMLResponse(_CONSOLE_HTML_PATH.read_text(encoding="utf-8"))
 
 
 @app.post(

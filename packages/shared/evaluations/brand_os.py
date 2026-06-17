@@ -325,23 +325,24 @@ def run_local_brand_os_evaluations(
     eval_cases = cases or load_brand_os_eval_cases()
     active_evaluators = evaluators if evaluators is not None else BRAND_OS_EVALUATORS
     results: list[dict[str, Any]] = []
-    for case in eval_cases:
-        outputs = run_brand_os_eval_target(case.inputs.model_dump())
-        reference_outputs = case.reference_outputs.model_dump()
-        evaluator_results = [
-            evaluator(outputs=outputs, reference_outputs=reference_outputs)
-            for evaluator in active_evaluators
-        ]
-        results.append(
-            {
-                "case_id": case.id,
-                "description": case.description,
-                "inputs": case.inputs.model_dump(),
-                "outputs": outputs,
-                "results": evaluator_results,
-                "passed": all(item["score"] for item in evaluator_results),
-            }
-        )
+    with _langsmith_tracing_disabled():
+        for case in eval_cases:
+            outputs = run_brand_os_eval_target(case.inputs.model_dump())
+            reference_outputs = case.reference_outputs.model_dump()
+            evaluator_results = [
+                evaluator(outputs=outputs, reference_outputs=reference_outputs)
+                for evaluator in active_evaluators
+            ]
+            results.append(
+                {
+                    "case_id": case.id,
+                    "description": case.description,
+                    "inputs": case.inputs.model_dump(),
+                    "outputs": outputs,
+                    "results": evaluator_results,
+                    "passed": all(item["score"] for item in evaluator_results),
+                }
+            )
     return results
 
 
