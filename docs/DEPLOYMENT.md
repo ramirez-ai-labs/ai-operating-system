@@ -8,20 +8,21 @@ requirements constrain how AI systems are deployed and operated.
 
 ## Deployment architecture
 
-```
-Enterprise environment
-│
-├── apps/api          ← FastAPI service (containerized, internal network only)
-├── data/             ← Local or network-mounted project data
-│   ├── projects/     ← Jira exports, roadmap docs, meeting notes
-│   └── brand/        ← Content drafts, notes, repo summaries
-│
-├── packages/
-│   ├── shared/providers/claude_provider.py   ← Calls Anthropic API
-│   └── shared/mcp/filesystem_server.py       ← Reads local data only
-│
-└── External calls
-    └── api.anthropic.com (HTTPS, outbound only, no inbound)
+```mermaid
+graph TB
+    subgraph Enterprise["Enterprise environment (no inbound traffic)"]
+        API["apps/api\nFastAPI — internal network only"]
+        Data["data/local_only/\nproject notes · brand docs\ninterview notes · 1:1s"]
+        Ollama["Ollama\nllama3.2 routing\nnomic-embed-text embeddings"]
+        Chroma["ChromaDB\nlocal vector index\ndata/chroma/"]
+
+        API --> Data
+        API --> Ollama
+        Ollama --> Chroma
+    end
+
+    API -->|"HTTPS outbound only\napi.anthropic.com:443"| Anthropic["Anthropic API\nClaude Haiku synthesis\nno data stored by default"]
+    API -.->|"optional — LANGSMITH_TRACING=true"| LangSmith["LangSmith\nnode-level execution traces"]
 ```
 
 No customer data is stored or logged by Anthropic by default. For
