@@ -38,42 +38,57 @@ enterprise AI work requires.
 
 ```mermaid
 flowchart TB
-    In([OrchestratorRequest]) --> CoS["Chief of Staff\nOllama classification\n+ keyword fallback"]
+    In([OrchestratorRequest]) --> MCP{"use_mcp?"}
+    MCP -->|true| MCPLoop["MCP Tool Loop\nClaude reads files via tool calls"]
+    MCP -->|false| CoS["Chief of Staff\nOllama classification\n+ keyword fallback"]
+    MCPLoop --> CoS
 
-    CoS -->|brand_os| Brand["Brand OS\nbrand_os.content_draft"]
-    CoS -->|director_os / default| Director["Director OS\ndirector_os.weekly_update"]
-    CoS -->|interview_os| Interview["Interview OS\ninterview_os.brief"]
-    CoS -->|one_on_one_os| OneOnOne["One-on-One OS\none_on_one_os.brief"]
+    CoS -->|director_os| Dir["Director OS\nretrieve_evidence"]
+    CoS -->|brand_os| Brand["Brand OS\nretrieve_evidence"]
+    CoS -->|interview_os| Interview["Interview OS\nretrieve_evidence"]
+    CoS -->|one_on_one_os| OneOnOne["One-on-One OS\nretrieve_evidence"]
 
-    Director --> Retrieval["Local Retrieval\nmarkdown evidence"]
-    Brand --> BRetrieval["Local Retrieval\nbrand evidence"]
-    Interview --> IRetrieval["Local Retrieval\ncandidate / JD evidence"]
-    OneOnOne --> ORetrieval["Local Retrieval\n1:1 notes evidence"]
+    Dir --> DModel{"use_model?"}
+    DModel -->|"provider: claude"| DC["Claude Haiku\ntool use + prompt cache"]
+    DModel -->|"provider: ollama"| DO["Ollama llama3.2\nlocal inference"]
+    DModel -->|false| DDet["Deterministic\nkeyword extraction"]
+    DC --> DVal["validate_response\nevidence grounding"]
+    DO --> DVal
+    DDet --> DVal
 
-    Retrieval --> Draft{"use_model?"}
-    Draft -->|"provider: claude"| ClaudeProvider["Claude Haiku\ntool use + prompt cache\ncache_control ephemeral"]
-    Draft -->|"provider: ollama"| OllamaProvider["Ollama llama3.2\nlocal inference"]
-    Draft -->|false| Det["Deterministic extraction\nkeyword matching"]
+    Brand --> BModel{"use_model?\nclaude only"}
+    BModel -->|true| BC["Claude Haiku\ntool use"]
+    BModel -->|false| BDet["Deterministic\nsection formatter"]
 
-    ClaudeProvider --> Val["Validator\nevidence grounding"]
-    OllamaProvider --> Val
-    Det --> Val
-    BRetrieval --> BFmt["Section formatter"]
-    IRetrieval --> IBrief["Interview brief\ngrounded extraction"]
-    ORetrieval --> OBrief["Meeting brief\ngrounded extraction"]
+    Interview --> IModel{"use_model?\nclaude only"}
+    IModel -->|true| IC["Claude Haiku\ntool use"]
+    IModel -->|false| IDet["Deterministic\ngrounded extraction"]
 
-    Val --> TA{"target_audience?"}
-    TA -->|set| Researcher["ResearcherAgent\nClaude Haiku  tool use\nstructured synthesis"]
-    Researcher --> Writer["WriterAgent\nClaude Haiku  completion\naudienced formatting"]
+    OneOnOne --> OModel{"use_model?\nclaude only"}
+    OModel -->|true| OC["Claude Haiku\ntool use"]
+    OModel -->|false| ODet["Deterministic\ngrounded extraction"]
+
+    DVal --> TA{"target_audience?"}
+    BC --> TA
+    BDet --> TA
+    IC --> TA
+    IDet --> TA
+    OC --> TA
+    ODet --> TA
+
+    TA -->|set| Researcher["ResearcherAgent\nClaude Haiku\nstructured synthesis"]
+    Researcher --> Writer["WriterAgent\nClaude Haiku\naudience formatting"]
     Writer --> RespA(["OrchestratorResponse\nformatted_content + agent_calls + trace"])
     TA -->|not set| RespB(["OrchestratorResponse\nWorkflowTrace + cache metrics"])
-    BFmt --> RespB
-    IBrief --> RespB
-    OBrief --> RespB
 
-    style ClaudeProvider fill:#e8f5e9,stroke:#388e3c
+    style DC fill:#e8f5e9,stroke:#388e3c
+    style BC fill:#e8f5e9,stroke:#388e3c
+    style IC fill:#e8f5e9,stroke:#388e3c
+    style OC fill:#e8f5e9,stroke:#388e3c
     style Researcher fill:#e8f5e9,stroke:#388e3c
     style Writer fill:#e8f5e9,stroke:#388e3c
+    style DO fill:#fff3e0,stroke:#f57c00
+    style MCPLoop fill:#e3f2fd,stroke:#1565c0
 ```
 
 ---
