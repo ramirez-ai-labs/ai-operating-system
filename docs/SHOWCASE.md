@@ -27,9 +27,9 @@ faces weekly:
 
 ## Why I built it
 
-I run a developer platform organization at Moody's Analytics. Every week I synthesize
-status across 8+ active workstreams, prepare for 6-10 direct report 1:1s, and
-produce content that represents the team externally. The existing tools — Jira,
+I run a developer platform organization at a large financial services firm. Every week
+I synthesize status across 8+ active workstreams, prepare for 6-10 direct report 1:1s,
+and produce content that represents the team externally. The existing tools — Jira,
 Confluence, meeting notes — don't talk to each other.
 
 I built AI-OS as both a working tool and a portfolio artifact that demonstrates
