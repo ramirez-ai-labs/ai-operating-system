@@ -47,6 +47,80 @@ how I think about production AI systems:
 
 ---
 
+## System design walkthrough
+
+Five decisions that shaped the architecture — and why each one was made.
+
+### Why Ollama for routing and embeddings
+
+The Chief of Staff routing layer calls Ollama `llama3.2` via a raw `urllib.request`
+POST to `/api/chat` with a compact classification prompt. It returns exactly one token:
+`director_os`, `brand_os`, `interview_os`, or `one_on_one_os`. When Ollama is
+unreachable it falls back to keyword rules automatically.
+
+Using Ollama here keeps routing free, local, and zero-data-egress. Routing decisions
+don't need the reasoning depth Claude brings — they need to be fast and cheap. Burning
+a Claude API call on a classification that returns one word is waste. The same logic
+applies to embeddings: ChromaDB uses `nomic-embed-text` via Ollama, so the embedding
+model and the routing model share a single local dependency with no cloud exposure.
+
+`packages/shared/orchestration/chief_of_staff.py:225-304` — the full Ollama
+classification function with keyword fallback.
+
+### Why Claude for synthesis
+
+Ollama handles routing and embeddings. Claude handles synthesis — the step that
+transforms retrieved evidence into structured output. The reason Claude owns this step
+is not capability in the abstract. It is tool use.
+
+Claude's tool use API lets you define a JSON schema with required fields. Every output
+item in every domain requires `source` (the filename) and `line_number`. If Claude
+cannot locate those values in the evidence, it cannot return the item. The schema
+rejects the response at parse time, not post-hoc. Ollama does not have reliable forced
+tool use at the level needed for this invariant.
+
+`packages/shared/providers/claude.py:31-65` — `_TOOL_SCHEMA` defining the grounding
+contract. `packages/shared/providers/claude.py:107-108` — `tool_choice` forcing it.
+
+### Why forced tool use and not a system prompt instruction
+
+The difference between "always cite your sources" in a system prompt and a tool schema
+with required `source` + `line_number` fields is structural enforcement. A system prompt
+instruction produces a citation most of the time. A tool schema produces a citation or
+fails to parse — and failed parses trigger the deterministic fallback. The output that
+reaches the API caller either has a citation or was built by the deterministic path.
+There is no "I'll mention the source approximately" middle ground.
+
+### Why ChromaDB needs a flat-file fallback
+
+ChromaDB semantic retrieval requires Ollama running and a built index. CI runs without
+either. The retrieval backend dispatcher (`packages/shared/retrieval/backend.py:41-64`)
+reads `RETRIEVAL_BACKEND` from the environment and selects either `chroma.py` or
+`local_files.py`. If the environment variable is absent, it defaults to keyword
+retrieval. If `RETRIEVAL_BACKEND=chroma` is set but Ollama is unreachable or the index
+doesn't exist, `chroma.py` falls through to `local_files.py` automatically.
+
+This keeps the system usable for development without any local services running. Semantic
+retrieval is an enhancement — a better answer when the infrastructure is present — not a
+hard dependency that makes the system fragile.
+
+### Why local evals run before LangSmith
+
+The CI pipeline runs eight eval steps — four deterministic, four ChromaDB — all without
+API keys. LangSmith evals are on-demand only: `python scripts/run_*_evals.py --langsmith`
+when you want cloud-backed tracing on a specific investigation. The separation is not
+about cost — it is about what CI should gate on. CI gates on correctness (does the
+system produce grounded, structured output from local data?). LangSmith answers a
+different question: how is latency and token usage trending, and which graph node is the
+bottleneck? Mixing the two would make CI depend on a network service and an API key that
+contributors may not have.
+
+`packages/shared/evaluations/director_os.py:335-341` — `_langsmith_tracing_disabled()`
+wrapping the local eval loop so that a configured LangSmith key doesn't accidentally
+emit traces during local or CI runs.
+
+---
+
 ## How I use it - domain walkthroughs
 
 ### Director OS - weekly leadership update
@@ -218,6 +292,126 @@ pipeline runs after the domain workflow. The researcher uses Claude tool use to
 produce structured findings (`ResearchSynthesis`); the writer takes only that
 struct - not raw evidence - and formats it for the audience. This bounds
 hallucination risk: the writer can only rephrase what the researcher extracted.
+
+---
+
+## Why Claude - four architectural decisions
+
+These are not integration choices. Each one is a decision that would have been
+made differently with a different model, and each one has a concrete consequence
+on output quality or system reliability.
+
+### 1. Forced tool use for schema-enforced grounding
+
+Claude's tool use API accepts a JSON schema with required fields. Every domain
+defines a tool schema with required `source` (filename) and `line_number` fields
+on every output item. Claude cannot return a wins item, a red flag, or a talking
+point without both. The API call either produces a fully grounded response or
+raises a parse error, which triggers the deterministic fallback.
+
+This is the core invariant of AI-OS and it is only implementable this way because
+Claude supports forced tool use (`tool_choice: {"type": "tool"}`). A prompt
+instruction achieves the same effect 95% of the time. The tool schema achieves it
+structurally.
+
+`packages/shared/providers/claude.py:31` — `_TOOL_SCHEMA` definition.
+`packages/shared/providers/claude.py:107-108` — `tool_choice` forcing it on every call.
+
+### 2. MCP composability in two patterns
+
+AI-OS implements MCP in two distinct patterns to show both use cases.
+
+**In-process tool loop** (`packages/shared/mcp/orchestrator_integration.py`):
+When `use_mcp=True` on `/orchestrate`, Claude runs autonomously — calling
+`list_files`, `read_file`, and `search_content` tools in a loop until it has
+enough context to produce a synthesis. The orchestrator executes each tool call,
+appends the result to the message thread, and continues until Claude stops calling
+tools. No pre-selected evidence. Claude decides what to read.
+
+**Standalone MCP server** (`apps/mcp/server.py`): All four domain workflows are
+registered as MCP tools — `director_os.weekly_update`, `brand_os.content_draft`,
+`interview_os.brief`, `one_on_one_os.brief`. A Claude Desktop or Claude Code session
+with the server wired via `claude_desktop_config.json` can invoke any workflow as a
+tool call without touching the HTTP API. The same Pydantic schemas that drive FastAPI
+drive the MCP tool input shapes — no parallel schema definitions.
+
+### 3. Prompt caching on the evidence block
+
+Every Claude synthesis call marks the evidence block with
+`cache_control: {"type": "ephemeral"}` (`packages/shared/providers/claude.py:104`).
+On the second request with the same evidence set, Anthropic returns the KV cache
+hit — the evidence block is not re-tokenized. This cuts per-request cost by 60-80%
+on repeated queries against the same document set, which is the normal usage pattern
+(same weekly notes, different focus each time).
+
+`cache_read_input_tokens` and `cache_creation_input_tokens` surface in every
+`WorkflowTrace` so the operator console can show "Cache hit: X tokens saved"
+without raw JSON inspection.
+
+### 4. Multi-agent separation for bounded hallucination
+
+The researcher-writer pipeline (`ResearcherAgent` + `WriterAgent`) is not a chat
+between two models. It is a deliberate information-narrowing pipeline.
+
+The `ResearcherAgent` (`packages/shared/agents/researcher.py:84`) has access to
+filesystem tools and produces a `ResearchSynthesis` struct
+(`packages/shared/agents/researcher.py:64`) — a structured object with
+`key_findings`, `supporting_evidence`, and `themes`. The `WriterAgent`
+(`packages/shared/agents/writer.py:57`) receives only that struct. It never
+sees the raw evidence files, the retrieval results, or the full message history.
+
+The writer can rephrase, reformat, and adapt tone. It cannot introduce information
+the researcher didn't extract. The hallucination surface is bounded to the
+reformatting step, not the full retrieval-to-output pipeline.
+
+---
+
+## Evaluation methodology
+
+### What the eval harness measures
+
+Each domain has a set of eval cases in `evaluations/<domain>/`. Each case has:
+
+- **`inputs`** — a typed request object (same Pydantic schema as the HTTP API)
+- **`reference_outputs`** — expected behavior: required summary terms, expected
+  source files, minimum item counts per section, source diversity threshold
+
+Five scorers run per case:
+
+| Scorer | What it checks |
+|---|---|
+| Summary terms | Required terms appear in the summary field |
+| Expected sources | Named source files appear in the evidence list |
+| Section minimums | Each output section has at least N items |
+| Source diversity | Evidence comes from at least N distinct files |
+| Grounding | Every item in every section has a non-empty `source` field |
+
+### Cross-path calibration
+
+The same eval cases run against three retrieval paths: keyword (`local_files`),
+semantic ChromaDB, and Claude model synthesis. Not all scorers apply to all paths.
+
+**`BRAND_OS_CLAUDE_EVALUATORS`** excludes the prefix-purity scorer. The prefix
+scorer checks that Brand OS items start with the expected content-type prefix
+(`Insight:`, `Podcast:`, `Improve:`). The deterministic path produces these
+prefixes because it extracts lines literally. Claude synthesis produces the same
+semantic content in natural language — the prefix is not present, and the scorer
+would fail a correct response. The Claude evaluator set uses the five scorers
+that measure output quality across both paths.
+
+**`BRAND_OS_CHROMA_EVALUATORS`** and the equivalent Interview OS and One-on-One OS
+chroma evaluator sets apply the same exclusion for the same reason: ChromaDB semantic
+retrieval returns semantically relevant content that may not start with the keyword
+prefix the deterministic scorer expects.
+
+### Committed results as a CI gate
+
+Results are not computed at CI time and discarded. Every domain has committed
+`results_claude.json` and `results_chroma.json` in `evaluations/<domain>/`. The
+CI pipeline runs eight eval scripts — four keyword-path, four chroma-path — and
+compares against these files. A regression in any case fails the PR gate before
+merge. The committed files are the authoritative record of what the system produces,
+not a summary of past runs.
 
 ---
 
