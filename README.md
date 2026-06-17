@@ -127,7 +127,7 @@ pytest tests/ -v
 ## Working with Claude
 
 The Claude provider is active when `ANTHROPIC_API_KEY` is set.
-Falls back to the Ollama deterministic path when the key is absent  - 
+Falls back to the Ollama deterministic path when the key is absent  -
 no code changes required.
 
 ```bash
@@ -233,7 +233,7 @@ python scripts/run_one_on_one_os_evals.py --langsmith
 All four domain graphs emit node-level traces to LangSmith when `LANGSMITH_TRACING=true`
 and `LANGSMITH_API_KEY` are set. Every `graph.invoke()` call is wrapped with
 `get_langsmith_tracing_context()` and each graph node (`retrieve_evidence`,
-`build_response`, `validate_response`) carries a `@traceable` decorator  - 
+`build_response`, `validate_response`) carries a `@traceable` decorator  -
 giving full input/output visibility at every step with no extra instrumentation code.
 
 ![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](LanndSmithOutput.png)
@@ -291,7 +291,7 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 
 ## Technology stack
 
-See [docs/TECH_STACK.md](docs/TECH_STACK.md) for a full mapping of how each tool is used, which features are exercised, and where in the codebase each integration lives.
+See [docs/SHOWCASE.md](docs/SHOWCASE.md) for a full mapping of how each tool is used, which features are exercised, and where in the codebase each integration lives.
 
 | Layer | Tool |
 |---|---|
@@ -330,7 +330,7 @@ so operators can see the cost trajectory over time.
 **Multi-agent coordination via explicit handoff contracts.** The
 `ResearcherAgent → WriterAgent` pipeline separates synthesis from formatting.
 The researcher uses tool use to produce structured findings
-(`ResearchSynthesis`); the writer takes only that struct  -  not raw evidence  - 
+(`ResearchSynthesis`); the writer takes only that struct  -  not raw evidence  -
 and formats it for the target audience. This explicit contract bounds
 hallucination risk: the writer can only rephrase what the researcher already
 extracted. Each agent emits an `AgentCall` with token counts so the full
