@@ -287,6 +287,8 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 
 ## Technology stack
 
+See [docs/TECH_STACK.md](docs/TECH_STACK.md) for a full mapping of how each tool is used, which features are exercised, and where in the codebase each integration lives.
+
 | Layer | Tool |
 |---|---|
 | Language | Python 3.11+ |
