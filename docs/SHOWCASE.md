@@ -233,13 +233,15 @@ if model synthesis fails and `fallback_to_deterministic=True`. Director OS has
 an additional `validate_response` node that enforces evidence grounding before
 the response reaches the API layer.
 
-```
-Director OS graph:
-retrieve_evidence -> build_draft -> assemble_response -> validate_response
-                                                              |
-                                              route_after_validation -> END
-                                                              | (fallback)
-                                                       build_draft (retry)
+```mermaid
+flowchart LR
+    S([START]) --> RE["retrieve_evidence"]
+    RE --> BD["build_draft"]
+    BD --> AR["assemble_response"]
+    AR --> VR["validate_response"]
+    VR -->|grounded| E([END])
+    VR -->|"fallback_to_deterministic=True"| DF["deterministic_fallback"]
+    DF --> AR
 ```
 
 ### Claude tool use for schema-enforced grounding
@@ -259,7 +261,14 @@ Every graph node carries `@traceable`. Setting `LANGSMITH_TRACING=true` and
 across all 4 domains emits a full execution trace to the `ai-os` project at
 smith.langsmith.com, with inputs, outputs, and latency at each node.
 
-![LangSmith trace - Director OS graph with retrieve_evidence, build_draft, assemble_response, validate_response nodes](../LanndSmithOutput.png)
+```mermaid
+flowchart TB
+    Root["director_os.run_weekly_update_graph\nrun_type: chain"]
+    Root --> N1["director_os.retrieve_evidence"]
+    Root --> N2["director_os.build_draft"]
+    Root --> N3["director_os.assemble_response"]
+    Root --> N4["director_os.validate_response"]
+```
 
 ### Three-path evaluation harness
 
