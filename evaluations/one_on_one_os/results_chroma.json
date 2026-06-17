@@ -1,0 +1,501 @@
+{
+  "run_at": "2026-06-17T00:04:52.914557+00:00",
+  "retrieval_backend": "chroma",
+  "eval_path": "evaluations/one_on_one_os/meeting_brief_cases.json",
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "pass_rate": 1.0
+  },
+  "cases": [
+    {
+      "case_id": "one-on-one-baseline",
+      "description": "Baseline brief from a named direct report should surface action items and talking points.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "Sarah SRE",
+        "direct_report": null,
+        "max_documents": 10,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Sarah Sre Lead, 1On1 Team Health Notes.",
+        "action_items": [
+          {
+            "text": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 22
+          },
+          {
+            "text": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 27
+          },
+          {
+            "text": "Action: Sarah to publish the updated Terraform 1.9 runbook by June 20.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 15
+          },
+          {
+            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          }
+        ],
+        "talking_points": [
+          {
+            "text": "Talking Point: Review Sarah's current workload split \u2014 incident response vs. platform migration.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 9
+          },
+          {
+            "text": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 27
+          }
+        ],
+        "blockers": [
+          {
+            "text": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 22
+          },
+          {
+            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          }
+        ],
+        "kudos": [
+          {
+            "text": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 25
+          },
+          {
+            "text": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 27
+          },
+          {
+            "text": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 26
+          }
+        ],
+        "evidence": [
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 3,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "**Attendees:** Victor (Manager), Sarah (SRE Lead)"
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 22,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 7,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Sarah has been managing incident response while also leading the Terraform 1.9 upgrade. Both tracks are active concurrently which is creating context-switching overhead."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 9,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Talking Point: Review Sarah's current workload split \u2014 incident response vs. platform migration."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 25,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 27,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 26,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 15,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Sarah to publish the updated Terraform 1.9 runbook by June 20."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 16,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Sarah to hand off Monday on-call shift to Marcus to reduce context switching."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 2 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "one-on-one-blockers-surfaced",
+      "description": "Blockers noted in 1:1 notes should surface in the blockers section.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "blockers blocked",
+        "direct_report": null,
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Sarah Sre Lead, 1On1 Team Health Notes.",
+        "action_items": [],
+        "talking_points": [],
+        "blockers": [
+          {
+            "text": "Blocker: The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21
+          },
+          {
+            "text": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 19
+          },
+          {
+            "text": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling).",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 21
+          }
+        ],
+        "kudos": [],
+        "evidence": [
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Blocker: The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 19,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 21,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling)."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 21,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Blocker: The LangSmith API key provisioning for the staging environment is pending IT \u2014 opened 8 days ago."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 22,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Blocker: Marcus's engineers can't start integration testing until the staging environment is stable \u2014 SRE owns this and it's been flaky."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 4 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "one-on-one-kudos-surfaced",
+      "description": "Recognition and wins noted in 1:1 notes should surface in the kudos section.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "kudos recognition wins",
+        "direct_report": null,
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Team Health Notes, 1On1 Marcus Devex Lead.",
+        "action_items": [
+          {
+            "text": "Kudos: Marcus \u2014 CLI tool adoption by three teams, junior engineer mentorship.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 26
+          }
+        ],
+        "talking_points": [],
+        "blockers": [
+          {
+            "text": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval.",
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 27
+          }
+        ],
+        "kudos": [
+          {
+            "text": "Kudos: Marcus \u2014 CLI tool adoption by three teams, junior engineer mentorship.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 26
+          },
+          {
+            "text": "Kudos: Marcus mentored two junior engineers through their first production deployments this quarter.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 27
+          },
+          {
+            "text": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 25
+          }
+        ],
+        "evidence": [
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 26,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Kudos: Marcus \u2014 CLI tool adoption by three teams, junior engineer mentorship."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 27,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Kudos: Marcus mentored two junior engineers through their first production deployments this quarter."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 3,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "**Attendees:** Victor (Manager), Priya (AI Platform Engineer)"
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 25,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 27,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "one-on-one-multifile-retrieval",
+      "description": "A broad team query should pull from multiple 1:1 note files.",
+      "inputs": {
+        "data_path": "data/local_only/one_on_one",
+        "focus": "team action items blockers",
+        "direct_report": null,
+        "max_documents": 10,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Team Health Notes, 1On1 Sarah Sre Lead.",
+        "action_items": [
+          {
+            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          },
+          {
+            "text": "Action: Marcus to set up 30-minute syncs with each product team lead to align on portal requirements.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 16
+          },
+          {
+            "text": "Blocker: The portal's design system dependency is owned by a team that hasn't responded to the API contract request in two weeks.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 21
+          },
+          {
+            "text": "Action: Victor to unblock Priya's data governance request by escalating to the Data Council.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 15
+          }
+        ],
+        "talking_points": [],
+        "blockers": [
+          {
+            "text": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling).",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 21
+          },
+          {
+            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          },
+          {
+            "text": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 19
+          }
+        ],
+        "kudos": [],
+        "evidence": [
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 21,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling)."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 19,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 16,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Action: Marcus to set up 30-minute syncs with each product team lead to align on portal requirements."
+          },
+          {
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 21,
+            "title": "1On1 Marcus Devex Lead",
+            "excerpt": "Blocker: The portal's design system dependency is owned by a team that hasn't responded to the API contract request in two weeks."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 22,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Blocker: Priya cannot finalize the retrieval metric baseline without access to the production query logs, which require a data governance approval."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Blocker: The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 15,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Action: Victor to unblock Priya's data governance request by escalating to the Data Council."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 14,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Action: Victor to schedule a team retrospective for end of June to address context-switching concerns."
+          },
+          {
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 16,
+            "title": "1On1 Priya Ai Platform",
+            "excerpt": "Action: Priya to document the LangSmith dataset schema so other teams can contribute eval cases."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 4 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

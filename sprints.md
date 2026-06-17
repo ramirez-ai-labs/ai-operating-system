@@ -359,16 +359,18 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 8 / ChromaDB eval coverage
 
-**Status: In progress**
+**Status: Complete — shipped in [#83](https://github.com/ramirez-ai-labs/ai-operating-system/pull/83). 224 tests passing.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| Add `is_index_ready()` to `packages/shared/retrieval/chroma.py` — shared pre-flight check for runners and tests | Done | — |
-| Create `scripts/run_director_os_evals_chroma.py` — Director OS live runner; skips gracefully with `--ci` when index absent | Done | — |
-| Create `scripts/run_brand_os_evals_chroma.py` — Brand OS live runner; skips gracefully with `--ci` when index absent | Done | — |
-| Add `tests/test_chroma_eval_integration.py` — 8 tests: graph routing, full eval pipeline, index ready check, runner CI skip logic | Done | — |
-| Wire chroma eval steps into `.github/workflows/ci.yml` (both runners with `--ci` flag) | Done | — |
-| Run live chroma evals — commit `evaluations/director_os/results_chroma.json` and `evaluations/brand_os/results_chroma.json` | Pending (requires Ollama + ingest) | — |
+| Add `is_index_ready()` to `packages/shared/retrieval/chroma.py` — shared pre-flight check for runners and tests | Done | [#81](https://github.com/ramirez-ai-labs/ai-operating-system/pull/81) |
+| Create `scripts/run_director_os_evals_chroma.py` — Director OS live runner; skips gracefully with `--ci` when index absent | Done | [#81](https://github.com/ramirez-ai-labs/ai-operating-system/pull/81) |
+| Create `scripts/run_brand_os_evals_chroma.py` — Brand OS live runner; skips gracefully with `--ci` when index absent | Done | [#81](https://github.com/ramirez-ai-labs/ai-operating-system/pull/81) |
+| Add `tests/test_chroma_eval_integration.py` — 8 tests: graph routing, full eval pipeline, index ready check, runner CI skip logic | Done | [#81](https://github.com/ramirez-ai-labs/ai-operating-system/pull/81) |
+| Wire chroma eval steps into `.github/workflows/ci.yml` (both runners with `--ci` flag) | Done | [#81](https://github.com/ramirez-ai-labs/ai-operating-system/pull/81) |
+| Fix source path mismatch — `chroma.py` `_parse_results` now uses `Path(...).name` to match `local_files.py` source format | Done | [#83](https://github.com/ramirez-ai-labs/ai-operating-system/pull/83) |
+| Add `BRAND_OS_CHROMA_EVALUATORS` — excludes prefix-based scorers calibrated for keyword retrieval | Done | [#83](https://github.com/ramirez-ai-labs/ai-operating-system/pull/83) |
+| Run live chroma evals — commit `evaluations/director_os/results_chroma.json` (7/7) and `evaluations/brand_os/results_chroma.json` (7/7) | Done | [#83](https://github.com/ramirez-ai-labs/ai-operating-system/pull/83) |
 
 ---
 

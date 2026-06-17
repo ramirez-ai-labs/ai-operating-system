@@ -87,6 +87,12 @@ jobs:
       - name: Run Brand OS chroma evaluation set (skips if index absent)
         run: python -m scripts.run_brand_os_evals_chroma --ci
 
+      - name: Run Interview OS chroma evaluation set (skips if index absent)
+        run: python -m scripts.run_interview_os_evals_chroma --ci
+
+      - name: Run One-on-One OS chroma evaluation set (skips if index absent)
+        run: python -m scripts.run_one_on_one_os_evals_chroma --ci
+
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:

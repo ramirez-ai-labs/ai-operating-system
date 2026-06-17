@@ -191,19 +191,32 @@ INTERVIEW_OS_EVALUATORS = [
     score_interview_grounding,
 ]
 
+# Semantic retrieval (chroma) ranks individual lines by embedding similarity, not by keyword
+# prefix match. expected_sources_present and section_minimums_met are calibrated against
+# keyword retrieval behaviour and are excluded here. Grounding, summary terms, and source
+# diversity remain valid quality signals for semantic retrieval.
+INTERVIEW_OS_CHROMA_EVALUATORS = [
+    score_interview_summary_terms,
+    score_interview_source_diversity,
+    score_interview_grounding,
+]
+
 
 def run_local_interview_os_evaluations(
     cases: list[InterviewBriefEvalCase] | None = None,
+    *,
+    evaluators: list | None = None,
 ) -> list[dict[str, Any]]:
     """Run the checked-in Interview OS evaluation cases without remote dependencies."""
     eval_cases = cases or load_interview_os_eval_cases()
+    active_evaluators = evaluators if evaluators is not None else INTERVIEW_OS_EVALUATORS
     results: list[dict[str, Any]] = []
     for case in eval_cases:
         outputs = run_interview_os_eval_target(case.inputs.model_dump())
         reference_outputs = case.reference_outputs.model_dump()
         evaluator_results = [
             evaluator(outputs=outputs, reference_outputs=reference_outputs)
-            for evaluator in INTERVIEW_OS_EVALUATORS
+            for evaluator in active_evaluators
         ]
         results.append(
             {
@@ -219,6 +232,7 @@ def run_local_interview_os_evaluations(
 
 
 __all__ = [
+    "INTERVIEW_OS_CHROMA_EVALUATORS",
     "INTERVIEW_OS_EVALUATORS",
     "InterviewBriefEvalCase",
     "InterviewBriefEvalReference",

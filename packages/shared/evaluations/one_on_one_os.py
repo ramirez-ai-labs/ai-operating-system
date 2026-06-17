@@ -193,19 +193,32 @@ ONE_ON_ONE_OS_EVALUATORS = [
     score_one_on_one_grounding,
 ]
 
+# Semantic retrieval (chroma) ranks individual lines by embedding similarity, not by keyword
+# prefix match. expected_sources_present and section_minimums_met are calibrated against
+# keyword retrieval behaviour and are excluded here. Grounding, summary terms, and source
+# diversity remain valid quality signals for semantic retrieval.
+ONE_ON_ONE_OS_CHROMA_EVALUATORS = [
+    score_one_on_one_summary_terms,
+    score_one_on_one_source_diversity,
+    score_one_on_one_grounding,
+]
+
 
 def run_local_one_on_one_os_evaluations(
     cases: list[OneOnOneBriefEvalCase] | None = None,
+    *,
+    evaluators: list | None = None,
 ) -> list[dict[str, Any]]:
     """Run the checked-in One-on-One OS evaluation cases without remote dependencies."""
     eval_cases = cases or load_one_on_one_os_eval_cases()
+    active_evaluators = evaluators if evaluators is not None else ONE_ON_ONE_OS_EVALUATORS
     results: list[dict[str, Any]] = []
     for case in eval_cases:
         outputs = run_one_on_one_os_eval_target(case.inputs.model_dump())
         reference_outputs = case.reference_outputs.model_dump()
         evaluator_results = [
             evaluator(outputs=outputs, reference_outputs=reference_outputs)
-            for evaluator in ONE_ON_ONE_OS_EVALUATORS
+            for evaluator in active_evaluators
         ]
         results.append(
             {
@@ -221,6 +234,7 @@ def run_local_one_on_one_os_evaluations(
 
 
 __all__ = [
+    "ONE_ON_ONE_OS_CHROMA_EVALUATORS",
     "ONE_ON_ONE_OS_EVALUATORS",
     "OneOnOneBriefEvalCase",
     "OneOnOneBriefEvalReference",
