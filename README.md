@@ -23,7 +23,9 @@ server** for workflow entry points.
 | Operator trace / observability | `trace.mcp_tool_calls` in every `/orchestrate` response |
 | Repeatable deployment pattern | `docs/DEPLOYMENT.md` — secrets, eval gate, rollback, MCP adapters |
 | LangGraph state graphs | `packages/shared/graphs/director_os.py`, `brand_os.py`, `interview_os.py`, `one_on_one_os.py` |
-| LangSmith tracing | Optional — `LANGSMITH_API_KEY` + `--langsmith` flag |
+| LangSmith tracing | Node-level traces on all 4 domain graphs via `@traceable` — set `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` |
+| ChromaDB semantic retrieval | `packages/shared/retrieval/chroma.py` — embedding-based retrieval with `nomic-embed-text` via Ollama |
+| Chroma eval harness | Per-domain chroma eval runners with `results_chroma.json` committed for all 4 domains |
 
 The architecture is designed to be adapted. The provider layer, the
 in-process filesystem tool loop, and the standalone MCP server are all
@@ -36,42 +38,57 @@ enterprise AI work requires.
 
 ```mermaid
 flowchart TB
-    In([OrchestratorRequest]) --> CoS["Chief of Staff\nOllama classification\n+ keyword fallback"]
+    In([OrchestratorRequest]) --> MCP{"use_mcp?"}
+    MCP -->|true| MCPLoop["MCP Tool Loop\nClaude reads files via tool calls"]
+    MCP -->|false| CoS["Chief of Staff\nOllama classification\n+ keyword fallback"]
+    MCPLoop --> CoS
 
-    CoS -->|brand_os| Brand["Brand OS\nbrand_os.content_draft"]
-    CoS -->|director_os / default| Director["Director OS\ndirector_os.weekly_update"]
-    CoS -->|interview_os| Interview["Interview OS\ninterview_os.brief"]
-    CoS -->|one_on_one_os| OneOnOne["One-on-One OS\none_on_one_os.brief"]
+    CoS -->|director_os| Dir["Director OS\nretrieve_evidence"]
+    CoS -->|brand_os| Brand["Brand OS\nretrieve_evidence"]
+    CoS -->|interview_os| Interview["Interview OS\nretrieve_evidence"]
+    CoS -->|one_on_one_os| OneOnOne["One-on-One OS\nretrieve_evidence"]
 
-    Director --> Retrieval["Local Retrieval\nmarkdown evidence"]
-    Brand --> BRetrieval["Local Retrieval\nbrand evidence"]
-    Interview --> IRetrieval["Local Retrieval\ncandidate / JD evidence"]
-    OneOnOne --> ORetrieval["Local Retrieval\n1:1 notes evidence"]
+    Dir --> DModel{"use_model?"}
+    DModel -->|"provider: claude"| DC["Claude Haiku\ntool use + prompt cache"]
+    DModel -->|"provider: ollama"| DO["Ollama llama3.2\nlocal inference"]
+    DModel -->|false| DDet["Deterministic\nkeyword extraction"]
+    DC --> DVal["validate_response\nevidence grounding"]
+    DO --> DVal
+    DDet --> DVal
 
-    Retrieval --> Draft{"use_model?"}
-    Draft -->|"provider: claude"| ClaudeProvider["Claude Haiku\ntool use + prompt cache\ncache_control ephemeral"]
-    Draft -->|"provider: ollama"| OllamaProvider["Ollama llama3.2\nlocal inference"]
-    Draft -->|false| Det["Deterministic extraction\nkeyword matching"]
+    Brand --> BModel{"use_model?\nclaude only"}
+    BModel -->|true| BC["Claude Haiku\ntool use"]
+    BModel -->|false| BDet["Deterministic\nsection formatter"]
 
-    ClaudeProvider --> Val["Validator\nevidence grounding"]
-    OllamaProvider --> Val
-    Det --> Val
-    BRetrieval --> BFmt["Section formatter"]
-    IRetrieval --> IBrief["Interview brief\ngrounded extraction"]
-    ORetrieval --> OBrief["Meeting brief\ngrounded extraction"]
+    Interview --> IModel{"use_model?\nclaude only"}
+    IModel -->|true| IC["Claude Haiku\ntool use"]
+    IModel -->|false| IDet["Deterministic\ngrounded extraction"]
 
-    Val --> TA{"target_audience?"}
-    TA -->|set| Researcher["ResearcherAgent\nClaude Haiku  tool use\nstructured synthesis"]
-    Researcher --> Writer["WriterAgent\nClaude Haiku  completion\naudienced formatting"]
+    OneOnOne --> OModel{"use_model?\nclaude only"}
+    OModel -->|true| OC["Claude Haiku\ntool use"]
+    OModel -->|false| ODet["Deterministic\ngrounded extraction"]
+
+    DVal --> TA{"target_audience?"}
+    BC --> TA
+    BDet --> TA
+    IC --> TA
+    IDet --> TA
+    OC --> TA
+    ODet --> TA
+
+    TA -->|set| Researcher["ResearcherAgent\nClaude Haiku\nstructured synthesis"]
+    Researcher --> Writer["WriterAgent\nClaude Haiku\naudience formatting"]
     Writer --> RespA(["OrchestratorResponse\nformatted_content + agent_calls + trace"])
     TA -->|not set| RespB(["OrchestratorResponse\nWorkflowTrace + cache metrics"])
-    BFmt --> RespB
-    IBrief --> RespB
-    OBrief --> RespB
 
-    style ClaudeProvider fill:#e8f5e9,stroke:#388e3c
+    style DC fill:#e8f5e9,stroke:#388e3c
+    style BC fill:#e8f5e9,stroke:#388e3c
+    style IC fill:#e8f5e9,stroke:#388e3c
+    style OC fill:#e8f5e9,stroke:#388e3c
     style Researcher fill:#e8f5e9,stroke:#388e3c
     style Writer fill:#e8f5e9,stroke:#388e3c
+    style DO fill:#fff3e0,stroke:#f57c00
+    style MCPLoop fill:#e3f2fd,stroke:#1565c0
 ```
 
 ---
@@ -169,9 +186,14 @@ continues until Claude produces a final text response.
 
 ## Eval results
 
-Each domain has a checked-in eval case set. Director OS additionally has
-committed live-Claude results in `evaluations/director_os/results_claude.json`,
-which records grounded output from the production synthesis path.
+All four domains have committed eval results across three retrieval paths:
+
+| Domain | Local (keyword) | Chroma (semantic) | Claude (live) |
+|---|---|---|---|
+| Director OS | `weekly_update_cases.json` | `results_chroma.json` | `results_claude.json` |
+| Brand OS | `content_draft_cases.json` | `results_chroma.json` | `results_claude.json` |
+| Interview OS | `interview_cases.json` | `results_chroma.json` | `results_claude.json` |
+| One-on-One OS | `meeting_brief_cases.json` | `results_chroma.json` | `results_claude.json` |
 
 Run all local evals (no API key required):
 
@@ -182,12 +204,44 @@ python scripts/run_interview_os_evals.py
 python scripts/run_one_on_one_os_evals.py
 ```
 
-Update and commit Director OS live-Claude results (requires `ANTHROPIC_API_KEY`):
+Run ChromaDB semantic retrieval evals (requires local Ollama + `nomic-embed-text`):
 
 ```bash
-python scripts/run_director_os_evals_claude.py
-git add evaluations/director_os/results_claude.json
-git commit -m "eval: update Director OS results against claude-haiku"
+python -m scripts.run_director_os_evals_chroma
+python -m scripts.run_brand_os_evals_chroma
+python -m scripts.run_interview_os_evals_chroma
+python -m scripts.run_one_on_one_os_evals_chroma
+```
+
+Run LangSmith cloud-backed evals (requires `LANGSMITH_API_KEY`):
+
+```bash
+python scripts/run_director_os_evals.py --langsmith
+python scripts/run_brand_os_evals.py --langsmith
+python scripts/run_interview_os_evals.py --langsmith
+python scripts/run_one_on_one_os_evals.py --langsmith
+```
+
+---
+
+## LangSmith observability
+
+All four domain graphs emit node-level traces to LangSmith when `LANGSMITH_TRACING=true`
+and `LANGSMITH_API_KEY` are set. Every `graph.invoke()` call is wrapped with
+`get_langsmith_tracing_context()` and each graph node (`retrieve_evidence`,
+`build_response`, `validate_response`) carries a `@traceable` decorator —
+giving full input/output visibility at every step with no extra instrumentation code.
+
+![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](LanndSmithOutput.png)
+
+Traces appear automatically in the `ai-os` project at smith.langsmith.com.
+No code changes required — tracing is a silent no-op when the env vars are absent.
+
+```bash
+# .env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=<your key from smith.langsmith.com>
+# LANGSMITH_PROJECT=ai-os  # default — override if needed
 ```
 
 ---
@@ -242,8 +296,9 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 | Model provider (local) | Ollama |
 | In-process MCP loop | `packages/shared/mcp/filesystem_server.py` |
 | Standalone MCP server | `apps/mcp/server.py` |
-| Observability | LangSmith (optional) |
-| Evaluation | Custom eval harness with committed results |
+| Semantic retrieval | ChromaDB + Ollama `nomic-embed-text` embeddings |
+| Observability | LangSmith — `@traceable` on all 4 domain graphs, node-level traces |
+| Evaluation | Per-domain eval harness — local, chroma, and LangSmith cloud paths |
 | CI/CD | GitHub Actions (lint, test, evals on every PR) |
 
 ---
