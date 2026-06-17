@@ -5,6 +5,10 @@ from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from packages.shared.observability.langsmith import (
+    get_langsmith_tracing_context,
+    traceable,
+)
 from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.brand_os import (
     BrandContentDraftRequest,
@@ -26,19 +30,22 @@ class BrandOSState(TypedDict, total=False):
     provider_usage: dict[str, int]
 
 
+@traceable(name="brand_os.run_content_draft_graph", run_type="chain")
 def run_content_draft_graph(request: BrandContentDraftRequest) -> BrandContentDraftResponse:
     """Execute the Brand OS content-draft graph and return the public response."""
     graph = _get_content_draft_graph()
-    final_state = graph.invoke(
-        {
-            "request": request,
-            "used_model": request.use_model,
-            "fallback_attempted": False,
-        }
-    )
+    with get_langsmith_tracing_context():
+        final_state = graph.invoke(
+            {
+                "request": request,
+                "used_model": request.use_model,
+                "fallback_attempted": False,
+            }
+        )
     return final_state["response"]
 
 
+@traceable(name="brand_os.retrieve_evidence", run_type="chain")
 def retrieve_evidence(state: BrandOSState) -> BrandOSState:
     """Collect the local evidence Brand OS is allowed to use."""
     request = state["request"]
@@ -55,6 +62,7 @@ def retrieve_evidence(state: BrandOSState) -> BrandOSState:
     return {"evidence": evidence}
 
 
+@traceable(name="brand_os.build_response", run_type="chain")
 def build_response(state: BrandOSState) -> BrandOSState:
     """Shape retrieved evidence into Brand OS draft sections."""
     request = state["request"]
