@@ -1,4 +1,4 @@
-# 1:1 Notes — Priya Nair, AI Platform Engineer
+# 1:1 Notes  -  Priya Nair, AI Platform Engineer
 **Date:** Week of June 9, 2026
 **Attendees:** Victor (Manager), Priya (AI Platform Engineer)
 
@@ -6,9 +6,9 @@
 
 Priya is leading the LLM evaluation framework build and is also the primary point of contact for the LangSmith integration. Both are on track but she is being pulled into ad-hoc demos for the sales team.
 
-Talking Point: The ad-hoc demo requests from sales are consuming 20-30% of Priya's week — we need a policy.
+Talking Point: The ad-hoc demo requests from sales are consuming 20-30% of Priya's week  -  we need a policy.
 Talking Point: LLM evaluation framework: discuss coverage goals and whether we target recall@5 or MRR as the primary metric for Q3.
-Talking Point: Priya raised the idea of publishing the eval framework as open source — discuss timing and IP clearance process.
+Talking Point: Priya raised the idea of publishing the eval framework as open source  -  discuss timing and IP clearance process.
 
 ## Actions from Last Week
 
@@ -18,7 +18,7 @@ Action: Victor to block Priya's calendar Tuesday/Thursday mornings as no-meeting
 
 ## Blockers
 
-Blocker: The LangSmith API key provisioning for the staging environment is pending IT — opened 8 days ago.
+Blocker: The LangSmith API key provisioning for the staging environment is pending IT  -  opened 8 days ago.
 Blocker: Priya cannot finalize the retrieval metric baseline without access to the production query logs, which require a data governance approval.
 
 ## Recognition

@@ -1,13 +1,17 @@
 # AI Operating System (AI-OS)
 
 AI-OS is a production-grade multi-agent system that helps technical leaders
-synthesize fragmented information — project status, team signals, brand work,
-candidate briefs, and 1:1 meeting prep — into structured, actionable output.
+synthesize fragmented information  -  project status, team signals, brand work,
+candidate briefs, and 1:1 meeting prep  -  into structured, actionable output.
 
 Four workflow domains: **Director OS**, **Brand OS**, **Interview OS**, and
 **One-on-One OS**. Built on **Claude** (Anthropic) with **LangGraph
 orchestration**, an in-process filesystem tool loop, and a **standalone MCP
 server** for workflow entry points.
+
+---
+
+**Recruiter / hiring manager walkthrough:** [docs/SHOWCASE.md](docs/SHOWCASE.md)  -  use cases, domain walkthroughs with live curl examples, and the engineering decisions behind the system.
 
 ---
 
@@ -18,18 +22,18 @@ server** for workflow entry points.
 | Production Claude integration | `packages/shared/providers/claude_provider.py` |
 | Four workflow domains | Director OS, Brand OS, Interview OS, One-on-One OS |
 | In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `packages/shared/mcp/orchestrator_integration.py` |
-| Standalone MCP server | `apps/mcp/server.py` — exports all 4 domain entry points as MCP tools |
+| Standalone MCP server | `apps/mcp/server.py`  -  exports all 4 domain entry points as MCP tools |
 | LLM evaluation framework | per-domain eval harness with committed results |
 | Operator trace / observability | `trace.mcp_tool_calls` in every `/orchestrate` response |
-| Repeatable deployment pattern | `docs/DEPLOYMENT.md` — secrets, eval gate, rollback, MCP adapters |
+| Repeatable deployment pattern | `docs/DEPLOYMENT.md`  -  secrets, eval gate, rollback, MCP adapters |
 | LangGraph state graphs | `packages/shared/graphs/director_os.py`, `brand_os.py`, `interview_os.py`, `one_on_one_os.py` |
-| LangSmith tracing | Node-level traces on all 4 domain graphs via `@traceable` — set `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` |
-| ChromaDB semantic retrieval | `packages/shared/retrieval/chroma.py` — embedding-based retrieval with `nomic-embed-text` via Ollama |
+| LangSmith tracing | Node-level traces on all 4 domain graphs via `@traceable`  -  set `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` |
+| ChromaDB semantic retrieval | `packages/shared/retrieval/chroma.py`  -  embedding-based retrieval with `nomic-embed-text` via Ollama |
 | Chroma eval harness | Per-domain chroma eval runners with `results_chroma.json` committed for all 4 domains |
 
 The architecture is designed to be adapted. The provider layer, the
 in-process filesystem tool loop, and the standalone MCP server are all
-swappable — designed for the kind of customer environment customization that
+swappable  -  designed for the kind of customer environment customization that
 enterprise AI work requires.
 
 ---
@@ -108,7 +112,7 @@ cp .env.example .env
 # Run the API
 uvicorn apps.api.main:app --reload --env-file .env
 
-# Run all evals — local, no API key required
+# Run all evals  -  local, no API key required
 python scripts/run_director_os_evals.py
 python scripts/run_brand_os_evals.py
 python scripts/run_interview_os_evals.py
@@ -123,11 +127,11 @@ pytest tests/ -v
 ## Working with Claude
 
 The Claude provider is active when `ANTHROPIC_API_KEY` is set.
-Falls back to the Ollama deterministic path when the key is absent —
+Falls back to the Ollama deterministic path when the key is absent  -
 no code changes required.
 
 ```bash
-# Director OS — weekly update with Claude
+# Director OS  -  weekly update with Claude
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
@@ -229,40 +233,40 @@ python scripts/run_one_on_one_os_evals.py --langsmith
 All four domain graphs emit node-level traces to LangSmith when `LANGSMITH_TRACING=true`
 and `LANGSMITH_API_KEY` are set. Every `graph.invoke()` call is wrapped with
 `get_langsmith_tracing_context()` and each graph node (`retrieve_evidence`,
-`build_response`, `validate_response`) carries a `@traceable` decorator —
+`build_response`, `validate_response`) carries a `@traceable` decorator  -
 giving full input/output visibility at every step with no extra instrumentation code.
 
 ![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](LanndSmithOutput.png)
 
 Traces appear automatically in the `ai-os` project at smith.langsmith.com.
-No code changes required — tracing is a silent no-op when the env vars are absent.
+No code changes required  -  tracing is a silent no-op when the env vars are absent.
 
 ```bash
 # .env
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=<your key from smith.langsmith.com>
-# LANGSMITH_PROJECT=ai-os  # default — override if needed
+# LANGSMITH_PROJECT=ai-os  # default  -  override if needed
 ```
 
 ---
 
 ## Model provider strategy
 
-AI-OS uses different models for different workloads — local inference for
+AI-OS uses different models for different workloads  -  local inference for
 routing and low-stakes tasks, Claude for structured synthesis, Sonnet/Opus
 on demand for complex runs:
 
 | Layer | Model | Workload |
 |---|---|---|
-| Local inference | Ollama (`llama3.2`) | Routing, classification, low-stakes summarization — free, on-device, no API key |
-| Cloud synthesis | Claude Haiku 4.5 | Structured output via tool use, MCP orchestration — cost-effective |
-| Premium synthesis | Claude Sonnet / Opus | Complex or high-stakes runs — on demand |
+| Local inference | Ollama (`llama3.2`) | Routing, classification, low-stakes summarization  -  free, on-device, no API key |
+| Cloud synthesis | Claude Haiku 4.5 | Structured output via tool use, MCP orchestration  -  cost-effective |
+| Premium synthesis | Claude Sonnet / Opus | Complex or high-stakes runs  -  on demand |
 
 All providers implement the same interface. Switching is a single field
-change in the request — no workflow logic changes required.
+change in the request  -  no workflow logic changes required.
 
 ```bash
-# Ollama — no API key required
+# Ollama  -  no API key required
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
@@ -272,7 +276,7 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
     "ollama_model": "llama3.2"
   }'
 
-# Claude Haiku — structured synthesis
+# Claude Haiku  -  structured synthesis
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
@@ -287,18 +291,20 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 
 ## Technology stack
 
+See [docs/SHOWCASE.md](docs/SHOWCASE.md) for a full mapping of how each tool is used, which features are exercised, and where in the codebase each integration lives.
+
 | Layer | Tool |
 |---|---|
 | Language | Python 3.11+ |
 | API | FastAPI + Pydantic |
 | Workflow orchestration | LangGraph |
-| Model provider (cloud) | Anthropic SDK — Claude Haiku / Sonnet / Opus |
+| Model provider (cloud) | Anthropic SDK  -  Claude Haiku / Sonnet / Opus |
 | Model provider (local) | Ollama |
 | In-process MCP loop | `packages/shared/mcp/filesystem_server.py` |
 | Standalone MCP server | `apps/mcp/server.py` |
 | Semantic retrieval | ChromaDB + Ollama `nomic-embed-text` embeddings |
-| Observability | LangSmith — `@traceable` on all 4 domain graphs, node-level traces |
-| Evaluation | Per-domain eval harness — local, chroma, and LangSmith cloud paths |
+| Observability | LangSmith  -  `@traceable` on all 4 domain graphs, node-level traces |
+| Evaluation | Per-domain eval harness  -  local, chroma, and LangSmith cloud paths |
 | CI/CD | GitHub Actions (lint, test, evals on every PR) |
 
 ---
@@ -308,7 +314,7 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 Claude is the primary synthesis engine for three specific reasons:
 
 **Tool use for structured output.** The Director OS workflow requires grounded
-output — every win, risk, and next step must cite a source file and line number
+output  -  every win, risk, and next step must cite a source file and line number
 from the retrieved evidence. Claude's tool use API enforces this contract at the
 schema level. The `generate_weekly_update` tool schema declares required
 `source` and `line_number` fields; hallucinated citations are caught at parse
@@ -324,7 +330,7 @@ so operators can see the cost trajectory over time.
 **Multi-agent coordination via explicit handoff contracts.** The
 `ResearcherAgent → WriterAgent` pipeline separates synthesis from formatting.
 The researcher uses tool use to produce structured findings
-(`ResearchSynthesis`); the writer takes only that struct — not raw evidence —
+(`ResearchSynthesis`); the writer takes only that struct  -  not raw evidence  -
 and formats it for the target audience. This explicit contract bounds
 hallucination risk: the writer can only rephrase what the researcher already
 extracted. Each agent emits an `AgentCall` with token counts so the full
@@ -336,8 +342,8 @@ pipeline cost is visible in the trace.
 
 Technical leaders operate across fragmented systems: Jira, Confluence,
 meeting notes, roadmap docs, 1:1 notes. AI-OS synthesizes these into
-structured, evidence-grounded output — weekly updates, risk summaries,
-content drafts — without defaulting to opaque or autonomous agent behavior.
+structured, evidence-grounded output  -  weekly updates, risk summaries,
+content drafts  -  without defaulting to opaque or autonomous agent behavior.
 
 It is designed to show how to embed AI into real enterprise workflows:
 provider abstraction, MCP tool integration, evaluation frameworks,

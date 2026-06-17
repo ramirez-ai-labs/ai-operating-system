@@ -20,7 +20,7 @@ Open the console at `http://127.0.0.1:8000/`.
 
 ## Branch and commit rules
 
-- Never commit directly to `main` — branch first.
+- Never commit directly to `main`  -  branch first.
 - Branch naming: `feat/`, `fix/`, `docs/`, `test/` prefixes.
 - One PR per logical unit of work. Squash-merge preferred.
 - Keep commit messages short (one line, imperative mood).
@@ -39,7 +39,7 @@ CI runs `ruff`, `pytest`, and both eval scripts on every PR to `main`. The build
 
 ## Architecture rules
 
-These are invariants — do not work around them:
+These are invariants  -  do not work around them:
 
 1. **All providers implement `WeeklyUpdateProvider`** from `packages/shared/providers/base.py`. Provider-specific logic stays in the provider file.
 2. **Provider selection via `_build_provider()`** in the Director OS graph. No workflow logic should branch on provider identity.

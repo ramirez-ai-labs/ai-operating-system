@@ -1,8 +1,8 @@
-# Role Brief — Senior AI Engineer, Platform Team
+# Role Brief  -  Senior AI Engineer, Platform Team
 
 ## Role Overview
 The Senior AI Engineer owns the design and delivery of production AI capabilities on the
-platform team. This role sits at the intersection of ML engineering and platform engineering —
+platform team. This role sits at the intersection of ML engineering and platform engineering  - 
 candidates must be comfortable building reliable systems, not just models.
 
 ## Key Responsibilities
@@ -23,7 +23,7 @@ candidates must be comfortable building reliable systems, not just models.
 
 ## Question: Production Ownership
 Discuss: Walk me through the last model you owned end-to-end in production.
-What did "ownership" mean — did you own the SLOs, the on-call, the rollback?
+What did "ownership" mean  -  did you own the SLOs, the on-call, the rollback?
 
 ## Talking Point: Evaluation Culture
 Our team runs eval pipelines on every PR. Candidates should be able to discuss

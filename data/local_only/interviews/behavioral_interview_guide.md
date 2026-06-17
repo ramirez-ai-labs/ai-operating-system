@@ -1,4 +1,4 @@
-# Behavioral Interview Guide — Senior AI Engineer
+# Behavioral Interview Guide  -  Senior AI Engineer
 
 ## Opening
 Thank the candidate, set agenda: 45-minute technical + behavioral session.
@@ -17,7 +17,7 @@ Walk me through a project where the scope changed significantly after kickoff.
 How did you re-plan and communicate the impact to stakeholders?
 
 ## Talking Point: Career Motivation
-Ask what draws the candidate to platform work specifically — not just AI.
+Ask what draws the candidate to platform work specifically  -  not just AI.
 Strong candidates articulate why building the system matters, not just
 building the model.
 

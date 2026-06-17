@@ -26,7 +26,7 @@ Enterprise environment
 
 No customer data is stored or logged by Anthropic by default. For
 zero-data-retention (ZDR) requirements, contact Anthropic sales to negotiate
-a ZDR agreement — this is a contract-level option, not a request header.
+a ZDR agreement  -  this is a contract-level option, not a request header.
 See: https://www.anthropic.com/privacy
 
 ---
@@ -36,7 +36,7 @@ See: https://www.anthropic.com/privacy
 ### Authentication and secrets
 
 - [ ] `ANTHROPIC_API_KEY` stored in a secrets manager (AWS Secrets Manager,
-      Azure Key Vault, HashiCorp Vault) — never in source code or `.env`
+      Azure Key Vault, HashiCorp Vault)  -  never in source code or `.env`
       files committed to version control
 - [ ] Key rotation schedule documented (recommend: 90 days)
 - [ ] Outbound HTTPS to `api.anthropic.com:443` approved by InfoSec
@@ -53,7 +53,7 @@ See: https://www.anthropic.com/privacy
 
 ### Network controls
 
-- [ ] AI-OS FastAPI service bound to `127.0.0.1` or internal VLAN only —
+- [ ] AI-OS FastAPI service bound to `127.0.0.1` or internal VLAN only  - 
       never exposed to public internet
 - [ ] Egress filter: allow only `api.anthropic.com:443`
 - [ ] Proxy configuration documented if outbound traffic routes through
@@ -61,7 +61,7 @@ See: https://www.anthropic.com/privacy
 
 ### Change control
 
-- [ ] Model version pinned in `config/models.yaml` — do not use `latest`
+- [ ] Model version pinned in `config/models.yaml`  -  do not use `latest`
       aliases in production (model behaviour changes across versions)
 - [ ] Eval gate (see below) passes before any production deployment
 - [ ] Rollback procedure documented: revert to Ollama deterministic path
@@ -130,7 +130,7 @@ The filesystem MCP server reads from `data/local_only/` by default.
 | S3 / Azure Blob | Add `object_storage_server.py` with `list_files`, `read_file`, `search_content` |
 | Confluence | Add `confluence_server.py` using Confluence REST API |
 
-The orchestrator (`orchestrator_integration.py`) is storage-agnostic —
+The orchestrator (`orchestrator_integration.py`) is storage-agnostic  - 
 it calls `mcp_server.call_tool(name, input)` regardless of backend.
 
 ---
@@ -207,10 +207,10 @@ export LANGSMITH_PROJECT=ai-os-production
 
 ## Deployment pattern summary
 
-1. **Secrets management** — API key in vault, never in code
-2. **Data residency** — confirm classification before enabling live API calls
-3. **Eval gate** — run and commit eval results before every production deployment
-4. **Provider abstraction** — Claude in prod, Ollama as fallback, no code changes required
-5. **Operator trace** — every response includes what the agent read and why
-6. **Validator** — enforce grounding and verbosity rules at the output layer
-7. **Rollback** — remove API key to revert to deterministic path instantly
+1. **Secrets management**  -  API key in vault, never in code
+2. **Data residency**  -  confirm classification before enabling live API calls
+3. **Eval gate**  -  run and commit eval results before every production deployment
+4. **Provider abstraction**  -  Claude in prod, Ollama as fallback, no code changes required
+5. **Operator trace**  -  every response includes what the agent read and why
+6. **Validator**  -  enforce grounding and verbosity rules at the output layer
+7. **Rollback**  -  remove API key to revert to deterministic path instantly
