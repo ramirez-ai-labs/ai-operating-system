@@ -19,10 +19,10 @@ The repository currently includes:
 
 - project documentation in `README.md` with Mermaid architecture diagram and "Why Claude" section
 - four workflow domains on a shared LangGraph foundation:
-  - `Director OS` — evidence-grounded weekly leadership updates with Claude tool use, prompt caching, Ollama fallback, and deterministic baseline
-  - `Brand OS` — content drafts (LinkedIn posts, podcast angles, repo improvements) from local brand notes; Claude-backed synthesis path available
-  - `Interview OS` — candidate prep briefs (key questions, talking points, red flags) from local interview notes; Claude-backed synthesis path available
-  - `One-on-One OS` — meeting briefs for 1:1s (action items, talking points, blockers, kudos) from direct-report notes; Claude-backed synthesis path available
+  - `Director OS`  -  evidence-grounded weekly leadership updates with Claude tool use, prompt caching, Ollama fallback, and deterministic baseline
+  - `Brand OS`  -  content drafts (LinkedIn posts, podcast angles, repo improvements) from local brand notes; Claude-backed synthesis path available
+  - `Interview OS`  -  candidate prep briefs (key questions, talking points, red flags) from local interview notes; Claude-backed synthesis path available
+  - `One-on-One OS`  -  meeting briefs for 1:1s (action items, talking points, blockers, kudos) from direct-report notes; Claude-backed synthesis path available
 - a Chief of Staff orchestration layer with Ollama LLM classification routing and keyword fallback, supporting all four domains
 - ChromaDB semantic retrieval backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
 - a `ResearcherAgent → WriterAgent` multi-agent pipeline for audience-targeted content formatting
@@ -217,18 +217,18 @@ Introduce Anthropic Claude as a first-class provider alongside Ollama, and estab
 
 | Layer | Model | Purpose |
 | --- | --- | --- |
-| Intent routing / classification | Ollama `llama3.2` (local) | Replace keyword if/else with LLM classification — free, fast, zero data egress |
-| Semantic embeddings | Ollama `nomic-embed-text` (local) | ChromaDB index generation — unified local model dependency, zero cost |
-| Structured synthesis | Claude Haiku (API) | Tool use, citation grounding, structured output — primary synthesis path |
-| Complex / premium synthesis | Claude Sonnet / Opus (API) | Multi-document, extended thinking, high-stakes — on demand |
-| Offline fallback synthesis | Ollama `llama3.2` (local) | When `ANTHROPIC_API_KEY` absent — system stays functional for local dev and airgapped demos |
+| Intent routing / classification | Ollama `llama3.2` (local) | Replace keyword if/else with LLM classification  -  free, fast, zero data egress |
+| Semantic embeddings | Ollama `nomic-embed-text` (local) | ChromaDB index generation  -  unified local model dependency, zero cost |
+| Structured synthesis | Claude Haiku (API) | Tool use, citation grounding, structured output  -  primary synthesis path |
+| Complex / premium synthesis | Claude Sonnet / Opus (API) | Multi-document, extended thinking, high-stakes  -  on demand |
+| Offline fallback synthesis | Ollama `llama3.2` (local) | When `ANTHROPIC_API_KEY` absent  -  system stays functional for local dev and airgapped demos |
 
 ### Exit Criteria
 
 - Claude and Ollama are interchangeable providers behind the same `WeeklyUpdateProvider` interface
 - The operator console exposes provider selection so the layered architecture is visible and demonstrable
 - Claude evals pass the same scorers as the deterministic baseline
-- Local setup requires only filling in `.env` from `.env.example` — no undocumented steps
+- Local setup requires only filling in `.env` from `.env.example`  -  no undocumented steps
 
 ### Status
 
@@ -236,18 +236,18 @@ Introduce Anthropic Claude as a first-class provider alongside Ollama, and estab
 - Implemented: `provider` and `claude_model` fields on `WeeklyUpdateRequest`
 - Implemented: `_build_provider` factory in `packages/shared/graphs/director_os.py`
 - Implemented: `--provider claude` flag on `scripts/run_director_os_evals.py`
-- Implemented: `scripts/run_director_os_evals_claude.py` — dedicated eval runner producing signal/safety scores, token counts, and real Claude response text
+- Implemented: `scripts/run_director_os_evals_claude.py`  -  dedicated eval runner producing signal/safety scores, token counts, and real Claude response text
 - Implemented: Claude-specific tests in `tests/test_director_os_evaluations.py`
 - Implemented: `.env.example` with all required keys
 - Implemented: provider selection is now wired through the Chief of Staff orchestrator for Director OS synthesis
-- Implemented: `evaluations/director_os/results_claude.json` committed in PR #44 — **but output shows deterministic fallback, not live Claude API responses.** Re-running `scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` and committing the result is the single remaining action for JD requirements #1 and #4.
-- Implemented: live Claude eval results committed in `evaluations/director_os/results_claude.json` (PR #56) — 3/3 cases, 100% signal and safety
+- Implemented: `evaluations/director_os/results_claude.json` committed in PR #44  -  **but output shows deterministic fallback, not live Claude API responses.** Re-running `scripts/run_director_os_evals_claude.py` with `ANTHROPIC_API_KEY` and committing the result is the single remaining action for JD requirements #1 and #4.
+- Implemented: live Claude eval results committed in `evaluations/director_os/results_claude.json` (PR #56)  -  3/3 cases, 100% signal and safety
 - Implemented: operator console provider dropdown (Sprint 9, PR #62)
 - Implemented: Claude Haiku is the default synthesis provider (Sprint 6)
-- Remaining: move Ollama to routing/classification layer (Phase 5e — now complete, see below)
-- Remaining: move Ollama to embedding layer for ChromaDB (Phase 5d — now complete, see Sprint 5)
+- Remaining: move Ollama to routing/classification layer (Phase 5e  -  now complete, see below)
+- Remaining: move Ollama to embedding layer for ChromaDB (Phase 5d  -  now complete, see Sprint 5)
 
-## Phase 5c: MCP Server — Expose AI-OS Workflows as Tools
+## Phase 5c: MCP Server  -  Expose AI-OS Workflows as Tools
 
 ### Objective
 
@@ -262,7 +262,7 @@ MCP is Anthropic's open standard for connecting AI models to external tools and 
 - Add `apps/mcp/server.py` implementing an MCP server using the `mcp` Python SDK
 - Expose `director_os_weekly_update` as an MCP tool backed by the existing `build_weekly_update` workflow
 - Expose `brand_os_content_draft` as an MCP tool backed by the existing `build_content_draft` workflow
-- Keep tool input schemas derived from the existing Pydantic request models — no parallel schema definitions
+- Keep tool input schemas derived from the existing Pydantic request models  -  no parallel schema definitions
 - Add `claude_desktop_config.json` example so the server can be wired to Claude Desktop in one step
 - Add tests covering tool registration, schema correctness, and round-trip tool invocation
 - Document the MCP server in `README.md` alongside the existing API entry points
@@ -271,21 +271,21 @@ MCP is Anthropic's open standard for connecting AI models to external tools and 
 
 - The MCP server starts and registers both tools without errors
 - A Claude Desktop or Claude Code session can invoke `director_os_weekly_update` and receive a grounded structured response
-- Tool schemas match the Pydantic request contracts — no drift
+- Tool schemas match the Pydantic request contracts  -  no drift
 - Tests pass in CI without requiring a live Claude connection
 
 ### Status
 
-- Implemented: `apps/mcp/server.py` standalone MCP server using the `mcp` Python SDK — shipped in PR #50
+- Implemented: `apps/mcp/server.py` standalone MCP server using the `mcp` Python SDK  -  shipped in PR #50
 - Implemented: `director_os_weekly_update` and `brand_os_content_draft` both registered as MCP tools
 - Implemented: `packages/shared/mcp/filesystem_server.py` exposes read-only local filesystem tools
 - Implemented: `packages/shared/mcp/orchestrator_integration.py` runs a bounded Claude tool-use loop and surfaces `mcp_tool_calls` in `/orchestrate` traces
 - Implemented: `mcp` SDK added to `pyproject.toml`
 - Implemented: `claude_desktop_config.json` example for one-step Claude Desktop wiring
-- Implemented: `tests/test_mcp_server.py` and `tests/test_claude_mcp.py` — all server-level tests passing
+- Implemented: `tests/test_mcp_server.py` and `tests/test_claude_mcp.py`  -  all server-level tests passing
 - Remaining: document the MCP server in `README.md` alongside existing API entry points (tracked in Sprint 4)
 
-## Phase 5d: ChromaDB — Upgrade Retrieval to Semantic Vector Search
+## Phase 5d: ChromaDB  -  Upgrade Retrieval to Semantic Vector Search
 
 ### Objective
 
@@ -293,16 +293,16 @@ Replace the current flat-file keyword retrieval in `packages/shared/retrieval/lo
 
 ### Context
 
-The current retrieval layer reads markdown files and filters by keyword match. This works for the MVP but breaks down with larger or noisier document sets — exactly the kind of data an enterprise customer brings. ChromaDB with Ollama-generated embeddings gives semantic similarity search without requiring a cloud vector database or a separate Python embedding dependency, preserving the local-first posture and unifying the local model stack under Ollama.
+The current retrieval layer reads markdown files and filters by keyword match. This works for the MVP but breaks down with larger or noisier document sets  -  exactly the kind of data an enterprise customer brings. ChromaDB with Ollama-generated embeddings gives semantic similarity search without requiring a cloud vector database or a separate Python embedding dependency, preserving the local-first posture and unifying the local model stack under Ollama.
 
 ### Deliverables
 
 - Add `packages/shared/retrieval/chroma.py` implementing the same retrieval interface as `local_files.py`
 - Use ChromaDB with a local persistent store under `data/chroma/` (gitignored)
-- Use Ollama `nomic-embed-text` for embedding generation — unified local model dependency, no `sentence-transformers` required
+- Use Ollama `nomic-embed-text` for embedding generation  -  unified local model dependency, no `sentence-transformers` required
 - Add an ingestion script `scripts/ingest_local_data.py` that indexes `data/local_only/` into ChromaDB
 - Keep the existing flat-file retrieval as a fallback when no ChromaDB index exists or Ollama is unavailable
-- Add `chromadb` to `pyproject.toml` dependencies (no `sentence-transformers` — embeddings via Ollama)
+- Add `chromadb` to `pyproject.toml` dependencies (no `sentence-transformers`  -  embeddings via Ollama)
 - Add tests for semantic retrieval quality against the existing sample data
 - Update `.env.example` with a `RETRIEVAL_BACKEND` variable (`local_files` or `chroma`)
 
@@ -315,9 +315,9 @@ The current retrieval layer reads markdown files and filters by keyword match. T
 
 ### Status
 
-- Complete — shipped Sprint 5 (PR #57). ChromaDB with Ollama `nomic-embed-text` embeddings; flat-file fallback when index absent or Ollama unavailable. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script.
+- Complete  -  shipped Sprint 5 (PR #57). ChromaDB with Ollama `nomic-embed-text` embeddings; flat-file fallback when index absent or Ollama unavailable. Activate with `RETRIEVAL_BACKEND=chroma` after running the ingest script.
 
-## Phase 5e: Tiered Model Architecture — Ollama to Routing Layer
+## Phase 5e: Tiered Model Architecture  -  Ollama to Routing Layer
 
 ### Objective
 
@@ -325,7 +325,7 @@ Move Ollama from its current position as a parallel synthesis provider to its co
 
 ### Deliverables
 
-- Replace keyword `if/else` routing in `packages/shared/orchestration/chief_of_staff.py` with an Ollama classification call — send the prompt with a compact system message, receive `director_os` or `brand_os` back
+- Replace keyword `if/else` routing in `packages/shared/orchestration/chief_of_staff.py` with an Ollama classification call  -  send the prompt with a compact system message, receive `director_os` or `brand_os` back
 - Change the default `provider` on `OrchestratorRequest` from `"ollama"` to `"claude"`
 - Change the operator console default from `provider=ollama` to `provider=claude`
 - Demote Ollama synthesis to explicit fallback: used only when `ANTHROPIC_API_KEY` is absent or synthesis provider is explicitly set to `"ollama"`
@@ -339,7 +339,7 @@ Move Ollama from its current position as a parallel synthesis provider to its co
 
 ### Status
 
-- Complete — shipped Sprint 6 + Phase 5e follow-up. `chief_of_staff.py` calls Ollama `/api/chat` with a compact classification prompt; falls back to keyword routing when Ollama is unreachable. `WorkflowTrace.routing_model` reflects the actual path taken (`"ollama/llama3.2"`, `"keyword-match (ollama/... unreachable)"`, or `"explicit"`).
+- Complete  -  shipped Sprint 6 + Phase 5e follow-up. `chief_of_staff.py` calls Ollama `/api/chat` with a compact classification prompt; falls back to keyword routing when Ollama is unreachable. `WorkflowTrace.routing_model` reflects the actual path taken (`"ollama/llama3.2"`, `"keyword-match (ollama/... unreachable)"`, or `"explicit"`).
 
 ## Phase 5f: MCP Agentic Loop as Default Path + Prompt Caching
 
@@ -349,8 +349,8 @@ Promote the existing MCP tool use loop from opt-in side-car to the default Direc
 
 ### Deliverables
 
-- Wire `orchestrator_integration.py` into the default Director OS path when `ANTHROPIC_API_KEY` is set — Claude decides what to read via tool calls rather than the keyword scorer pre-selecting
-- Add `cache_control` to the evidence block in `packages/shared/providers/claude.py` — mark the evidence list as a cacheable prefix
+- Wire `orchestrator_integration.py` into the default Director OS path when `ANTHROPIC_API_KEY` is set  -  Claude decides what to read via tool calls rather than the keyword scorer pre-selecting
+- Add `cache_control` to the evidence block in `packages/shared/providers/claude.py`  -  mark the evidence list as a cacheable prefix
 - Extend `WorkflowTrace` with `cache_read_tokens` and `cache_creation_tokens` fields populated from the Anthropic response usage block
 - Operator console renders "Cache hit: X tokens saved" when `cache_read_tokens > 0`
 - Keep `use_mcp=False` path available for environments where stdio MCP is not viable
@@ -363,19 +363,19 @@ Promote the existing MCP tool use loop from opt-in side-car to the default Direc
 
 ### Status
 
-- Complete — shipped Sprint 6. `cache_control: {"type": "ephemeral"}` on the system prompt in `packages/shared/providers/claude.py`; `cache_read_input_tokens` and `cache_creation_input_tokens` surface in every `WorkflowTrace`. Operator console renders cache hit/primed metrics. — [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) / [#61](https://github.com/ramirez-ai-labs/ai-operating-system/pull/61)
+- Complete  -  shipped Sprint 6. `cache_control: {"type": "ephemeral"}` on the system prompt in `packages/shared/providers/claude.py`; `cache_read_input_tokens` and `cache_creation_input_tokens` surface in every `WorkflowTrace`. Operator console renders cache hit/primed metrics.  -  [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) / [#61](https://github.com/ramirez-ai-labs/ai-operating-system/pull/61)
 
 ## Phase 5g: Multi-Agent Researcher → Writer
 
 ### Objective
 
-Add a two-agent workflow demonstrating Claude-to-Claude orchestration. A researcher agent retrieves and synthesizes evidence using filesystem tools; a writer agent takes the synthesis and formats it for a specific target audience. The pattern matters more than the use case — it shows multi-agent orchestration at the level an Anthropic FE needs to explain and demo to enterprise customers.
+Add a two-agent workflow demonstrating Claude-to-Claude orchestration. A researcher agent retrieves and synthesizes evidence using filesystem tools; a writer agent takes the synthesis and formats it for a specific target audience. The pattern matters more than the use case  -  it shows multi-agent orchestration at the level an Anthropic FE needs to explain and demo to enterprise customers.
 
 ### Deliverables
 
-- `packages/shared/agents/researcher.py` — Claude with filesystem MCP tools; returns a structured synthesis of retrieved evidence
-- `packages/shared/agents/writer.py` — Claude takes researcher output and formats for a specified audience: `linkedin_post`, `executive_brief`, or `team_update`
-- New `target_audience` field on `OrchestratorRequest` — when set, Chief of Staff routes through researcher → writer pipeline instead of the single-agent path
+- `packages/shared/agents/researcher.py`  -  Claude with filesystem MCP tools; returns a structured synthesis of retrieved evidence
+- `packages/shared/agents/writer.py`  -  Claude takes researcher output and formats for a specified audience: `linkedin_post`, `executive_brief`, or `team_update`
+- New `target_audience` field on `OrchestratorRequest`  -  when set, Chief of Staff routes through researcher → writer pipeline instead of the single-agent path
 - New `/orchestrate` trace fields: `agent_calls` list showing researcher and writer invocations with token counts
 - Tests covering the handoff contract between researcher and writer
 
@@ -387,7 +387,7 @@ Add a two-agent workflow demonstrating Claude-to-Claude orchestration. A researc
 
 ### Status
 
-- Complete — shipped Sprint 7. `ResearcherAgent` uses Claude tool use to return a structured `ResearchSynthesis`; `WriterAgent` formats it for `linkedin_post`, `executive_brief`, or `team_update`. Both agents record per-invocation token counts (including cache fields) in `AgentCall` entries on the `WorkflowTrace`. — [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) / [#61](https://github.com/ramirez-ai-labs/ai-operating-system/pull/61)
+- Complete  -  shipped Sprint 7. `ResearcherAgent` uses Claude tool use to return a structured `ResearchSynthesis`; `WriterAgent` formats it for `linkedin_post`, `executive_brief`, or `team_update`. Both agents record per-invocation token counts (including cache fields) in `AgentCall` entries on the `WorkflowTrace`.  -  [#60](https://github.com/ramirez-ai-labs/ai-operating-system/pull/60) / [#61](https://github.com/ramirez-ai-labs/ai-operating-system/pull/61)
 
 ## Phase 5h: Realistic Demo Data + "Why Claude" Framing
 
@@ -409,7 +409,7 @@ Replace the 5 toy markdown files with a realistic enterprise scenario and add a 
 
 ### Status
 
-- Complete — shipped Sprint 8. Realistic quarterly planning scenario under `data/local_only/projects/`; realistic brand scenario under `data/local_only/brand/`. "Why Claude" section and Mermaid architecture diagram added to `README.md`. — [#59](https://github.com/ramirez-ai-labs/ai-operating-system/pull/59)
+- Complete  -  shipped Sprint 8. Realistic quarterly planning scenario under `data/local_only/projects/`; realistic brand scenario under `data/local_only/brand/`. "Why Claude" section and Mermaid architecture diagram added to `README.md`.  -  [#59](https://github.com/ramirez-ai-labs/ai-operating-system/pull/59)
 
 ## Phase 6: Add a Lightweight Local UI and Optional Langflow Demo Layer
 
@@ -434,8 +434,8 @@ Expose workflow execution in a way that supports both usability and project cred
 ### Status
 
 - Implemented: operator console at `/` through `apps/api` with provider selector, target audience dropdown, cache hit metrics, agent pipeline card (researcher → writer with per-agent token counts), and formatted content card
-- Shipped in Sprint 9 — [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62)
-- Remaining: a dedicated `apps/web` frontend remains optional — current console satisfies traceability and operator control goals without the extra surface area
+- Shipped in Sprint 9  -  [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62)
+- Remaining: a dedicated `apps/web` frontend remains optional  -  current console satisfies traceability and operator control goals without the extra surface area
 
 ## Phase 7: Harden the Project for Ongoing Growth
 
@@ -469,13 +469,13 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 Sprints 1–15 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, committed live eval results (100% pass rate each), and CI eval gates. Sprint 16 (ChromaDB eval coverage) is in progress. 224 tests passing.
 
-**Sprint 15 — Brand OS Claude provider path + v1.2.0 tag (complete, PR #80):**
-Added `ClaudeBrandContentDraftProvider` with forced tool use and citation grounding. Added `BRAND_OS_CLAUDE_EVALUATORS` (excludes prefix-purity scorer, which tests deterministic routing behavior not applicable to Claude synthesis). Committed `evaluations/brand_os/results_claude.json` — 7/7 passed (100%). Cut `v1.2.0` release tag — first milestone where all four domains have live Claude results.
+**Sprint 15  -  Brand OS Claude provider path + v1.2.0 tag (complete, PR #80):**
+Added `ClaudeBrandContentDraftProvider` with forced tool use and citation grounding. Added `BRAND_OS_CLAUDE_EVALUATORS` (excludes prefix-purity scorer, which tests deterministic routing behavior not applicable to Claude synthesis). Committed `evaluations/brand_os/results_claude.json`  -  7/7 passed (100%). Cut `v1.2.0` release tag  -  first milestone where all four domains have live Claude results.
 
-**Sprint 16 — ChromaDB eval coverage (in progress):**
+**Sprint 16  -  ChromaDB eval coverage (in progress):**
 Added `is_index_ready()` to `chroma.py`, chroma eval runners for Director OS and Brand OS, 8 integration tests, and CI gates. Live eval results pending (requires Ollama + ingest run).
 
-**What's next — Phase 8:**
+**What's next  -  Phase 8:**
 
 | Candidate | Value | Effort |
 |---|---|---|
