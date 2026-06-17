@@ -1,7 +1,7 @@
-# Candidate Profile — Alex Chen
+# Candidate Profile  -  Alex Chen
 
 ## Role Applied For
-Senior AI Engineer — Platform Team
+Senior AI Engineer  -  Platform Team
 
 ## Background
 Alex has 7 years of experience in ML engineering, most recently at a fintech scale-up where
@@ -24,7 +24,7 @@ Explore: How did Alex handle latency trade-offs in the real-time inference migra
 What was the p99 target and how was it measured?
 
 ## Talking Point: LLM Experience
-Alex lists LangChain experience but the duration is unclear — worth probing whether this
+Alex lists LangChain experience but the duration is unclear  -  worth probing whether this
 is greenfield production work or exploratory.
 
 ## Red Flag: No Mention of Evaluation Frameworks

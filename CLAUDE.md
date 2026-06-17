@@ -1,4 +1,4 @@
-# CLAUDE.md — AI Operating System
+# CLAUDE.md  -  AI Operating System
 
 Project-level guidance for Claude Code sessions. These instructions apply to every session in this repo.
 
@@ -6,7 +6,7 @@ Project-level guidance for Claude Code sessions. These instructions apply to eve
 
 - Never commit directly to `main`. Always create a branch first.
 - Branch naming: `feat/`, `fix/`, `docs/`, `test/` prefixes.
-- PRs only — no force pushes to main.
+- PRs only  -  no force pushes to main.
 
 ## How to run the project
 
@@ -39,7 +39,7 @@ python scripts/run_brand_os_evals.py
 
 ## Environment setup
 
-Copy `.env.example` to `.env` and fill in keys. The system runs fully without any API keys — both `ANTHROPIC_API_KEY` and `LANGSMITH_API_KEY` are opt-in.
+Copy `.env.example` to `.env` and fill in keys. The system runs fully without any API keys  -  both `ANTHROPIC_API_KEY` and `LANGSMITH_API_KEY` are opt-in.
 
 ## Key file locations
 
@@ -67,7 +67,7 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 ## Architecture invariants
 
 - All providers implement `WeeklyUpdateProvider` from `packages/shared/providers/base.py`. Do not add provider-specific logic outside of the provider files.
-- Provider selection is handled by `_build_provider()` in the Director OS graph. Switching providers is a single field change on the request — no workflow logic should branch on provider identity.
+- Provider selection is handled by `_build_provider()` in the Director OS graph. Switching providers is a single field change on the request  -  no workflow logic should branch on provider identity.
 - The API layer (`apps/api/main.py`) stays thin. Workflow logic lives in `director_os/` and `brand_os/` so it can be tested without FastAPI.
 - Deterministic fallback must always be available. Any model-assisted path must have a fallback when `fallback_to_deterministic=True`.
 - Evidence grounding is non-negotiable. Every output item must cite a source and line number that appears in the retrieved evidence. Do not relax this in the validator or provider.

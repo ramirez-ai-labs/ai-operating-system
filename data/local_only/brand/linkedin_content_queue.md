@@ -3,7 +3,7 @@
 ## Ready to Publish
 
 ### Post: "5 things I learned shipping MCP servers in an enterprise environment"
-- Status: Draft complete — needs final review
+- Status: Draft complete  -  needs final review
 - Hook: "We connected our internal project status system to Claude Desktop in under an hour. Here is what surprised us."
 - Key points: path traversal protection matters more than you think; the trace is the product for enterprise buyers; deterministic fallback is not optional; eval gates before every deployment; the MCP spec is simpler than the marketing suggests.
 - Win: strong hook; concrete lessons; not another "AI is the future" post.
@@ -33,7 +33,7 @@
 - Engagement: 187 reactions, 34 comments
 - Win: highest-performing post of Q2; drove 28 new newsletter subscribers.
 
-### "Techqueria RAG Workshop — what worked and what I would change"
+### "Techqueria RAG Workshop  -  what worked and what I would change"
 - Published: June 9
 - Impressions: 2,100
 - Engagement: 94 reactions, 18 comments
