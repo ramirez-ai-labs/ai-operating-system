@@ -398,7 +398,7 @@ def _build_trace(
         model_id_used = request.claude_model if model_used else None
         cache_read = usage.get("cache_read_input_tokens", 0)
         cache_creation = usage.get("cache_creation_input_tokens", 0)
-    else:
+    elif workflow == ONE_ON_ONE_WORKFLOW:
         usage = getattr(result, "provider_usage", {})
         model_used = bool(usage)
         fallback_used = request.use_model and not model_used
@@ -413,6 +413,11 @@ def _build_trace(
         model_id_used = request.claude_model if model_used else None
         cache_read = usage.get("cache_read_input_tokens", 0)
         cache_creation = usage.get("cache_creation_input_tokens", 0)
+    else:
+        raise ValueError(
+            f"_build_trace: unrecognised workflow {workflow!r}. "
+            "Add an explicit branch for each new domain."
+        )
 
     return WorkflowTrace(
         data_path=request.data_path,
