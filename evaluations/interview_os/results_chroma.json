@@ -1,0 +1,425 @@
+{
+  "run_at": "2026-06-17T00:04:49.038681+00:00",
+  "retrieval_backend": "chroma",
+  "eval_path": "evaluations/interview_os/interview_cases.json",
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "pass_rate": 1.0
+  },
+  "cases": [
+    {
+      "case_id": "interview-brief-baseline",
+      "description": "Baseline brief from a generic focus should surface at least one grounded question and return evidence.",
+      "inputs": {
+        "data_path": "data/local_only/interviews",
+        "focus": "candidate brief",
+        "candidate_name": null,
+        "role": null,
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "candidate_summary": "Interview OS brief for the candidate applying for the role. Grounded from local evidence: Behavioral Interview Guide, Role Brief Senior Ai Engineer.",
+        "key_questions": [],
+        "talking_points": [
+          {
+            "text": "Our team runs eval pipelines on every PR. Candidates should be able to discuss",
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 29
+          }
+        ],
+        "red_flags": [
+          {
+            "text": "Watch for candidates who attribute all failures to management, timelines, or",
+            "source": "behavioral_interview_guide.md",
+            "line_number": 25
+          }
+        ],
+        "evidence": [
+          {
+            "source": "behavioral_interview_guide.md",
+            "line_number": 4,
+            "title": "Behavioral Interview Guide",
+            "excerpt": "Thank the candidate, set agenda: 45-minute technical + behavioral session."
+          },
+          {
+            "source": "behavioral_interview_guide.md",
+            "line_number": 25,
+            "title": "Behavioral Interview Guide",
+            "excerpt": "Watch for candidates who attribute all failures to management, timelines, or"
+          },
+          {
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 33,
+            "title": "Role Brief Senior Ai Engineer",
+            "excerpt": "Candidates who can only talk about model architecture and not system design,"
+          },
+          {
+            "source": "behavioral_interview_guide.md",
+            "line_number": 29,
+            "title": "Behavioral Interview Guide",
+            "excerpt": "Some strong candidates have broad skills but shallow depth in production systems."
+          },
+          {
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 29,
+            "title": "Role Brief Senior Ai Engineer",
+            "excerpt": "Our team runs eval pipelines on every PR. Candidates should be able to discuss"
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 2 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "interview-red-flags-surfaced",
+      "description": "Red flag sections in candidate notes should appear in the red_flags section of the brief.",
+      "inputs": {
+        "data_path": "data/local_only/interviews",
+        "focus": "red flags concerns",
+        "candidate_name": null,
+        "role": null,
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "candidate_summary": "Interview OS brief for the candidate applying for the role. Grounded from local evidence: Role Brief Senior Ai Engineer, Past Feedback Notes.",
+        "key_questions": [
+          {
+            "text": "Asked thoughtful questions about team structure and on-call expectations.",
+            "source": "past_feedback_notes.md",
+            "line_number": 5
+          },
+          {
+            "text": "Recommend: proceed with caution, probe evaluation culture in final round.",
+            "source": "past_feedback_notes.md",
+            "line_number": 13
+          },
+          {
+            "text": "Concern: evaluation and testing section was thin. When asked about regression testing",
+            "source": "past_feedback_notes.md",
+            "line_number": 11
+          }
+        ],
+        "talking_points": [],
+        "red_flags": [
+          {
+            "text": "reliability, or operational concerns are not a fit for this role.",
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 34
+          },
+          {
+            "text": "Concern: evaluation and testing section was thin. When asked about regression testing",
+            "source": "past_feedback_notes.md",
+            "line_number": 11
+          }
+        ],
+        "evidence": [
+          {
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 34,
+            "title": "Role Brief Senior Ai Engineer",
+            "excerpt": "reliability, or operational concerns are not a fit for this role."
+          },
+          {
+            "source": "past_feedback_notes.md",
+            "line_number": 5,
+            "title": "Past Feedback Notes",
+            "excerpt": "Asked thoughtful questions about team structure and on-call expectations."
+          },
+          {
+            "source": "past_feedback_notes.md",
+            "line_number": 13,
+            "title": "Past Feedback Notes",
+            "excerpt": "Recommend: proceed with caution, probe evaluation culture in final round."
+          },
+          {
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 36,
+            "title": "Candidate Profile Alex Chen",
+            "excerpt": "enterprise governance, compliance review cycles, and multi-team coordination."
+          },
+          {
+            "source": "past_feedback_notes.md",
+            "line_number": 11,
+            "title": "Past Feedback Notes",
+            "excerpt": "Concern: evaluation and testing section was thin. When asked about regression testing"
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "interview-multifile-retrieval",
+      "description": "A broad query should pull from multiple source files \u00e2\u20ac\u201d source diversity is the primary signal.",
+      "inputs": {
+        "data_path": "data/local_only/interviews",
+        "focus": "senior AI engineer interview",
+        "candidate_name": null,
+        "role": null,
+        "max_documents": 10,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "candidate_summary": "Interview OS brief for the candidate applying for the role. Grounded from local evidence: Candidate Profile Alex Chen, Role Brief Senior Ai Engineer.",
+        "key_questions": [
+          {
+            "text": "Ask what draws the candidate to platform work specifically \u2014 not just AI.",
+            "source": "behavioral_interview_guide.md",
+            "line_number": 20
+          },
+          {
+            "text": "Ask Alex: \"If you joined our team and we had no existing eval infrastructure for",
+            "source": "past_feedback_notes.md",
+            "line_number": 25
+          },
+          {
+            "text": "Probe with a follow-up: \"What's the hardest production debugging session you've had?\"",
+            "source": "behavioral_interview_guide.md",
+            "line_number": 30
+          }
+        ],
+        "talking_points": [
+          {
+            "text": "Alex has 7 years of experience in ML engineering, most recently at a fintech scale-up where",
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 7
+          }
+        ],
+        "red_flags": [],
+        "evidence": [
+          {
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 4,
+            "title": "Candidate Profile Alex Chen",
+            "excerpt": "Senior AI Engineer \u2014 Platform Team"
+          },
+          {
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 4,
+            "title": "Role Brief Senior Ai Engineer",
+            "excerpt": "The Senior AI Engineer owns the design and delivery of production AI capabilities on the"
+          },
+          {
+            "source": "behavioral_interview_guide.md",
+            "line_number": 20,
+            "title": "Behavioral Interview Guide",
+            "excerpt": "Ask what draws the candidate to platform work specifically \u2014 not just AI."
+          },
+          {
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 7,
+            "title": "Candidate Profile Alex Chen",
+            "excerpt": "Alex has 7 years of experience in ML engineering, most recently at a fintech scale-up where"
+          },
+          {
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 11,
+            "title": "Role Brief Senior Ai Engineer",
+            "excerpt": "Partner with product and data teams to scope and deliver AI features"
+          },
+          {
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 9,
+            "title": "Candidate Profile Alex Chen",
+            "excerpt": "Prior to that, Alex spent 3 years at a healthcare AI startup building NLP pipelines for"
+          },
+          {
+            "source": "past_feedback_notes.md",
+            "line_number": 25,
+            "title": "Past Feedback Notes",
+            "excerpt": "Ask Alex: \"If you joined our team and we had no existing eval infrastructure for"
+          },
+          {
+            "source": "behavioral_interview_guide.md",
+            "line_number": 30,
+            "title": "Behavioral Interview Guide",
+            "excerpt": "Probe with a follow-up: \"What's the hardest production debugging session you've had?\""
+          },
+          {
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 5,
+            "title": "Role Brief Senior Ai Engineer",
+            "excerpt": "platform team. This role sits at the intersection of ML engineering and platform engineering \u2014"
+          },
+          {
+            "source": "role_brief_senior_ai_engineer.md",
+            "line_number": 33,
+            "title": "Role Brief Senior Ai Engineer",
+            "excerpt": "Candidates who can only talk about model architecture and not system design,"
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 4 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "interview-behavioral-guide",
+      "description": "Behavioral guide content should surface behavioral questions in the brief.",
+      "inputs": {
+        "data_path": "data/local_only/interviews",
+        "focus": "behavioral interview questions",
+        "candidate_name": null,
+        "role": null,
+        "max_documents": 5,
+        "use_model": false,
+        "provider": "claude",
+        "claude_model": "claude-haiku-4-5-20251001",
+        "fallback_to_deterministic": true
+      },
+      "outputs": {
+        "candidate_summary": "Interview OS brief for the candidate applying for the role. Grounded from local evidence: Past Feedback Notes, Candidate Profile Alex Chen.",
+        "key_questions": [
+          {
+            "text": "Asked thoughtful questions about team structure and on-call expectations.",
+            "source": "past_feedback_notes.md",
+            "line_number": 5
+          },
+          {
+            "text": "All prior experience is at Series B or earlier companies. Ask about comfort with",
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 35
+          },
+          {
+            "text": "Concern: evaluation and testing section was thin. When asked about regression testing",
+            "source": "past_feedback_notes.md",
+            "line_number": 11
+          }
+        ],
+        "talking_points": [
+          {
+            "text": "All prior experience is at Series B or earlier companies. Ask about comfort with",
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 35
+          }
+        ],
+        "red_flags": [
+          {
+            "text": "Concern: evaluation and testing section was thin. When asked about regression testing",
+            "source": "past_feedback_notes.md",
+            "line_number": 11
+          },
+          {
+            "text": "Two separate interviewers flagged the evaluation gap. This is a pattern, not noise.",
+            "source": "past_feedback_notes.md",
+            "line_number": 20
+          }
+        ],
+        "evidence": [
+          {
+            "source": "past_feedback_notes.md",
+            "line_number": 5,
+            "title": "Past Feedback Notes",
+            "excerpt": "Asked thoughtful questions about team structure and on-call expectations."
+          },
+          {
+            "source": "candidate_profile_alex_chen.md",
+            "line_number": 35,
+            "title": "Candidate Profile Alex Chen",
+            "excerpt": "All prior experience is at Series B or earlier companies. Ask about comfort with"
+          },
+          {
+            "source": "behavioral_interview_guide.md",
+            "line_number": 4,
+            "title": "Behavioral Interview Guide",
+            "excerpt": "Thank the candidate, set agenda: 45-minute technical + behavioral session."
+          },
+          {
+            "source": "past_feedback_notes.md",
+            "line_number": 11,
+            "title": "Past Feedback Notes",
+            "excerpt": "Concern: evaluation and testing section was thin. When asked about regression testing"
+          },
+          {
+            "source": "past_feedback_notes.md",
+            "line_number": 20,
+            "title": "Past Feedback Notes",
+            "excerpt": "Two separate interviewers flagged the evaluation gap. This is a pattern, not noise."
+          }
+        ],
+        "provider_usage": {}
+      },
+      "results": [
+        {
+          "key": "summary_terms_present",
+          "score": true,
+          "comment": "All required summary terms were present."
+        },
+        {
+          "key": "source_diversity_met",
+          "score": true,
+          "comment": "Observed 3 unique evidence sources."
+        },
+        {
+          "key": "all_items_grounded",
+          "score": true,
+          "comment": "All output items carry source and line_number citations."
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI-OS Operator Console</title>
+  <style>
+    :root {
+      --bg: #f5f1e8;
+      --panel: #fffdf8;
+      --ink: #1f1a14;
+      --muted: #6d655b;
+      --line: #d8cebf;
+      --accent: #0b6e4f;
+      --accent-2: #c5622d;
+      --shadow: 0 24px 60px rgba(31, 26, 20, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(197, 98, 45, 0.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(11, 110, 79, 0.12), transparent 28%),
+        linear-gradient(180deg, #f7f3ec 0%, var(--bg) 100%);
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 20px 56px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+    .hero-copy {
+      padding: 28px;
+    }
+    .hero-copy h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+    .hero-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+    .hero-stats {
+      padding: 22px;
+      display: grid;
+      gap: 12px;
+    }
+    .stat {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+    .stat strong {
+      display: block;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .stat span {
+      font-size: 1.05rem;
+    }
+    .workspace {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+    }
+    .guide {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .panel-header {
+      padding: 18px 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .panel-header h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.01em;
+    }
+    .panel-header span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    form {
+      padding: 18px 20px 20px;
+      display: grid;
+      gap: 14px;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .checkbox {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--ink);
+    }
+    .checkbox input {
+      width: auto;
+      margin: 0;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), #1a8c67);
+      color: #fff;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.05); }
+    .results {
+      padding: 0 20px 20px;
+      display: grid;
+      gap: 14px;
+    }
+    .status {
+      margin: 0;
+      color: var(--muted);
+      min-height: 1.5em;
+    }
+    .sections {
+      padding: 0 20px 20px;
+      display: grid;
+      gap: 16px;
+    }
+    .trace-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .trace-card, .result-card, .raw-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.68);
+    }
+    .trace-card h3, .result-card h3, .raw-card h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+    }
+    .trace-card dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px 10px;
+      font-size: 0.92rem;
+    }
+    .trace-card dt {
+      color: var(--muted);
+      font-style: normal;
+    }
+    .trace-card dd {
+      margin: 0;
+    }
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    li + li {
+      margin-top: 6px;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .result-summary-text {
+      margin: 0;
+      font-size: 0.97rem;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+    .result-section + .result-section {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .result-section h4 {
+      margin: 0 0 8px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    .result-item {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(216,206,191,0.5);
+    }
+    .result-item:last-child { border-bottom: 0; }
+    .result-item .source-tag {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: monospace;
+    }
+    .flag-true { color: var(--accent); font-weight: 700; }
+    .flag-false { color: var(--muted); }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(11, 110, 79, 0.1);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .guide-card {
+      padding: 20px;
+    }
+    .guide-card h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+    .guide-card p,
+    .guide-card li {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .guide-card ul,
+    .guide-card ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .guide-card li + li {
+      margin-top: 8px;
+    }
+    @media (max-width: 960px) {
+      .hero, .workspace { grid-template-columns: 1fr; }
+      .guide,
+      .trace-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="card hero-copy">
+        <div class="pill">Operator Console</div>
+        <h1>Inspect workflow routing before it becomes mystery.</h1>
+        <p>
+          Submit one AI-OS request, see which workflow was selected, inspect the
+          evidence footprint, and review fallback or model-state metadata without
+          leaving the local stack.
+        </p>
+      </div>
+      <div class="card hero-stats">
+        <div class="stat">
+          <strong>Entry Points</strong>
+          <span>/director-os/weekly-update, /brand-os/content-draft, /orchestrate</span>
+        </div>
+        <div class="stat">
+          <strong>What To Inspect</strong>
+          <span>Routing rationale, cache hit metrics, agent pipeline, evidence sources.</span>
+        </div>
+        <div class="stat">
+          <strong>Multi-Agent</strong>
+          <span>Set Target Audience to run ResearcherAgent → WriterAgent via Claude.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="guide">
+      <div class="card guide-card">
+        <h2>What This Page Is</h2>
+        <p>
+          This console is a local inspection view for AI-OS. It lets you send one
+          request through the orchestrator and then inspect what happened:
+          which workflow ran, why it was selected, which files grounded the
+          result, and whether the system used or skipped model-assisted synthesis.
+        </p>
+      </div>
+      <div class="card guide-card">
+        <h2>How To Use It</h2>
+        <ol>
+          <li>Start with a prompt that describes the work you want done.</li>
+          <li>
+            Leave <strong>Workflow</strong> on <strong>Auto-select</strong> to
+            test routing, or choose a workflow explicitly to test a single domain.
+          </li>
+          <li>
+            Use <strong>Data Path</strong> to point at the local notes or files
+            you want the workflow to search, then run the request and inspect the
+            trace cards on the right.
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <div class="card">
+        <div class="panel-header">
+          <h2>Run A Workflow</h2>
+          <span>Local API request</span>
+        </div>
+        <form id="orchestrate-form">
+          <label>
+            Prompt
+            <textarea id="prompt" name="prompt">Prepare my leadership weekly update</textarea>
+          </label>
+          <div class="row">
+            <label>
+              Workflow
+              <select id="workflow" name="workflow">
+                <option value="">Auto-select</option>
+                <option value="director_os.weekly_update">director_os.weekly_update</option>
+                <option value="brand_os.content_draft">brand_os.content_draft</option>
+                <option value="interview_os.brief">interview_os.brief</option>
+                <option value="one_on_one_os.brief">one_on_one_os.brief</option>
+              </select>
+            </label>
+            <label>
+              Focus
+              <input id="focus" name="focus" placeholder="Optional retrieval focus" />
+            </label>
+          </div>
+          <div class="row">
+            <label>
+              Data Path
+              <input id="data_path" name="data_path" value="data/local_only/projects" />
+            </label>
+            <label>
+              Max Documents
+              <input
+                id="max_documents"
+                name="max_documents"
+                type="number"
+                min="1"
+                max="20"
+                value="5"
+              />
+            </label>
+          </div>
+          <div class="row">
+            <label class="checkbox">
+              <input id="use_model" name="use_model" type="checkbox" />
+              Model-assisted synthesis
+            </label>
+            <label class="checkbox">
+              <input id="use_mcp" name="use_mcp" type="checkbox" />
+              MCP-first synthesis (use_mcp)
+            </label>
+          </div>
+          <div class="row">
+            <label>
+              Provider
+              <select id="provider" name="provider">
+                <option value="claude">Claude Haiku (default)</option>
+                <option value="ollama">Ollama (local)</option>
+              </select>
+            </label>
+            <label>
+              Target Audience
+              <select id="target_audience" name="target_audience">
+                <option value="">None — structured output only</option>
+                <option value="linkedin_post">LinkedIn Post</option>
+                <option value="executive_brief">Executive Brief</option>
+                <option value="team_update">Team Update</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit">Run /orchestrate</button>
+        </form>
+        <div class="results">
+          <p id="status" class="status">Ready. Submit a request to inspect the trace.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="panel-header">
+          <h2>Trace Output</h2>
+          <span>Readable operator view</span>
+        </div>
+        <div class="sections">
+          <div class="trace-grid">
+            <div class="trace-card">
+              <h3>Routing</h3>
+              <dl id="routing-meta">
+                <dt>Workflow</dt><dd>Not run yet</dd>
+                <dt>Rationale</dt><dd>Submit a request to inspect routing.</dd>
+              </dl>
+            </div>
+            <div class="trace-card">
+              <h3>Execution Trace</h3>
+              <dl id="trace-meta">
+                <dt>Evidence</dt><dd>-</dd>
+                <dt>Model</dt><dd>-</dd>
+                <dt>Fallback</dt><dd>-</dd>
+                <dt>Data Path</dt><dd>-</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="result-card">
+            <h3>Section Counts</h3>
+            <ul id="section-counts">
+              <li style="color:var(--muted)">Run a request to populate section counts.</li>
+            </ul>
+          </div>
+          <div class="result-card">
+            <h3>Evidence Sources</h3>
+            <ul id="evidence-sources">
+              <li style="color:var(--muted)">Run a request to inspect evidence sources.</li>
+            </ul>
+          </div>
+          <div class="result-card" id="agent-calls-card" style="display:none">
+            <h3>Agent Pipeline</h3>
+            <div id="agent-calls-detail"></div>
+          </div>
+          <div class="result-card" id="formatted-content-card" style="display:none">
+            <h3>Formatted Content</h3>
+            <div id="formatted-content-detail"></div>
+          </div>
+          <div class="result-card" id="mcp-synthesis-card" style="display:none">
+            <h3>MCP Synthesis</h3>
+            <div id="mcp-synthesis-detail"></div>
+          </div>
+          <div class="result-card">
+            <h3>Result</h3>
+            <div id="result-detail">
+              <p class="result-summary-text" style="color:var(--muted)">No workflow run yet.</p>
+            </div>
+          </div>
+          <div class="raw-card">
+            <h3>Raw Response — <code>/orchestrate</code></h3>
+            <pre id="raw-response">No workflow run yet.</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const form = document.getElementById("orchestrate-form");
+    const statusNode = document.getElementById("status");
+    const routingMeta = document.getElementById("routing-meta");
+    const traceMeta = document.getElementById("trace-meta");
+    const sectionCounts = document.getElementById("section-counts");
+    const evidenceSources = document.getElementById("evidence-sources");
+    const resultDetail = document.getElementById("result-detail");
+    const rawResponse = document.getElementById("raw-response");
+    const dataPathInput = document.getElementById("data_path");
+    const promptInput = document.getElementById("prompt");
+    const workflowInput = document.getElementById("workflow");
+
+    function flag(val) {
+      return `<span class="${val ? 'flag-true' : 'flag-false'}">${val}</span>`;
+    }
+
+    function renderItems(items, labelKey) {
+      if (!items || items.length === 0)
+        return '<p class="result-summary-text" style="color:var(--muted)">None</p>';
+      return items.map(item => {
+        const text = item[labelKey] || item.text || JSON.stringify(item);
+        const src = item.source || '';
+        return `<div class="result-item">${text}<span class="source-tag">${src}</span></div>`;
+      }).join("");
+    }
+
+    workflowInput.addEventListener("change", () => {
+      if (workflowInput.value === "brand_os.content_draft") {
+        dataPathInput.value = "data/local_only/brand";
+        if (!promptInput.value.trim()) {
+          promptInput.value = "Turn this work into a podcast and LinkedIn content draft";
+        }
+      } else if (workflowInput.value === "director_os.weekly_update") {
+        dataPathInput.value = "data/local_only/projects";
+        if (!promptInput.value.trim()) {
+          promptInput.value = "Prepare my leadership weekly update";
+        }
+      } else if (workflowInput.value === "interview_os.brief") {
+        dataPathInput.value = "data/local_only/interviews";
+        if (!promptInput.value.trim()) {
+          promptInput.value = "Prepare an interview brief for the candidate";
+        }
+      } else if (workflowInput.value === "one_on_one_os.brief") {
+        dataPathInput.value = "data/local_only/one_on_one";
+        if (!promptInput.value.trim()) {
+          promptInput.value = "Prepare my 1:1 meeting briefs";
+        }
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      statusNode.textContent = "Running /orchestrate...";
+
+      const payload = {
+        prompt: document.getElementById("prompt").value || null,
+        workflow: document.getElementById("workflow").value || null,
+        focus: document.getElementById("focus").value || null,
+        data_path: document.getElementById("data_path").value,
+        max_documents: Number(document.getElementById("max_documents").value),
+        use_model: document.getElementById("use_model").checked,
+        use_mcp: document.getElementById("use_mcp").checked,
+        provider: document.getElementById("provider").value || "claude",
+        target_audience: document.getElementById("target_audience").value || null,
+      };
+
+      try {
+        const response = await fetch("/orchestrate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const body = await response.json();
+
+        if (!response.ok) {
+          statusNode.textContent = "Request failed. Inspect the raw response below.";
+          rawResponse.textContent = JSON.stringify(body, null, 2);
+          const errMsg = body.detail || "The API returned an error.";
+          resultDetail.innerHTML =
+            `<p class="result-summary-text" style="color:var(--accent-2)">${errMsg}</p>`;
+          return;
+        }
+
+        statusNode.textContent = "Workflow complete. Trace updated below.";
+        routingMeta.innerHTML =
+          "<dt>Workflow</dt><dd>" + body.selected_workflow + "</dd>" +
+          "<dt>Rationale</dt><dd>" + body.rationale + "</dd>";
+
+        const providerRow = body.trace.model_used && body.trace.provider_used
+          ? "<dt>Provider</dt><dd>" + body.trace.provider_used + "</dd>" +
+            "<dt>Model</dt><dd>" + (body.trace.model_id_used || "—") + "</dd>"
+          : "<dt>Provider</dt><dd style='color:var(--muted)'>deterministic (no model)</dd>";
+
+        const cacheRead = body.trace.cache_read_input_tokens || 0;
+        const cacheCreate = body.trace.cache_creation_input_tokens || 0;
+        const cacheHitHtml =
+          "<dt>Cache hit</dt><dd class='flag-true'>"
+          + cacheRead.toLocaleString() + " tokens saved</dd>";
+        const cachePrimedHtml =
+          "<dt>Cache primed</dt><dd>"
+          + cacheCreate.toLocaleString() + " tokens stored</dd>";
+        const cacheRow = cacheRead > 0 ? cacheHitHtml
+          : cacheCreate > 0 ? cachePrimedHtml : "";
+
+        traceMeta.innerHTML =
+          "<dt>Evidence</dt><dd>" + body.trace.evidence_count + " items</dd>" +
+          providerRow +
+          cacheRow +
+          "<dt>Model used</dt><dd>" + flag(body.trace.model_used) + "</dd>" +
+          "<dt>Fallback</dt><dd>" + flag(body.trace.fallback_used) + "</dd>" +
+          "<dt>Data Path</dt><dd>" + body.trace.data_path + "</dd>";
+
+        sectionCounts.innerHTML = Object.entries(body.trace.section_counts)
+          .map(([key, value]) => "<li><strong>" + key + "</strong>: " + value + "</li>")
+          .join("");
+
+        evidenceSources.innerHTML = body.trace.evidence_sources
+          .map((source) => "<li>" + source + "</li>")
+          .join("");
+
+        const result = body.result || {};
+        const summary = result.summary || result.insight_summary
+          || result.candidate_summary || result.meeting_summary || "";
+        const wins = result.wins || result.post_outline
+          || result.key_questions || result.action_items || [];
+        const risks = result.risks || result.red_flags || result.blockers || [];
+        const nextSteps = result.next_steps || result.podcast_angles
+          || result.talking_points || result.kudos || [];
+
+        const winsLabel = result.key_questions ? "Key Questions"
+          : result.action_items ? "Action Items" : "Wins / Insights";
+        const risksLabel = result.red_flags ? "Red Flags"
+          : result.blockers ? "Blockers" : "Risks";
+        const nextLabel = result.kudos ? "Kudos"
+          : result.talking_points ? "Talking Points" : "Next Steps";
+
+        let detailHtml = summary
+          ? `<p class="result-summary-text">${summary}</p>` : "";
+        if (wins.length) detailHtml +=
+          `<div class="result-section"><h4>${winsLabel}</h4>${renderItems(wins, "text")}</div>`;
+        if (risks.length) detailHtml +=
+          `<div class="result-section"><h4>${risksLabel}</h4>${renderItems(risks, "text")}</div>`;
+        if (nextSteps.length) detailHtml +=
+          `<div class="result-section"><h4>${nextLabel}</h4>`
+          + `${renderItems(nextSteps, "text")}</div>`;
+        const emptyMsg = "<p class='result-summary-text' "
+          + "style='color:var(--muted)'>No result content returned.</p>";
+        resultDetail.innerHTML = detailHtml || emptyMsg;
+
+        // Agent pipeline card — show researcher → writer invocations with token counts.
+        const agentCallsCard = document.getElementById("agent-calls-card");
+        const agentCallsDetail = document.getElementById("agent-calls-detail");
+        const calls = (body.trace.agent_calls || []);
+        if (calls.length > 0) {
+          agentCallsCard.style.display = "";
+          agentCallsDetail.innerHTML = calls.map((c, i) => {
+            const cacheNote = c.cache_read_input_tokens > 0
+              ? " &nbsp;<span style='color:var(--accent);font-size:0.8rem'>cache hit: "
+                + c.cache_read_input_tokens.toLocaleString() + " tokens</span>"
+              : "";
+            const arrow = i < calls.length - 1
+              ? "<div style='color:var(--muted);padding:4px 0 4px 12px'>↓</div>" : "";
+            return "<div class='result-item'>"
+              + "<strong>" + c.agent + "</strong>"
+              + " &nbsp;<span style='color:var(--muted);font-size:0.85rem'>" + c.model + "</span>"
+              + " &nbsp;in:" + c.input_tokens + " out:" + c.output_tokens
+              + cacheNote
+              + "</div>" + arrow;
+          }).join("");
+        } else {
+          agentCallsCard.style.display = "none";
+        }
+
+        // Formatted content card — writer output for the selected target audience.
+        const formattedCard = document.getElementById("formatted-content-card");
+        const formattedDetail = document.getElementById("formatted-content-detail");
+        if (body.formatted_content) {
+          formattedCard.style.display = "";
+          const preStyle =
+            "white-space:pre-wrap;font-family:Georgia,serif;"
+            + "font-size:0.97rem;line-height:1.6";
+          formattedDetail.innerHTML =
+            "<pre style='" + preStyle + "'>" + body.formatted_content + "</pre>";
+        } else {
+          formattedCard.style.display = "none";
+        }
+
+        // MCP synthesis card — Claude's free-form synthesis when use_mcp=True.
+        const mcpCard = document.getElementById("mcp-synthesis-card");
+        const mcpDetail = document.getElementById("mcp-synthesis-detail");
+        if (body.mcp_synthesis) {
+          mcpCard.style.display = "";
+          const mcpPreStyle =
+            "white-space:pre-wrap;font-family:Georgia,serif;"
+            + "font-size:0.97rem;line-height:1.6";
+          mcpDetail.innerHTML =
+            "<pre style='" + mcpPreStyle + "'>" + body.mcp_synthesis + "</pre>";
+        } else {
+          mcpCard.style.display = "none";
+        }
+
+        rawResponse.textContent = JSON.stringify(body, null, 2);
+      } catch (error) {
+        statusNode.textContent = "Request failed before the API responded.";
+        resultDetail.innerHTML =
+          `<p class="result-summary-text" style="color:var(--accent-2)">${String(error)}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
