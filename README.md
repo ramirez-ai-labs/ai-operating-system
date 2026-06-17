@@ -11,6 +11,10 @@ server** for workflow entry points.
 
 ---
 
+**Recruiter / hiring manager walkthrough:** [docs/SHOWCASE.md](docs/SHOWCASE.md) — use cases, domain walkthroughs with live curl examples, and the engineering decisions behind the system.
+
+---
+
 ## What this demonstrates
 
 | Capability | Implementation |
