@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +17,7 @@ DEFAULT_ONE_ON_ONE_OS_EVALS_PATH = (
     / "one_on_one_os"
     / "meeting_brief_cases.json"
 )
+DEFAULT_ONE_ON_ONE_OS_EVAL_DATASET = "one-on-one-os-brief"
 
 
 class MinimumOneOnOneSectionCounts(BaseModel):
@@ -204,6 +207,80 @@ ONE_ON_ONE_OS_CHROMA_EVALUATORS = [
 ]
 
 
+@contextmanager
+def _langsmith_tracing_disabled():
+    """Temporarily disable workflow tracing for fully local eval runs."""
+    previous_value = os.environ.get("LANGSMITH_TRACING")
+    os.environ["LANGSMITH_TRACING"] = "false"
+    try:
+        yield
+    finally:
+        if previous_value is None:
+            os.environ.pop("LANGSMITH_TRACING", None)
+        else:
+            os.environ["LANGSMITH_TRACING"] = previous_value
+
+
+def sync_langsmith_one_on_one_os_dataset(
+    *,
+    client=None,
+    cases: list[OneOnOneBriefEvalCase] | None = None,
+    dataset_name: str = DEFAULT_ONE_ON_ONE_OS_EVAL_DATASET,
+):
+    """Replace the LangSmith dataset with the checked-in One-on-One OS cases."""
+    from langsmith import Client
+
+    langsmith_client = client or Client()
+    eval_cases = cases or load_one_on_one_os_eval_cases()
+    try:
+        langsmith_client.delete_dataset(dataset_name=dataset_name)
+    except Exception:
+        pass
+
+    dataset = langsmith_client.create_dataset(
+        dataset_name,
+        description="Checked-in One-on-One OS brief evaluation cases.",
+    )
+    langsmith_client.create_examples(
+        dataset_id=dataset.id,
+        examples=[
+            {
+                "inputs": case.inputs.model_dump(),
+                "outputs": case.reference_outputs.model_dump(),
+                "metadata": {"case_id": case.id, "description": case.description},
+            }
+            for case in eval_cases
+        ],
+    )
+    return dataset
+
+
+def run_langsmith_one_on_one_os_evaluations(
+    *,
+    cases: list[OneOnOneBriefEvalCase] | None = None,
+    upload_results: bool = True,
+    experiment_prefix: str = "one-on-one-os-brief",
+):
+    """Run the checked-in One-on-One OS evaluation cases through LangSmith when configured."""
+    from langsmith import Client, evaluate
+
+    client = Client()
+    dataset = sync_langsmith_one_on_one_os_dataset(client=client, cases=cases)
+    return evaluate(
+        run_one_on_one_os_eval_target,
+        data=dataset,
+        evaluators=ONE_ON_ONE_OS_EVALUATORS,
+        experiment_prefix=experiment_prefix,
+        metadata={
+            "workflow": "one_on_one_os.brief",
+            "dataset_name": DEFAULT_ONE_ON_ONE_OS_EVAL_DATASET,
+        },
+        max_concurrency=1,
+        upload_results=upload_results,
+        client=client,
+    )
+
+
 def run_local_one_on_one_os_evaluations(
     cases: list[OneOnOneBriefEvalCase] | None = None,
     *,
@@ -238,13 +315,16 @@ __all__ = [
     "ONE_ON_ONE_OS_EVALUATORS",
     "OneOnOneBriefEvalCase",
     "OneOnOneBriefEvalReference",
+    "DEFAULT_ONE_ON_ONE_OS_EVAL_DATASET",
     "DEFAULT_ONE_ON_ONE_OS_EVALS_PATH",
     "load_one_on_one_os_eval_cases",
     "run_one_on_one_os_eval_target",
+    "run_langsmith_one_on_one_os_evaluations",
     "run_local_one_on_one_os_evaluations",
     "score_one_on_one_expected_sources",
     "score_one_on_one_grounding",
     "score_one_on_one_section_minimums",
     "score_one_on_one_source_diversity",
     "score_one_on_one_summary_terms",
+    "sync_langsmith_one_on_one_os_dataset",
 ]

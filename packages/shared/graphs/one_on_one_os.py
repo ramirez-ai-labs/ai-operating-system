@@ -5,6 +5,10 @@ from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from packages.shared.observability.langsmith import (
+    get_langsmith_tracing_context,
+    traceable,
+)
 from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.one_on_one_os import OneOnOneRequest, OneOnOneResponse
@@ -23,19 +27,22 @@ class OneOnOneOSState(TypedDict, total=False):
     provider_usage: dict[str, int]
 
 
+@traceable(name="one_on_one_os.run_one_on_one_graph", run_type="chain")
 def run_one_on_one_graph(request: OneOnOneRequest) -> OneOnOneResponse:
     """Execute the One-on-One OS graph and return the public response."""
     graph = _get_one_on_one_graph()
-    final_state = graph.invoke(
-        {
-            "request": request,
-            "used_model": request.use_model,
-            "fallback_attempted": False,
-        }
-    )
+    with get_langsmith_tracing_context():
+        final_state = graph.invoke(
+            {
+                "request": request,
+                "used_model": request.use_model,
+                "fallback_attempted": False,
+            }
+        )
     return final_state["response"]
 
 
+@traceable(name="one_on_one_os.retrieve_evidence", run_type="chain")
 def retrieve_evidence(state: OneOnOneOSState) -> OneOnOneOSState:
     """Collect local evidence One-on-One OS is allowed to use."""
     request = state["request"]
@@ -53,6 +60,7 @@ def retrieve_evidence(state: OneOnOneOSState) -> OneOnOneOSState:
     return {"evidence": evidence}
 
 
+@traceable(name="one_on_one_os.build_response", run_type="chain")
 def build_response(state: OneOnOneOSState) -> OneOnOneOSState:
     """Shape retrieved evidence into the One-on-One OS brief sections."""
     request = state["request"]

@@ -5,6 +5,10 @@ from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from packages.shared.observability.langsmith import (
+    get_langsmith_tracing_context,
+    traceable,
+)
 from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.interview_os import InterviewBriefRequest, InterviewBriefResponse
@@ -23,19 +27,22 @@ class InterviewOSState(TypedDict, total=False):
     provider_usage: dict[str, int]
 
 
+@traceable(name="interview_os.run_interview_brief_graph", run_type="chain")
 def run_interview_brief_graph(request: InterviewBriefRequest) -> InterviewBriefResponse:
     """Execute the Interview OS brief graph and return the public response."""
     graph = _get_interview_brief_graph()
-    final_state = graph.invoke(
-        {
-            "request": request,
-            "used_model": request.use_model,
-            "fallback_attempted": False,
-        }
-    )
+    with get_langsmith_tracing_context():
+        final_state = graph.invoke(
+            {
+                "request": request,
+                "used_model": request.use_model,
+                "fallback_attempted": False,
+            }
+        )
     return final_state["response"]
 
 
+@traceable(name="interview_os.retrieve_evidence", run_type="chain")
 def retrieve_evidence(state: InterviewOSState) -> InterviewOSState:
     """Collect local evidence Interview OS is allowed to use."""
     request = state["request"]
@@ -53,6 +60,7 @@ def retrieve_evidence(state: InterviewOSState) -> InterviewOSState:
     return {"evidence": evidence}
 
 
+@traceable(name="interview_os.build_response", run_type="chain")
 def build_response(state: InterviewOSState) -> InterviewOSState:
     """Shape retrieved evidence into the Interview OS brief sections (deterministic path)."""
     request = state["request"]
