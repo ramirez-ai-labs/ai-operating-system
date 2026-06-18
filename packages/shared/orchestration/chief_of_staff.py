@@ -346,16 +346,16 @@ def _build_trace(
     evidence_sources = list(dict.fromkeys(item.source for item in result.evidence))
     focus_used = request.focus or request.prompt
 
+    usage = getattr(result, "provider_usage", {})
+    cache_read = usage.get("cache_read_input_tokens", 0)
+    cache_creation = usage.get("cache_creation_input_tokens", 0)
+    model_supported = True
+    section_counts = result.section_counts
+
     if workflow == DIRECTOR_WORKFLOW:
         fallback_used = request.use_model and result.summary.startswith(
             DETERMINISTIC_SUMMARY_PREFIX
         )
-        section_counts = {
-            "wins": len(result.wins),
-            "risks": len(result.risks),
-            "next_steps": len(result.next_steps),
-        }
-        model_supported = True
         model_used = request.use_model and not fallback_used
         if model_used:
             provider_used = request.provider
@@ -366,53 +366,11 @@ def _build_trace(
         else:
             provider_used = None
             model_id_used = None
-
-        usage = getattr(result, "provider_usage", {})
-        cache_read = usage.get("cache_read_input_tokens", 0)
-        cache_creation = usage.get("cache_creation_input_tokens", 0)
-    elif workflow == BRAND_WORKFLOW:
-        usage = getattr(result, "provider_usage", {})
+    elif workflow in (BRAND_WORKFLOW, INTERVIEW_WORKFLOW, ONE_ON_ONE_WORKFLOW):
         model_used = bool(usage)
         fallback_used = request.use_model and not model_used
-        section_counts = {
-            "post_outline": len(result.post_outline),
-            "podcast_angles": len(result.podcast_angles),
-            "repo_improvements": len(result.repo_improvements),
-        }
-        model_supported = True
         provider_used = request.provider if model_used else None
         model_id_used = request.claude_model if model_used else None
-        cache_read = usage.get("cache_read_input_tokens", 0)
-        cache_creation = usage.get("cache_creation_input_tokens", 0)
-    elif workflow == INTERVIEW_WORKFLOW:
-        usage = getattr(result, "provider_usage", {})
-        model_used = bool(usage)
-        fallback_used = request.use_model and not model_used
-        section_counts = {
-            "key_questions": len(result.key_questions),
-            "talking_points": len(result.talking_points),
-            "red_flags": len(result.red_flags),
-        }
-        model_supported = True
-        provider_used = request.provider if model_used else None
-        model_id_used = request.claude_model if model_used else None
-        cache_read = usage.get("cache_read_input_tokens", 0)
-        cache_creation = usage.get("cache_creation_input_tokens", 0)
-    elif workflow == ONE_ON_ONE_WORKFLOW:
-        usage = getattr(result, "provider_usage", {})
-        model_used = bool(usage)
-        fallback_used = request.use_model and not model_used
-        section_counts = {
-            "action_items": len(result.action_items),
-            "talking_points": len(result.talking_points),
-            "blockers": len(result.blockers),
-            "kudos": len(result.kudos),
-        }
-        model_supported = True
-        provider_used = request.provider if model_used else None
-        model_id_used = request.claude_model if model_used else None
-        cache_read = usage.get("cache_read_input_tokens", 0)
-        cache_creation = usage.get("cache_creation_input_tokens", 0)
     else:
         raise ValueError(
             f"_build_trace: unrecognised workflow {workflow!r}. "

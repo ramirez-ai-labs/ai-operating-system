@@ -52,3 +52,12 @@ class OneOnOneResponse(BaseModel):
     kudos: list[GroundedItem]
     evidence: list[EvidenceItem]
     provider_usage: dict[str, int] = Field(default_factory=dict)
+
+    @property
+    def section_counts(self) -> dict[str, int]:
+        return {
+            "action_items": len(self.action_items),
+            "talking_points": len(self.talking_points),
+            "blockers": len(self.blockers),
+            "kudos": len(self.kudos),
+        }

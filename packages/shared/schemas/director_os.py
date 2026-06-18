@@ -81,6 +81,14 @@ class WeeklyUpdateResponse(BaseModel):
     # provider internals.
     provider_usage: dict[str, int] = Field(default_factory=dict)
 
+    @property
+    def section_counts(self) -> dict[str, int]:
+        return {
+            "wins": len(self.wins),
+            "risks": len(self.risks),
+            "next_steps": len(self.next_steps),
+        }
+
 
 class WeeklyUpdateDraft(BaseModel):
     """Intermediate structured draft generated before evidence is attached."""
