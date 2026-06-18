@@ -415,6 +415,63 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 17  -  ChromaDB Eval Parity for All 4 Domains + Console Template Extraction
+
+**Objective:** Bring Interview OS and One-on-One OS to full ChromaDB eval parity with Director OS and Brand OS. Extract the 700-line inline HTML from `apps/api/main.py` into a dedicated template file so `main.py` stays thin.
+
+**Maps to:** plan.md Phase 8 / ChromaDB eval coverage
+
+**Status: Complete  -  shipped in [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84). 224 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Add `INTERVIEW_OS_CHROMA_EVALUATORS`  -  excludes prefix-based scorers calibrated for keyword retrieval | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+| Add `ONE_ON_ONE_OS_CHROMA_EVALUATORS`  -  same exclusion pattern | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+| Create `scripts/run_interview_os_evals_chroma.py`  -  graceful `--ci` skip when index absent | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+| Create `scripts/run_one_on_one_os_evals_chroma.py`  -  graceful `--ci` skip when index absent | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+| Wire both runners into `.github/workflows/ci.yml` with `--ci` flag | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+| Commit `evaluations/interview_os/results_chroma.json`  -  4/4 passed (100%) | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+| Commit `evaluations/one_on_one_os/results_chroma.json`  -  4/4 passed (100%) | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+| Extract `apps/api/main.py` inline HTML into `apps/api/templates/console.html`  -  `main.py` shrinks from 820 to 125 lines | Done | [#84](https://github.com/ramirez-ai-labs/ai-operating-system/pull/84) |
+
+---
+
+## Sprint 18  -  LangGraph + LangSmith Observability Parity Across All 4 Domains
+
+**Objective:** Add `@traceable` instrumentation and LangSmith evaluation integration to Brand OS, Interview OS, and One-on-One OS, matching the Director OS pattern. All four eval scripts gain a `--langsmith` flag for on-demand cloud-backed evaluation runs.
+
+**Maps to:** plan.md Phase 3 (LangSmith tracing)  -  extended to all domains
+
+**Status: Complete  -  shipped in [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85). 224 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Add `@traceable` decorators to Brand OS graph entry point and all internal nodes | Done | [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85) |
+| Add `@traceable` decorators to Interview OS graph entry point and all internal nodes | Done | [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85) |
+| Add `@traceable` decorators to One-on-One OS graph entry point and all internal nodes | Done | [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85) |
+| Add `_langsmith_tracing_disabled()`, `sync_langsmith_brand_os_dataset()`, `run_langsmith_brand_os_evaluations()` to Brand OS eval module | Done | [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85) |
+| Add equivalent LangSmith functions to Interview OS and One-on-One OS eval modules | Done | [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85) |
+| Add `--langsmith` flag to `run_brand_os_evals.py`, `run_interview_os_evals.py`, `run_one_on_one_os_evals.py` | Done | [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85) |
+| Wrap `graph.invoke()` in all three domains with `get_langsmith_tracing_context()` | Done | [#85](https://github.com/ramirez-ai-labs/ai-operating-system/pull/85) |
+
+---
+
+## Sprint 19  -  Post-Sprint-18 Hardening
+
+**Objective:** Fix three correctness issues surfaced in post-Sprint-18 code review: `_langsmith_tracing_disabled` not wired in 3 domains, `_build_trace` `else` catch-all silently swallowing future domains, and `console.html` blocking `uvicorn --reload`.
+
+**Maps to:** plan.md Phase 7 (hardening)
+
+**Status: Complete  -  shipped in [#90](https://github.com/ramirez-ai-labs/ai-operating-system/pull/90). 224 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Wire `_langsmith_tracing_disabled()` into Brand OS, Interview OS, and One-on-One OS local eval loops  -  matches Director OS pattern | Done | [#90](https://github.com/ramirez-ai-labs/ai-operating-system/pull/90) |
+| Replace `_build_trace` `else` catch-all with explicit `elif workflow == ONE_ON_ONE_WORKFLOW:` + `ValueError` fallback  -  forces an explicit branch for every new domain | Done | [#90](https://github.com/ramirez-ai-labs/ai-operating-system/pull/90) |
+| Switch `console.html` from import-time read to lazy per-request read  -  fixes `uvicorn --reload` requiring a manual server restart after HTML changes | Done | [#90](https://github.com/ramirez-ai-labs/ai-operating-system/pull/90) |
+
+---
+
 ## Coordination notes
 
 - Sprint 1 is complete. Live Claude eval results committed in PR #56  -  3/3 cases, 100% signal and safety. All five JD requirements are satisfied in the repo.
@@ -431,3 +488,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 13 is complete (PR #75, 2026-06-13). One-on-One OS fourth workflow domain shipped (schemas, graph, provider, workflow, route, routing, data, evals, tests, MCP tool). Multiagent CI gate wired for `multiagent_cases.json`. All four domains have full eval runners in CI and a Claude-backed synthesis path. 213 tests passing.
 - Sprint 14 is complete (PR #78, 2026-06-14). `required_summary_terms` recalibrated across three eval case files for cross-path stability. Live Claude eval results committed for Director OS (4/4), Interview OS (4/4), and One-on-One OS (4/4)  -  all 100%. v1.1.0 tagged.
 - Sprint 15 is complete (PR #80, 2026-06-15). Brand OS Claude provider path shipped: `ClaudeBrandContentDraftProvider`, `use_model` schema fields, conditional graph edge, `BRAND_OS_CLAUDE_EVALUATORS` (excludes prefix-purity scorer, which tests deterministic routing only), eval runner. Live Claude evals: 7/7 passed (100%). All four domains now have full Claude provider parity and committed eval results. 216 tests passing. v1.2.0 tagged.
+- Sprint 16 is complete (PR #83, 2026-06-15). ChromaDB source path mismatch fixed (`Path(...).name` now matches `local_files.py` format). `BRAND_OS_CHROMA_EVALUATORS` added. Live chroma eval results committed for Director OS (7/7) and Brand OS (7/7)  -  all 100%. 224 tests passing.
+- Sprint 17 is complete (PR #84, 2026-06-17). ChromaDB eval parity extended to Interview OS (4/4) and One-on-One OS (4/4). All four domains now have full chroma eval coverage and committed live results. Console HTML extracted from `main.py` into `apps/api/templates/console.html`  -  `main.py` shrinks from 820 to 125 lines. 224 tests passing.
+- Sprint 18 is complete (PR #85, 2026-06-17). LangGraph `@traceable` instrumentation and LangSmith eval integration added to all four domains. Brand OS, Interview OS, and One-on-One OS eval scripts now support `--langsmith` for on-demand cloud-backed runs. Full observability parity across the portfolio. 224 tests passing.
+- Sprint 19 is complete (PR #90, 2026-06-17). Three post-Sprint-18 correctness fixes: `_langsmith_tracing_disabled` wired in 3 domains, `_build_trace` catch-all replaced with explicit `elif` + `ValueError` guard, `console.html` switched to lazy per-request load. 224 tests passing.

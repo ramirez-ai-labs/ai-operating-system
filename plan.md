@@ -467,20 +467,37 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–15 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, committed live eval results (100% pass rate each), and CI eval gates. Sprint 16 (ChromaDB eval coverage) is in progress. 224 tests passing.
+Sprints 1–19 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, committed live eval results (100% pass rate each), and CI eval gates. 224 tests passing.
 
-**Sprint 15  -  Brand OS Claude provider path + v1.2.0 tag (complete, PR #80):**
-Added `ClaudeBrandContentDraftProvider` with forced tool use and citation grounding. Added `BRAND_OS_CLAUDE_EVALUATORS` (excludes prefix-purity scorer, which tests deterministic routing behavior not applicable to Claude synthesis). Committed `evaluations/brand_os/results_claude.json`  -  7/7 passed (100%). Cut `v1.2.0` release tag  -  first milestone where all four domains have live Claude results.
+**Sprint 16  -  ChromaDB eval coverage (complete, PR #83):**
+Added `is_index_ready()` to `chroma.py`, chroma eval runners for Director OS and Brand OS, CI gates, and live results (7/7 each).
 
-**Sprint 16  -  ChromaDB eval coverage (in progress):**
-Added `is_index_ready()` to `chroma.py`, chroma eval runners for Director OS and Brand OS, 8 integration tests, and CI gates. Live eval results pending (requires Ollama + ingest run).
+**Sprint 17  -  ChromaDB eval parity for all 4 domains (complete, PR #84):**
+Extended chroma eval coverage to Interview OS (4/4) and One-on-One OS (4/4). Extracted console HTML from `main.py` into `apps/api/templates/console.html`  -  `main.py` shrinks from 820 to 125 lines.
+
+**Sprint 18  -  LangSmith observability parity (complete, PR #85):**
+`@traceable` instrumentation and LangSmith eval integration added to all four domains. All eval scripts now support `--langsmith` for on-demand cloud-backed runs.
+
+**Sprint 19  -  Hardening (complete, PR #90):**
+`_langsmith_tracing_disabled` wired in 3 domains, `_build_trace` catch-all replaced with explicit `ValueError` guard per domain, `console.html` switched to lazy per-request load.
+
+**Sprint 20  -  Debt paydown (recommended next):**
+
+| Item | File | Why now |
+|---|---|---|
+| Extract `_parse_grounded_items` + `_GROUNDED_ITEM_SCHEMA` to `packages/shared/providers/grounding.py` | 5 provider files | Same grounding logic duplicated 5 ways  -  one schema change must be applied everywhere or domains silently diverge |
+| Fix ghost token tracking  -  capture `provider.get_last_usage()` before internal fallback in `_build_model_draft` | `packages/shared/graphs/director_os.py` | Claude API calls that trigger the internal ValueError catch burn tokens with no trace visibility |
+| Fix `trace["total_input_tokens"]` not flushed on exhausted-round path | `packages/shared/mcp/orchestrator_integration.py` | Token accounting discrepancy between `OrchestratedResponse.total_tokens` and `response.trace` |
+| Add consecutive-empty-response circuit breaker in orchestration loop | `packages/shared/mcp/orchestrator_integration.py` | A transient content-filter event burns all 5 rounds before returning `success=False` |
+| Move `section_counts` to domain response schemas | `packages/shared/schemas/` + `chief_of_staff.py` | `_build_trace` currently reaches into domain field names  -  a rename breaks the trace silently |
+| Promote `competing_prefixes` to module-level constant | `packages/shared/graphs/director_os.py` | Dict reconstructed 3 x N times per request; zero-line risk change |
 
 **What's next  -  Phase 8:**
 
 | Candidate | Value | Effort |
 |---|---|---|
-| Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS | Medium |
-| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal | High |
+| Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS and the shared graph infrastructure | Medium |
+| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal; strongest portfolio signal for Director/Platform Engineering roles | High |
 
 Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
 
