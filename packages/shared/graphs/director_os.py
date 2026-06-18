@@ -202,12 +202,13 @@ def _build_model_draft(
     provider = _build_provider(request)
     try:
         draft = provider.generate_weekly_update(request.focus, evidence)
+        usage = provider.get_last_usage()
         _validate_model_draft(draft)
-        return draft, provider.get_last_usage()
+        return draft, usage
     except ValueError:
         if not request.fallback_to_deterministic:
             raise
-    return _build_deterministic_draft(request.focus, evidence), {}
+    return _build_deterministic_draft(request.focus, evidence), provider.get_last_usage()
 
 
 def _build_summary(focus: str | None, evidence: list[EvidenceItem]) -> str:
