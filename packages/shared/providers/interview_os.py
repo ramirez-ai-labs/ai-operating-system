@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
-from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+from packages.shared.schemas.director_os import EvidenceItem
 from packages.shared.schemas.interview_os import InterviewBriefResponse
 
 _TOOL_NAME = "generate_interview_brief"

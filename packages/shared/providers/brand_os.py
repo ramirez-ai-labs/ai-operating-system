@@ -4,7 +4,7 @@ import os
 
 from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
 from packages.shared.schemas.brand_os import BrandContentDraftResponse
-from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+from packages.shared.schemas.director_os import EvidenceItem
 
 _TOOL_NAME = "generate_brand_content_draft"
 

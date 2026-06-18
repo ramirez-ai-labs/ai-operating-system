@@ -5,7 +5,7 @@ from urllib import error, request
 
 from packages.shared.providers.base import WeeklyUpdateProvider
 from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
-from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateDraft
+from packages.shared.schemas.director_os import EvidenceItem, WeeklyUpdateDraft
 
 
 class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
