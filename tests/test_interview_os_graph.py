@@ -242,3 +242,36 @@ def test_interview_os_keyword_routing() -> None:
         )
     )
     assert response.selected_workflow == "interview_os.brief"
+
+
+def test_interview_os_non_claude_provider_falls_back_with_fallback_enabled() -> None:
+    """provider='ollama' + fallback_to_deterministic=True must produce a deterministic result."""
+    request = InterviewBriefRequest(
+        data_path=DATA_PATH,
+        focus="interview questions",
+        use_model=True,
+        provider="ollama",
+        fallback_to_deterministic=True,
+        max_documents=5,
+    )
+    response = build_interview_brief(request)
+    assert response.candidate_summary
+    assert response.evidence
+
+
+def test_interview_os_non_claude_provider_raises_when_fallback_disabled() -> None:
+    """provider='ollama' + fallback_to_deterministic=False must surface an actionable error."""
+    request = InterviewBriefRequest(
+        data_path=DATA_PATH,
+        focus="interview questions",
+        use_model=True,
+        provider="ollama",
+        fallback_to_deterministic=False,
+        max_documents=5,
+    )
+    try:
+        build_interview_brief(request)
+    except ValueError as exc:
+        assert "fallback_to_deterministic" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError when non-Claude provider and fallback disabled.")

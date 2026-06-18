@@ -120,8 +120,10 @@ def _build_provider(request: OneOnOneRequest):
     """Select the synthesis provider. Patchable in tests and evals."""
     if request.provider != "claude":
         raise ValueError(
-            f"One-on-One OS model synthesis requires provider='claude'. "
-            f"Got: {request.provider!r}. Ollama synthesis is not available for One-on-One OS."
+            "One-on-One OS model synthesis only supports provider='claude' "
+            f"(requires ANTHROPIC_API_KEY). Got: {request.provider!r}. "
+            "Set use_model=False for deterministic synthesis, or keep "
+            "fallback_to_deterministic=True (the default) to fall back automatically."
         )
     from packages.shared.providers.one_on_one_os import ClaudeOneOnOneProvider
     return ClaudeOneOnOneProvider(model=request.claude_model)

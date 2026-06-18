@@ -120,8 +120,10 @@ def _build_provider(request: InterviewBriefRequest):
     """Select the synthesis provider. Patchable in tests and evals."""
     if request.provider != "claude":
         raise ValueError(
-            f"Interview OS model synthesis requires provider='claude'. "
-            f"Got: {request.provider!r}. Ollama synthesis is not available for Interview OS."
+            "Interview OS model synthesis only supports provider='claude' "
+            f"(requires ANTHROPIC_API_KEY). Got: {request.provider!r}. "
+            "Set use_model=False for deterministic synthesis, or keep "
+            "fallback_to_deterministic=True (the default) to fall back automatically."
         )
     from packages.shared.providers.interview_os import ClaudeInterviewBriefProvider
     return ClaudeInterviewBriefProvider(model=request.claude_model)
