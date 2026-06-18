@@ -215,3 +215,36 @@ def test_one_on_one_os_keyword_routing() -> None:
         )
     )
     assert response.selected_workflow == "one_on_one_os.brief"
+
+
+def test_one_on_one_os_non_claude_provider_falls_back_with_fallback_enabled() -> None:
+    """provider='ollama' + fallback_to_deterministic=True must produce a deterministic result."""
+    request = OneOnOneRequest(
+        data_path=DATA_PATH,
+        focus="action items",
+        use_model=True,
+        provider="ollama",
+        fallback_to_deterministic=True,
+        max_documents=5,
+    )
+    response = build_meeting_brief(request)
+    assert response.meeting_summary
+    assert response.evidence
+
+
+def test_one_on_one_os_non_claude_provider_raises_when_fallback_disabled() -> None:
+    """provider='ollama' + fallback_to_deterministic=False must surface an actionable error."""
+    request = OneOnOneRequest(
+        data_path=DATA_PATH,
+        focus="action items",
+        use_model=True,
+        provider="ollama",
+        fallback_to_deterministic=False,
+        max_documents=5,
+    )
+    try:
+        build_meeting_brief(request)
+    except ValueError as exc:
+        assert "fallback_to_deterministic" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError when non-Claude provider and fallback disabled.")

@@ -122,8 +122,10 @@ def _build_provider(request: BrandContentDraftRequest):
     """Select the synthesis provider. Patchable in tests and evals."""
     if request.provider != "claude":
         raise ValueError(
-            f"Brand OS model synthesis requires provider='claude'. "
-            f"Got: {request.provider!r}. Ollama synthesis is not available for Brand OS."
+            "Brand OS model synthesis only supports provider='claude' "
+            f"(requires ANTHROPIC_API_KEY). Got: {request.provider!r}. "
+            "Set use_model=False for deterministic synthesis, or keep "
+            "fallback_to_deterministic=True (the default) to fall back automatically."
         )
     from packages.shared.providers.brand_os import ClaudeBrandContentDraftProvider
 
