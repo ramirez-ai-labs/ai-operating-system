@@ -305,3 +305,65 @@ def test_brand_os_graph_raises_when_fallback_disabled_and_model_fails(monkeypatc
         assert "anthropic_api_key" in str(exc).lower()
     else:
         raise AssertionError("Expected ValueError when fallback is disabled and model fails.")
+
+
+def test_brand_os_non_claude_provider_falls_back_with_fallback_enabled(monkeypatch) -> None:
+    """provider='ollama' + fallback_to_deterministic=True must produce a deterministic result."""
+    from packages.shared.graphs import brand_os as graph_module
+
+    monkeypatch.setattr(
+        graph_module,
+        "retrieve_relevant_documents",
+        lambda *, base_path, query, limit: [
+            EvidenceItem(
+                source="brand_week_x.md",
+                line_number=3,
+                title="Brand Week X",
+                excerpt="Insight: local-first AI makes grounded content drafts tractable.",
+            )
+        ],
+    )
+
+    result = run_content_draft_graph(
+        BrandContentDraftRequest(
+            data_path="data/local_only/brand",
+            focus="local-first ai",
+            use_model=True,
+            provider="ollama",
+            fallback_to_deterministic=True,
+        )
+    )
+    assert result.insight_summary
+    assert result.evidence
+
+
+def test_brand_os_non_claude_provider_raises_when_fallback_disabled(monkeypatch) -> None:
+    """provider='ollama' + fallback_to_deterministic=False must surface an actionable error."""
+    from packages.shared.graphs import brand_os as graph_module
+
+    monkeypatch.setattr(
+        graph_module,
+        "retrieve_relevant_documents",
+        lambda *, base_path, query, limit: [
+            EvidenceItem(
+                source="brand_week_x.md",
+                line_number=3,
+                title="Brand Week X",
+                excerpt="Insight: local-first AI makes grounded content drafts tractable.",
+            )
+        ],
+    )
+
+    try:
+        run_content_draft_graph(
+            BrandContentDraftRequest(
+                data_path="data/local_only/brand",
+                use_model=True,
+                provider="ollama",
+                fallback_to_deterministic=False,
+            )
+        )
+    except ValueError as exc:
+        assert "claude" in str(exc).lower()
+    else:
+        raise AssertionError("Expected ValueError when non-Claude provider and fallback disabled.")

@@ -49,14 +49,21 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 | Chief of Staff routing | `packages/shared/orchestration/chief_of_staff.py` |
 | Director OS graph | `packages/shared/graphs/director_os.py` |
 | Brand OS graph | `packages/shared/graphs/brand_os.py` |
-| Claude provider | `packages/shared/providers/claude.py` |
-| Ollama provider | `packages/shared/providers/ollama.py` |
+| Interview OS graph | `packages/shared/graphs/interview_os.py` |
+| One-on-One OS graph | `packages/shared/graphs/one_on_one_os.py` |
+| Claude provider (Director OS) | `packages/shared/providers/claude.py` |
+| Ollama provider (Director OS) | `packages/shared/providers/ollama.py` |
 | Provider interface | `packages/shared/providers/base.py` |
-| Provider factory | `_build_provider()` in `packages/shared/graphs/director_os.py` |
+| Provider factory | `_build_provider()` in each domain graph |
 | Retrieval | `packages/shared/retrieval/local_files.py` |
-| Validation | `packages/shared/validation/weekly_update.py` |
+| Validation (Director OS) | `packages/shared/validation/weekly_update.py` |
+| Validation (Brand OS) | `packages/shared/validation/brand_os.py` |
+| Validation (Interview OS) | `packages/shared/validation/interview_os.py` |
+| Validation (One-on-One OS) | `packages/shared/validation/one_on_one_os.py` |
 | Director OS schemas | `packages/shared/schemas/director_os.py` |
 | Brand OS schemas | `packages/shared/schemas/brand_os.py` |
+| Interview OS schemas | `packages/shared/schemas/interview_os.py` |
+| One-on-One OS schemas | `packages/shared/schemas/one_on_one_os.py` |
 | Orchestrator schema | `packages/shared/schemas/orchestrator.py` |
 | Eval cases (Director OS) | `evaluations/director_os/weekly_update_cases.json` |
 | Eval cases (Brand OS) | `evaluations/brand_os/content_draft_cases.json` |
@@ -67,8 +74,9 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 ## Architecture invariants
 
 - Domain providers implement domain-specific interfaces defined in `packages/shared/providers/`. The Director OS `WeeklyUpdateProvider` in `base.py` is the reference pattern. Each domain defines its own provider interface — do not add provider-specific logic outside of the provider files.
-- Provider selection is handled by `_build_provider()` in the Director OS graph. Switching providers is a single field change on the request  -  no workflow logic should branch on provider identity.
-- The API layer (`apps/api/main.py`) stays thin. Workflow logic lives in `director_os/` and `brand_os/` so it can be tested without FastAPI.
+- Provider selection is handled by `_build_provider()` in each domain graph. Switching providers is a single field change on the request  -  no workflow logic should branch on provider identity.
+- **Director OS supports both Claude and Ollama** for model synthesis (`provider='ollama'` or `provider='claude'`). **Brand OS, Interview OS, and One-on-One OS are Claude-only** (`provider='claude'`, requires `ANTHROPIC_API_KEY`). Passing a non-Claude provider to these three domains raises a `ValueError` that is caught by the graph's `build_response` node and falls back to deterministic synthesis when `fallback_to_deterministic=True` (the default). The system is therefore fully runnable without any API keys — set `use_model=False` (the default) or rely on the fallback.
+- The API layer (`apps/api/main.py`) stays thin. Workflow logic lives in the domain graph files so it can be tested without FastAPI.
 - Deterministic fallback must always be available. Any model-assisted path must have a fallback when `fallback_to_deterministic=True`.
 - Evidence grounding is non-negotiable. Every output item must cite a source and line number that appears in the retrieved evidence. Do not relax this in the validator or provider.
 
@@ -87,6 +95,21 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 See `sprints.md` for the active sprint checklist.
 See `plan.md` for the full phased roadmap (Phases 1–7).
 
+## Running evals
+
+Use the unified dispatcher for new work:
+
+```bash
+python scripts/run_evals.py                              # all domains, local
+python scripts/run_evals.py --domain director_os        # one domain
+python scripts/run_evals.py --domain director_os --backend claude
+python scripts/run_evals.py --domain all --backend chroma --ci
+```
+
+The dispatcher auto-discovers domains from `packages/shared/evaluations/` — adding a new domain requires only the evaluations module, not a new script.
+
+The legacy per-domain scripts (`scripts/run_director_os_evals.py` etc.) remain for CI backwards-compatibility.
+
 ## CI
 
 GitHub Actions runs on every PR to `main`:
@@ -94,5 +117,8 @@ GitHub Actions runs on every PR to `main`:
 - `pytest` with coverage
 - `python scripts/run_director_os_evals.py` (local evals, no API key)
 - `python scripts/run_brand_os_evals.py` (local evals, no API key)
+- `python scripts/run_interview_os_evals.py` (local evals, no API key)
+- `python scripts/run_one_on_one_os_evals.py` (local evals, no API key)
+- Chroma evals (all 4 domains, skip gracefully in CI if index absent)
 
 LangSmith-backed evals are on-demand only and not run in CI.

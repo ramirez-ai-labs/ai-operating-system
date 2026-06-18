@@ -138,6 +138,20 @@ def _chroma_retrieve(base_path: str, query: str, limit: int) -> list[EvidenceIte
             "Run: python scripts/ingest_local_data.py"
         )
 
+    # Per-path staleness: the collection may have docs for other data roots
+    # but none for this path if it was never ingested. Detect this before
+    # querying so the operator gets a clear message rather than silent keyword
+    # fallback with no indication the semantic index was bypassed.
+    path_check = collection.get(
+        where={"data_root": str(root)}, limit=1, include=["documents"]
+    )
+    if not path_check["ids"]:
+        raise RuntimeError(
+            f"ChromaDB index has no documents for data path '{root}'. "
+            "This path was not ingested. "
+            "Run: python scripts/ingest_local_data.py"
+        )
+
     # Filter to only the requested data root so Director OS retrieval
     # stays within projects/ and Brand OS retrieval stays within brand/.
     # The data_root stored during ingestion is the resolved absolute path
