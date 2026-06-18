@@ -195,6 +195,51 @@ def test_chroma_falls_back_when_ollama_unreachable(monkeypatch, tmp_path) -> Non
     assert isinstance(results, list)
 
 
+def test_chroma_falls_back_when_path_not_ingested(monkeypatch, tmp_path, caplog) -> None:
+    """
+    When the collection has docs globally but none for the requested data_root,
+    the public function should warn and fall back to keyword retrieval rather
+    than returning empty results silently.
+    """
+    import logging
+
+    fake_chroma_path = tmp_path / "chroma"
+    fake_chroma_path.mkdir()
+    monkeypatch.setattr(
+        "packages.shared.retrieval.chroma.CHROMA_DB_PATH", str(fake_chroma_path)
+    )
+
+    def fake_embed(text, model, url):
+        return [0.1, 0.2, 0.3]
+
+    monkeypatch.setattr("packages.shared.retrieval.chroma._embed", fake_embed)
+
+    mock_chroma = MagicMock()
+    mock_client = MagicMock()
+    mock_collection = MagicMock()
+    mock_collection.count.return_value = 10  # global collection has docs
+    mock_collection.get.return_value = {"ids": []}  # none for this data root
+    mock_client.get_collection.return_value = mock_collection
+    mock_chroma.PersistentClient.return_value = mock_client
+
+    with patch.dict("sys.modules", {"chromadb": mock_chroma}):
+        import importlib
+
+        from packages.shared.retrieval import chroma
+        importlib.reload(chroma)
+
+        with caplog.at_level(logging.WARNING):
+            results = chroma.retrieve_relevant_documents(
+                base_path="data/local_only/brand",
+                query="local-first ai",
+                limit=3,
+            )
+
+    assert isinstance(results, list)
+    warning_text = " ".join(r.message for r in caplog.records).lower()
+    assert "not ingested" in warning_text or "no documents" in warning_text
+
+
 # ---------------------------------------------------------------------------
 # chroma.py — result parsing
 # ---------------------------------------------------------------------------
