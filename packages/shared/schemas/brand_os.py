@@ -47,3 +47,11 @@ class BrandContentDraftResponse(BaseModel):
     repo_improvements: list[GroundedItem]
     evidence: list[EvidenceItem]
     provider_usage: dict[str, int] = Field(default_factory=dict)
+
+    @property
+    def section_counts(self) -> dict[str, int]:
+        return {
+            "post_outline": len(self.post_outline),
+            "podcast_angles": len(self.podcast_angles),
+            "repo_improvements": len(self.repo_improvements),
+        }

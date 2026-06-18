@@ -55,3 +55,11 @@ class InterviewBriefResponse(BaseModel):
     red_flags: list[GroundedItem]
     evidence: list[EvidenceItem]
     provider_usage: dict[str, int] = Field(default_factory=dict)
+
+    @property
+    def section_counts(self) -> dict[str, int]:
+        return {
+            "key_questions": len(self.key_questions),
+            "talking_points": len(self.talking_points),
+            "red_flags": len(self.red_flags),
+        }
