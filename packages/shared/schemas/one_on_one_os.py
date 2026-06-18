@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
-from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+from packages.shared.schemas.base import BaseResponse
+from packages.shared.schemas.director_os import GroundedItem
 
 
 class OneOnOneRequest(BaseModel):
@@ -42,7 +43,7 @@ class OneOnOneRequest(BaseModel):
     )
 
 
-class OneOnOneResponse(BaseModel):
+class OneOnOneResponse(BaseResponse):
     """Grounded 1:1 prep brief returned from One-on-One OS."""
 
     meeting_summary: str
@@ -50,8 +51,7 @@ class OneOnOneResponse(BaseModel):
     talking_points: list[GroundedItem]
     blockers: list[GroundedItem]
     kudos: list[GroundedItem]
-    evidence: list[EvidenceItem]
-    provider_usage: dict[str, int] = Field(default_factory=dict)
+    # evidence and provider_usage are inherited from BaseResponse.
 
     @property
     def section_counts(self) -> dict[str, int]:

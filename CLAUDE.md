@@ -79,8 +79,43 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 - The API layer (`apps/api/main.py`) stays thin. Workflow logic lives in the domain graph files so it can be tested without FastAPI.
 - Deterministic fallback must always be available. Any model-assisted path must have a fallback when `fallback_to_deterministic=True`.
 - Evidence grounding is non-negotiable. Every output item must cite a source and line number that appears in the retrieved evidence. Do not relax this in the validator or provider.
+- All domain response schemas must inherit from `BaseResponse` in `packages/shared/schemas/base.py`. This enforces `evidence: list[EvidenceItem]` and `provider_usage: dict[str, int]` at the Pydantic level and requires a `section_counts` property (`NotImplementedError` at runtime if missing).
 
-## Adding a new workflow
+## Adding a new domain — checklist
+
+Use Interview OS as the canonical reference implementation.
+
+**Files to create (5):**
+
+| File | Template |
+| --- | --- |
+| `packages/shared/schemas/<domain>.py` | `InterviewBriefRequest(BaseModel)`, `InterviewBriefResponse(BaseResponse)` |
+| `packages/shared/graphs/<domain>.py` | `packages/shared/graphs/interview_os.py` |
+| `packages/shared/validation/<domain>.py` | `packages/shared/validation/interview_os.py` |
+| `packages/shared/evaluations/<domain>.py` | `packages/shared/evaluations/interview_os.py` |
+| `evaluations/<domain>/<cases>.json` | `evaluations/interview_os/interview_cases.json` |
+
+**Files to modify (5):**
+
+| File | Change |
+| --- | --- |
+| `packages/shared/schemas/orchestrator.py` | Add response type to `OrchestratorResponse.result` union |
+| `packages/shared/orchestration/chief_of_staff.py` | Add workflow constant, routing keyword, and `_build_trace` branch |
+| `apps/api/main.py` | Register new route |
+| `CLAUDE.md` | Update key file locations table |
+| `.github/workflows/ci.yml` | Add eval runner step |
+
+**Invariants to satisfy:**
+
+- Response schema inherits `BaseResponse` — `evidence`, `provider_usage`, `section_counts` are mandatory.
+- `_build_provider()` in the graph raises `ValueError` for non-Claude providers (Brand/Interview/OneOnOne pattern).
+- `validate_response` node + `route_after_validation` conditional wired in the graph.
+- Deterministic fallback always available (`fallback_to_deterministic=True`).
+- All grounded items cite `source` + `line_number` from the retrieved evidence.
+- Eval cases cover: deterministic path, model path, fallback path, empty-sections rejection.
+- `run_evals.py` auto-discovers the new domain — no script changes needed.
+
+## Adding a new workflow (within an existing domain)
 
 1. Add request/response schemas to `packages/shared/schemas/`
 2. Build the LangGraph state graph in `packages/shared/graphs/`

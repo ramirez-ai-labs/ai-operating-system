@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
-from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+from packages.shared.schemas.base import BaseResponse
+from packages.shared.schemas.director_os import GroundedItem
 
 
 class BrandContentDraftRequest(BaseModel):
@@ -38,15 +39,14 @@ class BrandContentDraftRequest(BaseModel):
     )
 
 
-class BrandContentDraftResponse(BaseModel):
+class BrandContentDraftResponse(BaseResponse):
     """Grounded content draft returned from Brand OS."""
 
     insight_summary: str
     post_outline: list[GroundedItem]
     podcast_angles: list[GroundedItem]
     repo_improvements: list[GroundedItem]
-    evidence: list[EvidenceItem]
-    provider_usage: dict[str, int] = Field(default_factory=dict)
+    # evidence and provider_usage are inherited from BaseResponse.
 
     @property
     def section_counts(self) -> dict[str, int]:
