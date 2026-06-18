@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
-from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+from packages.shared.schemas.base import BaseResponse
+from packages.shared.schemas.director_os import GroundedItem
 
 
 class InterviewBriefRequest(BaseModel):
@@ -46,15 +47,14 @@ class InterviewBriefRequest(BaseModel):
     )
 
 
-class InterviewBriefResponse(BaseModel):
+class InterviewBriefResponse(BaseResponse):
     """Grounded interview prep brief returned from Interview OS."""
 
     candidate_summary: str
     key_questions: list[GroundedItem]
     talking_points: list[GroundedItem]
     red_flags: list[GroundedItem]
-    evidence: list[EvidenceItem]
-    provider_usage: dict[str, int] = Field(default_factory=dict)
+    # evidence and provider_usage are inherited from BaseResponse.
 
     @property
     def section_counts(self) -> dict[str, int]:

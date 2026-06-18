@@ -2,6 +2,27 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from packages.shared.schemas.base import (
+    BaseRequest,
+    BaseResponse,
+    EvidenceItem,
+    GroundedItem,
+)
+
+# Re-exported so all existing callers of
+# `from packages.shared.schemas.director_os import EvidenceItem, GroundedItem`
+# continue to work unchanged.
+__all__ = [
+    "EvidenceItem",
+    "GroundedItem",
+    "BaseRequest",
+    "BaseResponse",
+    "WeeklyUpdateRequest",
+    "WeeklyUpdateResponse",
+    "WeeklyUpdateDraft",
+    "ErrorResponse",
+]
+
 
 class WeeklyUpdateRequest(BaseModel):
     """Input contract for the Phase 1 Director OS workflow."""
@@ -53,33 +74,14 @@ class WeeklyUpdateRequest(BaseModel):
     )
 
 
-class EvidenceItem(BaseModel):
-    """Minimal evidence payload returned from local retrieval."""
-    source: str
-    line_number: int
-    title: str
-    excerpt: str
-
-
-class GroundedItem(BaseModel):
-    """Output item tied to a specific supporting evidence location."""
-    text: str
-    source: str
-    line_number: int
-
-
-class WeeklyUpdateResponse(BaseModel):
+class WeeklyUpdateResponse(BaseResponse):
     """Structured weekly update returned to the operator."""
+
     summary: str
     wins: list[GroundedItem]
     risks: list[GroundedItem]
     next_steps: list[GroundedItem]
-    evidence: list[EvidenceItem]
-    # Populated by the Claude provider when use_model=True and provider="claude".
-    # Carries cache_read_input_tokens and cache_creation_input_tokens so the
-    # orchestration layer can surface them in WorkflowTrace without coupling to
-    # provider internals.
-    provider_usage: dict[str, int] = Field(default_factory=dict)
+    # evidence and provider_usage are inherited from BaseResponse.
 
     @property
     def section_counts(self) -> dict[str, int]:
