@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.interview_os import InterviewBriefResponse
 
@@ -15,15 +16,6 @@ _SYSTEM_PROMPT = (
     "by the evidence."
 )
 
-_GROUNDED_ITEM_SCHEMA: dict[str, object] = {
-    "type": "object",
-    "properties": {
-        "text": {"type": "string"},
-        "source": {"type": "string", "description": "Exact source filename from the evidence."},
-        "line_number": {"type": "integer", "description": "Exact line_number from the evidence."},
-    },
-    "required": ["text", "source", "line_number"],
-}
 
 _TOOL_SCHEMA: dict[str, object] = {
     "name": _TOOL_NAME,
@@ -43,17 +35,17 @@ _TOOL_SCHEMA: dict[str, object] = {
             },
             "key_questions": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Interview questions to ask, cited from evidence.",
             },
             "talking_points": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Topics to cover or highlights to discuss, cited from evidence.",
             },
             "red_flags": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Concerns, gaps, or risks to probe, cited from evidence.",
             },
         },
@@ -124,13 +116,13 @@ class ClaudeInterviewBriefProvider:
 
         return InterviewBriefResponse(
             candidate_summary=parsed.get("candidate_summary", ""),
-            key_questions=_parse_grounded_items(
+            key_questions=parse_grounded_items(
                 parsed.get("key_questions", []), evidence_locations
             ),
-            talking_points=_parse_grounded_items(
+            talking_points=parse_grounded_items(
                 parsed.get("talking_points", []), evidence_locations
             ),
-            red_flags=_parse_grounded_items(parsed.get("red_flags", []), evidence_locations),
+            red_flags=parse_grounded_items(parsed.get("red_flags", []), evidence_locations),
             evidence=evidence,
         )
 
@@ -153,23 +145,3 @@ Evidence:
 {evidence_lines}"""
 
 
-def _parse_grounded_items(
-    items: list[dict[str, object]],
-    evidence_locations: set[tuple[str, int]],
-) -> list[GroundedItem]:
-    grounded: list[GroundedItem] = []
-    for raw in items:
-        if not isinstance(raw, dict):
-            raise ValueError("Claude returned a malformed grounded item.")
-        item = GroundedItem(
-            text=str(raw.get("text", "")),
-            source=str(raw.get("source", "")),
-            line_number=int(raw.get("line_number", 0)),
-        )
-        if (item.source, item.line_number) not in evidence_locations:
-            raise ValueError(
-                f"Claude cited evidence not in the retrieved context: "
-                f"{item.source}:{item.line_number}"
-            )
-        grounded.append(item)
-    return grounded

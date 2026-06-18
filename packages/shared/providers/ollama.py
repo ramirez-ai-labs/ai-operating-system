@@ -4,6 +4,7 @@ import json
 from urllib import error, request
 
 from packages.shared.providers.base import WeeklyUpdateProvider
+from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateDraft
 
 
@@ -34,9 +35,9 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
                 "type": "object",
                 "properties": {
                     "summary": {"type": "string"},
-                    "wins": {"type": "array", "items": _grounded_item_schema()},
-                    "risks": {"type": "array", "items": _grounded_item_schema()},
-                    "next_steps": {"type": "array", "items": _grounded_item_schema()},
+                    "wins": {"type": "array", "items": GROUNDED_ITEM_SCHEMA},
+                    "risks": {"type": "array", "items": GROUNDED_ITEM_SCHEMA},
+                    "next_steps": {"type": "array", "items": GROUNDED_ITEM_SCHEMA},
                 },
                 "required": ["summary", "wins", "risks", "next_steps"],
             },
@@ -72,11 +73,12 @@ class OllamaWeeklyUpdateProvider(WeeklyUpdateProvider):
         except json.JSONDecodeError as exc:
             raise ValueError("Ollama returned invalid JSON for the weekly update draft.") from exc
 
+        evidence_locations = {(item.source, item.line_number) for item in evidence}
         return WeeklyUpdateDraft(
             summary=parsed.get("summary", ""),
-            wins=_parse_grounded_items(parsed.get("wins", []), evidence),
-            risks=_parse_grounded_items(parsed.get("risks", []), evidence),
-            next_steps=_parse_grounded_items(parsed.get("next_steps", []), evidence),
+            wins=parse_grounded_items(parsed.get("wins", []), evidence_locations),
+            risks=parse_grounded_items(parsed.get("risks", []), evidence_locations),
+            next_steps=parse_grounded_items(parsed.get("next_steps", []), evidence_locations),
         )
 
 
@@ -108,38 +110,3 @@ Evidence:
 """.strip()
 
 
-def _grounded_item_schema() -> dict[str, object]:
-    """Describe a grounded output item for Ollama's JSON mode."""
-    return {
-        "type": "object",
-        "properties": {
-            "text": {"type": "string"},
-            "source": {"type": "string"},
-            "line_number": {"type": "integer"},
-        },
-        "required": ["text", "source", "line_number"],
-    }
-
-
-def _parse_grounded_items(
-    items: list[dict[str, object]],
-    evidence: list[EvidenceItem],
-) -> list[GroundedItem]:
-    """Parse model-returned grounded items and reject unknown evidence references."""
-    evidence_locations = {(item.source, item.line_number) for item in evidence}
-    grounded: list[GroundedItem] = []
-
-    for raw_item in items:
-        if not isinstance(raw_item, dict):
-            raise ValueError("Ollama returned malformed grounded items.")
-
-        grounded_item = GroundedItem(
-            text=str(raw_item.get("text", "")),
-            source=str(raw_item.get("source", "")),
-            line_number=int(raw_item.get("line_number", 0)),
-        )
-        if (grounded_item.source, grounded_item.line_number) not in evidence_locations:
-            raise ValueError("Ollama cited evidence that was not part of the retrieved context.")
-        grounded.append(grounded_item)
-
-    return grounded

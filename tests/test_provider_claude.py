@@ -16,8 +16,8 @@ import pytest
 from packages.shared.providers.claude import (
     ClaudeWeeklyUpdateProvider,
     _build_prompt,
-    _parse_grounded_items,
 )
+from packages.shared.providers.grounding import parse_grounded_items
 from packages.shared.schemas.director_os import EvidenceItem
 
 # ---------------------------------------------------------------------------
@@ -162,7 +162,7 @@ def test_raises_on_hallucinated_citation(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_raises_on_malformed_grounded_item(monkeypatch: pytest.MonkeyPatch) -> None:
     evidence_locations = {("notes.md", 1)}
     with pytest.raises(ValueError, match="malformed"):
-        _parse_grounded_items(["not-a-dict"], evidence_locations)  # type: ignore[arg-type]
+        parse_grounded_items(["not-a-dict"], evidence_locations)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.one_on_one_os import OneOnOneResponse
 
@@ -15,15 +16,6 @@ _SYSTEM_PROMPT = (
     "supported by the evidence."
 )
 
-_GROUNDED_ITEM_SCHEMA: dict[str, object] = {
-    "type": "object",
-    "properties": {
-        "text": {"type": "string"},
-        "source": {"type": "string", "description": "Exact source filename from the evidence."},
-        "line_number": {"type": "integer", "description": "Exact line_number from the evidence."},
-    },
-    "required": ["text", "source", "line_number"],
-}
 
 _TOOL_SCHEMA: dict[str, object] = {
     "name": _TOOL_NAME,
@@ -43,22 +35,22 @@ _TOOL_SCHEMA: dict[str, object] = {
             },
             "action_items": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Committed actions from previous or current 1:1, cited from notes.",
             },
             "talking_points": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Topics to raise in the meeting, cited from notes.",
             },
             "blockers": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Things blocking the direct report, cited from notes.",
             },
             "kudos": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Recognition or positive callouts, cited from notes.",
             },
         },
@@ -129,14 +121,14 @@ class ClaudeOneOnOneProvider:
 
         return OneOnOneResponse(
             meeting_summary=parsed.get("meeting_summary", ""),
-            action_items=_parse_grounded_items(
+            action_items=parse_grounded_items(
                 parsed.get("action_items", []), evidence_locations
             ),
-            talking_points=_parse_grounded_items(
+            talking_points=parse_grounded_items(
                 parsed.get("talking_points", []), evidence_locations
             ),
-            blockers=_parse_grounded_items(parsed.get("blockers", []), evidence_locations),
-            kudos=_parse_grounded_items(parsed.get("kudos", []), evidence_locations),
+            blockers=parse_grounded_items(parsed.get("blockers", []), evidence_locations),
+            kudos=parse_grounded_items(parsed.get("kudos", []), evidence_locations),
             evidence=evidence,
         )
 
@@ -159,23 +151,3 @@ Evidence:
 {evidence_lines}"""
 
 
-def _parse_grounded_items(
-    items: list[dict[str, object]],
-    evidence_locations: set[tuple[str, int]],
-) -> list[GroundedItem]:
-    grounded: list[GroundedItem] = []
-    for raw in items:
-        if not isinstance(raw, dict):
-            raise ValueError("Claude returned a malformed grounded item.")
-        item = GroundedItem(
-            text=str(raw.get("text", "")),
-            source=str(raw.get("source", "")),
-            line_number=int(raw.get("line_number", 0)),
-        )
-        if (item.source, item.line_number) not in evidence_locations:
-            raise ValueError(
-                f"Claude cited evidence not in the retrieved context: "
-                f"{item.source}:{item.line_number}"
-            )
-        grounded.append(item)
-    return grounded

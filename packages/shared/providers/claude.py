@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 
 from packages.shared.providers.base import WeeklyUpdateProvider
+from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateDraft
 
 _TOOL_NAME = "generate_weekly_update"
@@ -18,15 +19,6 @@ _SYSTEM_PROMPT = (
     "Do not invent wins, risks, or next steps that are not directly supported by the evidence."
 )
 
-_GROUNDED_ITEM_SCHEMA: dict[str, object] = {
-    "type": "object",
-    "properties": {
-        "text": {"type": "string"},
-        "source": {"type": "string", "description": "Exact source filename from the evidence."},
-        "line_number": {"type": "integer", "description": "Exact line_number from the evidence."},
-    },
-    "required": ["text", "source", "line_number"],
-}
 
 _TOOL_SCHEMA: dict[str, object] = {
     "name": _TOOL_NAME,
@@ -44,17 +36,17 @@ _TOOL_SCHEMA: dict[str, object] = {
             },
             "wins": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Completed work or positive outcomes cited from evidence.",
             },
             "risks": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Blockers, delays, or open concerns cited from evidence.",
             },
             "next_steps": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Planned actions or follow-ups cited from evidence.",
             },
         },
@@ -131,9 +123,9 @@ class ClaudeWeeklyUpdateProvider(WeeklyUpdateProvider):
 
         return WeeklyUpdateDraft(
             summary=parsed.get("summary", ""),
-            wins=_parse_grounded_items(parsed.get("wins", []), evidence_locations),
-            risks=_parse_grounded_items(parsed.get("risks", []), evidence_locations),
-            next_steps=_parse_grounded_items(parsed.get("next_steps", []), evidence_locations),
+            wins=parse_grounded_items(parsed.get("wins", []), evidence_locations),
+            risks=parse_grounded_items(parsed.get("risks", []), evidence_locations),
+            next_steps=parse_grounded_items(parsed.get("next_steps", []), evidence_locations),
         )
 
 
@@ -156,23 +148,3 @@ Evidence:
 {evidence_lines}"""
 
 
-def _parse_grounded_items(
-    items: list[dict[str, object]],
-    evidence_locations: set[tuple[str, int]],
-) -> list[GroundedItem]:
-    grounded: list[GroundedItem] = []
-    for raw in items:
-        if not isinstance(raw, dict):
-            raise ValueError("Claude returned a malformed grounded item.")
-        item = GroundedItem(
-            text=str(raw.get("text", "")),
-            source=str(raw.get("source", "")),
-            line_number=int(raw.get("line_number", 0)),
-        )
-        if (item.source, item.line_number) not in evidence_locations:
-            raise ValueError(
-                f"Claude cited evidence not in the retrieved context: "
-                f"{item.source}:{item.line_number}"
-            )
-        grounded.append(item)
-    return grounded
