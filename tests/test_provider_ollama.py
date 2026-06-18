@@ -129,7 +129,7 @@ def test_raises_on_citation_outside_evidence() -> None:
         wins=[{"text": "ghost win", "source": "ghost.md", "line_number": 99}]
     )
     with patch(_PATCH, return_value=_mock_urlopen(body)):
-        with pytest.raises(ValueError, match="not part of the retrieved context"):
+        with pytest.raises(ValueError, match="not in the retrieved context"):
             _provider().generate_weekly_update(focus=None, evidence=[_make_evidence()])
 
 

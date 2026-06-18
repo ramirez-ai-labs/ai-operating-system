@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 
+from packages.shared.providers.grounding import GROUNDED_ITEM_SCHEMA, parse_grounded_items
 from packages.shared.schemas.brand_os import BrandContentDraftResponse
-from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+from packages.shared.schemas.director_os import EvidenceItem
 
 _TOOL_NAME = "generate_brand_content_draft"
 
@@ -15,15 +16,6 @@ _SYSTEM_PROMPT = (
     "supported by the evidence."
 )
 
-_GROUNDED_ITEM_SCHEMA: dict[str, object] = {
-    "type": "object",
-    "properties": {
-        "text": {"type": "string"},
-        "source": {"type": "string", "description": "Exact source filename from the evidence."},
-        "line_number": {"type": "integer", "description": "Exact line_number from the evidence."},
-    },
-    "required": ["text", "source", "line_number"],
-}
 
 _TOOL_SCHEMA: dict[str, object] = {
     "name": _TOOL_NAME,
@@ -43,17 +35,17 @@ _TOOL_SCHEMA: dict[str, object] = {
             },
             "post_outline": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Post or article outline items, cited from evidence.",
             },
             "podcast_angles": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Podcast discussion angles or themes, cited from evidence.",
             },
             "repo_improvements": {
                 "type": "array",
-                "items": _GROUNDED_ITEM_SCHEMA,
+                "items": GROUNDED_ITEM_SCHEMA,
                 "description": "Repository or workflow improvement ideas, cited from evidence.",
             },
         },
@@ -126,13 +118,13 @@ class ClaudeBrandContentDraftProvider:
 
         return BrandContentDraftResponse(
             insight_summary=parsed.get("insight_summary", ""),
-            post_outline=_parse_grounded_items(
+            post_outline=parse_grounded_items(
                 parsed.get("post_outline", []), evidence_locations
             ),
-            podcast_angles=_parse_grounded_items(
+            podcast_angles=parse_grounded_items(
                 parsed.get("podcast_angles", []), evidence_locations
             ),
-            repo_improvements=_parse_grounded_items(
+            repo_improvements=parse_grounded_items(
                 parsed.get("repo_improvements", []), evidence_locations
             ),
             evidence=evidence,
@@ -157,23 +149,3 @@ Evidence:
 {evidence_lines}"""
 
 
-def _parse_grounded_items(
-    items: list[dict[str, object]],
-    evidence_locations: set[tuple[str, int]],
-) -> list[GroundedItem]:
-    grounded: list[GroundedItem] = []
-    for raw in items:
-        if not isinstance(raw, dict):
-            raise ValueError("Claude returned a malformed grounded item.")
-        item = GroundedItem(
-            text=str(raw.get("text", "")),
-            source=str(raw.get("source", "")),
-            line_number=int(raw.get("line_number", 0)),
-        )
-        if (item.source, item.line_number) not in evidence_locations:
-            raise ValueError(
-                f"Claude cited evidence not in the retrieved context: "
-                f"{item.source}:{item.line_number}"
-            )
-        grounded.append(item)
-    return grounded
