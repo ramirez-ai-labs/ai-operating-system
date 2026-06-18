@@ -252,6 +252,13 @@ def _collect_sentences(
     return results
 
 
+_COMPETING_PREFIXES: dict[str, str] = {
+    "wins": "win:",
+    "risks": "risk:",
+    "next_steps": "next:",
+}
+
+
 def _matches_section(
     *,
     excerpt: str,
@@ -265,12 +272,7 @@ def _matches_section(
     if lowered_excerpt.startswith(normalized_prefix):
         return True
 
-    competing_prefixes = {
-        "wins": "win:",
-        "risks": "risk:",
-        "next_steps": "next:",
-    }
-    for competing_section, competing_prefix in competing_prefixes.items():
+    for competing_section, competing_prefix in _COMPETING_PREFIXES.items():
         if competing_section != section_name and lowered_excerpt.startswith(competing_prefix):
             return False
 
