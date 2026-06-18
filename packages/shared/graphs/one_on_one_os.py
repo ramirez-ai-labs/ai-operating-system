@@ -12,6 +12,7 @@ from packages.shared.observability.langsmith import (
 from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.one_on_one_os import OneOnOneRequest, OneOnOneResponse
+from packages.shared.validation.one_on_one_os import validate_meeting_brief
 
 logger = logging.getLogger(__name__)
 
@@ -78,16 +79,29 @@ def build_response(state: OneOnOneOSState) -> OneOnOneOSState:
                 "One-on-One OS model synthesis failed — falling back to deterministic path: %s",
                 exc,
             )
-            return {"fallback_attempted": True}
 
     response = _build_deterministic_response(request, evidence)
     return {"response": response, "used_model": False}
 
 
-def route_after_build(
+@traceable(name="one_on_one_os.validate_response", run_type="chain")
+def validate_response(state: OneOnOneOSState) -> OneOnOneOSState:
+    """Validate the current response and trigger deterministic fallback when allowed."""
+    response = state["response"]
+    request = state["request"]
+    try:
+        validated = validate_meeting_brief(response)
+        return {"response": validated}
+    except ValueError:
+        if not state.get("used_model", False) or not request.fallback_to_deterministic:
+            raise
+        return {"fallback_attempted": True}
+
+
+def route_after_validation(
     state: OneOnOneOSState,
 ) -> Literal["build_response", END]:
-    """Retry with deterministic path if model synthesis failed and fallback is allowed."""
+    """Retry with deterministic path if model output failed validation."""
     if state.get("fallback_attempted", False) and state.get("used_model", False):
         return "build_response"
     return END
@@ -189,11 +203,13 @@ def _build_one_on_one_graph():
     graph = StateGraph(OneOnOneOSState)
     graph.add_node("retrieve_evidence", retrieve_evidence)
     graph.add_node("build_response", build_response)
+    graph.add_node("validate_response", validate_response)
     graph.add_edge(START, "retrieve_evidence")
     graph.add_edge("retrieve_evidence", "build_response")
+    graph.add_edge("build_response", "validate_response")
     graph.add_conditional_edges(
-        "build_response",
-        route_after_build,
+        "validate_response",
+        route_after_validation,
         {
             "build_response": "build_response",
             END: END,

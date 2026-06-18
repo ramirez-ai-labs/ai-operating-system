@@ -12,6 +12,7 @@ from packages.shared.observability.langsmith import (
 from packages.shared.retrieval.backend import retrieve_relevant_documents
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
 from packages.shared.schemas.interview_os import InterviewBriefRequest, InterviewBriefResponse
+from packages.shared.validation.interview_os import validate_interview_brief
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def retrieve_evidence(state: InterviewOSState) -> InterviewOSState:
 
 @traceable(name="interview_os.build_response", run_type="chain")
 def build_response(state: InterviewOSState) -> InterviewOSState:
-    """Shape retrieved evidence into the Interview OS brief sections (deterministic path)."""
+    """Shape retrieved evidence into the Interview OS brief sections."""
     request = state["request"]
     evidence = state["evidence"]
 
@@ -77,16 +78,29 @@ def build_response(state: InterviewOSState) -> InterviewOSState:
             logger.warning(
                 "Interview OS model synthesis failed — falling back to deterministic path: %s", exc
             )
-            return {"fallback_attempted": True}
 
     response = _build_deterministic_response(request, evidence)
     return {"response": response, "used_model": False}
 
 
-def route_after_build(
+@traceable(name="interview_os.validate_response", run_type="chain")
+def validate_response(state: InterviewOSState) -> InterviewOSState:
+    """Validate the current response and trigger deterministic fallback when allowed."""
+    response = state["response"]
+    request = state["request"]
+    try:
+        validated = validate_interview_brief(response)
+        return {"response": validated}
+    except ValueError:
+        if not state.get("used_model", False) or not request.fallback_to_deterministic:
+            raise
+        return {"fallback_attempted": True}
+
+
+def route_after_validation(
     state: InterviewOSState,
 ) -> Literal["build_response", END]:
-    """Retry with deterministic path if model synthesis failed and fallback is allowed."""
+    """Retry with deterministic path if model output failed validation."""
     if state.get("fallback_attempted", False) and state.get("used_model", False):
         return "build_response"
     return END
@@ -184,11 +198,13 @@ def _build_interview_brief_graph():
     graph = StateGraph(InterviewOSState)
     graph.add_node("retrieve_evidence", retrieve_evidence)
     graph.add_node("build_response", build_response)
+    graph.add_node("validate_response", validate_response)
     graph.add_edge(START, "retrieve_evidence")
     graph.add_edge("retrieve_evidence", "build_response")
+    graph.add_edge("build_response", "validate_response")
     graph.add_conditional_edges(
-        "build_response",
-        route_after_build,
+        "validate_response",
+        route_after_validation,
         {
             "build_response": "build_response",
             END: END,

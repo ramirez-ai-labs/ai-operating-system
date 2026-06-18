@@ -155,6 +155,54 @@ def test_one_on_one_os_route_in_orchestrator() -> None:
     assert response.trace.section_counts.get("action_items") is not None
 
 
+def test_one_on_one_brief_validate_response_triggers_fallback_on_empty_sections(
+    monkeypatch,
+) -> None:
+    """validate_response must fall back to deterministic when model returns empty sections."""
+    from packages.shared.schemas.director_os import EvidenceItem
+
+    def fake_retrieve(*, base_path, query, limit):
+        return [
+            EvidenceItem(
+                source="1on1_notes.md",
+                line_number=1,
+                title="1:1 Notes",
+                excerpt="Action: follow up on deployment pipeline timeline",
+            )
+        ]
+
+    class EmptySectionsProvider:
+        def generate_one_on_one_brief(self, focus, evidence):
+            return OneOnOneResponse(
+                meeting_summary="ok",
+                action_items=[],
+                talking_points=[],
+                blockers=[],
+                kudos=[],
+                evidence=evidence,
+            )
+
+        def get_last_usage(self):
+            return {"input_tokens": 10, "output_tokens": 5}
+
+    with patch("packages.shared.graphs.one_on_one_os._build_provider",
+               return_value=EmptySectionsProvider()):
+        with patch("packages.shared.graphs.one_on_one_os.retrieve_relevant_documents",
+                   side_effect=fake_retrieve):
+            result = build_meeting_brief(
+                OneOnOneRequest(
+                    data_path=DATA_PATH,
+                    focus="action items",
+                    use_model=True,
+                    fallback_to_deterministic=True,
+                    max_documents=5,
+                )
+            )
+    assert any(
+        (result.action_items, result.talking_points, result.blockers, result.kudos)
+    ), "Expected deterministic fallback to populate at least one section"
+
+
 def test_one_on_one_os_keyword_routing() -> None:
     from packages.shared.orchestration.chief_of_staff import route_request
     from packages.shared.schemas.orchestrator import OrchestratorRequest
