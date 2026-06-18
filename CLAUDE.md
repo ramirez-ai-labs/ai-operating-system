@@ -66,7 +66,7 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 
 ## Architecture invariants
 
-- All providers implement `WeeklyUpdateProvider` from `packages/shared/providers/base.py`. Do not add provider-specific logic outside of the provider files.
+- Domain providers implement domain-specific interfaces defined in `packages/shared/providers/`. The Director OS `WeeklyUpdateProvider` in `base.py` is the reference pattern. Each domain defines its own provider interface — do not add provider-specific logic outside of the provider files.
 - Provider selection is handled by `_build_provider()` in the Director OS graph. Switching providers is a single field change on the request  -  no workflow logic should branch on provider identity.
 - The API layer (`apps/api/main.py`) stays thin. Workflow logic lives in `director_os/` and `brand_os/` so it can be tested without FastAPI.
 - Deterministic fallback must always be available. Any model-assisted path must have a fallback when `fallback_to_deterministic=True`.

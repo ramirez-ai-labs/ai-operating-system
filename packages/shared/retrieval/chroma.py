@@ -49,6 +49,13 @@ COLLECTION_NAME = "ai-os-docs"
 # nomic-embed-text is 274M, fast, and well-suited for short prose documents.
 EMBEDDING_MODEL = "nomic-embed-text"
 
+# Module-level singleton. ChromaDB's PersistentClient opens a SQLite
+# connection and acquires a WAL file handle on construction. Re-creating it
+# on every retrieve call causes repeated open/close cycles that serialize
+# through the SQLite WAL lock under concurrent requests. One client per
+# process is sufficient — the collection is read-only at query time.
+_chroma_client: object | None = None
+
 
 def retrieve_relevant_documents(
     base_path: str,
@@ -81,19 +88,26 @@ def retrieve_relevant_documents(
 # ---------------------------------------------------------------------------
 
 
+def _get_chroma_client() -> object:
+    """Return the module-level ChromaDB client, initializing it on first use."""
+    global _chroma_client
+    if _chroma_client is None:
+        try:
+            import chromadb  # noqa: PLC0415
+        except ImportError as exc:
+            raise RuntimeError(
+                "chromadb is not installed. "
+                "Run: pip install 'chromadb>=0.5.0,<1.0.0'"
+            ) from exc
+        _chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    return _chroma_client
+
+
 def _chroma_retrieve(base_path: str, query: str, limit: int) -> list[EvidenceItem]:
     """
     Core ChromaDB query path. Raises on any error so the public wrapper
     can decide whether to fall back or propagate.
     """
-    try:
-        import chromadb  # noqa: PLC0415
-    except ImportError as exc:
-        raise RuntimeError(
-            "chromadb is not installed. "
-            "Run: pip install 'chromadb>=0.5.0,<1.0.0'"
-        ) from exc
-
     chroma_path = Path(CHROMA_DB_PATH)
     if not chroma_path.exists():
         raise FileNotFoundError(
@@ -108,7 +122,7 @@ def _chroma_retrieve(base_path: str, query: str, limit: int) -> list[EvidenceIte
     # so a network failure surfaces immediately rather than after the DB opens.
     query_embedding = _embed(query or "general project update", EMBEDDING_MODEL, ollama_url)
 
-    client = chromadb.PersistentClient(path=str(chroma_path))
+    client = _get_chroma_client()
     try:
         collection = client.get_collection(name=COLLECTION_NAME)
     except Exception as exc:
