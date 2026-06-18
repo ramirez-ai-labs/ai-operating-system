@@ -39,7 +39,7 @@ how I think about production AI systems:
   Every item cites source + line number. This is enforced at the schema level, not post-hoc.
 - **Deterministic fallback as a safety net** - model synthesis is opt-in. The system
   always has a working deterministic path, so it never fails silently.
-- **Evaluation as a first-class concern** - 28 eval cases across all 4 domains,
+- **Evaluation as a first-class concern** - 22 eval cases across all 4 domains,
   three retrieval paths (keyword / ChromaDB semantic / LangSmith cloud), all committed
   and gated in CI.
 - **Observability by default** - LangSmith traces every graph node automatically
@@ -280,7 +280,7 @@ Each domain has eval cases covering three retrieval paths:
 | Chroma (semantic) | `chroma.py` - ChromaDB + `nomic-embed-text` embeddings | Local Ollama |
 | LangSmith (cloud) | `run_*_evals.py --langsmith` | `LANGSMITH_API_KEY` |
 
-All 28 eval cases pass across all 4 domains on the local and chroma paths.
+All 22 eval cases pass across all 4 domains on the local and chroma paths.
 Results are committed as `results_chroma.json` per domain - the CI gate fails
 if any case regresses.
 
@@ -426,13 +426,13 @@ not a summary of past runs.
 
 ## Eval results
 
-| Domain | Local | Chroma |
-|---|---|---|
-| Director OS | 7/7 | 7/7 |
-| Brand OS | 7/7 | 7/7 |
-| Interview OS | 4/4 | 4/4 |
-| One-on-One OS | 4/4 | 4/4 |
-| **Total** | **22/22** | **22/22** |
+| Domain | Local | Chroma | Claude |
+|---|---|---|---|
+| Director OS | 7/7 | 7/7 | 4/4 |
+| Brand OS | 7/7 | 7/7 | 7/7 |
+| Interview OS | 4/4 | 4/4 | 4/4 |
+| One-on-One OS | 4/4 | 4/4 | 4/4 |
+| **Total** | **22/22** | **22/22** | **19/19** |
 
 ---
 
@@ -511,7 +511,7 @@ not a summary of past runs.
 | **Key features used** | `PersistentClient` for on-disk index, `collection.query()` with `n_results`, metadata filtering by `data_root` to scope retrieval per domain, `nomic-embed-text` via Ollama for embeddings |
 | **Where** | `packages/shared/retrieval/chroma.py`, `packages/shared/retrieval/backend.py` (retrieval backend selector) |
 | **Ingest** | `scripts/ingest_chroma.py` - builds the index from markdown files under `data/local_only/` |
-| **Eval results** | All 4 domains have committed `results_chroma.json` (28/28 pass rate) |
+| **Eval results** | All 4 domains have committed `results_chroma.json` (22/22 pass rate) |
 | **vs keyword retrieval** | Keyword retrieval is the default (no Ollama required). ChromaDB activates when the index exists - the backend selector chooses automatically. |
 
 ### MCP (Model Context Protocol)
