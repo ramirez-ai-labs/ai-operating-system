@@ -195,7 +195,7 @@ def test_chroma_falls_back_when_ollama_unreachable(monkeypatch, tmp_path) -> Non
     assert isinstance(results, list)
 
 
-def test_chroma_falls_back_when_path_not_ingested(monkeypatch, tmp_path, caplog) -> None:
+def test_chroma_falls_back_when_path_not_ingested(tmp_path, caplog) -> None:
     """
     When the collection has docs globally but none for the requested data_root,
     the public function should warn and fall back to keyword retrieval rather
@@ -205,14 +205,6 @@ def test_chroma_falls_back_when_path_not_ingested(monkeypatch, tmp_path, caplog)
 
     fake_chroma_path = tmp_path / "chroma"
     fake_chroma_path.mkdir()
-    monkeypatch.setattr(
-        "packages.shared.retrieval.chroma.CHROMA_DB_PATH", str(fake_chroma_path)
-    )
-
-    def fake_embed(text, model, url):
-        return [0.1, 0.2, 0.3]
-
-    monkeypatch.setattr("packages.shared.retrieval.chroma._embed", fake_embed)
 
     mock_chroma = MagicMock()
     mock_client = MagicMock()
@@ -227,6 +219,14 @@ def test_chroma_falls_back_when_path_not_ingested(monkeypatch, tmp_path, caplog)
 
         from packages.shared.retrieval import chroma
         importlib.reload(chroma)
+
+        # reload() re-runs module-level code, resetting CHROMA_DB_PATH to
+        # data/chroma (absent in CI). Override it on the reloaded module
+        # object so the path-exists check passes and we reach the per-path test.
+        chroma.CHROMA_DB_PATH = str(fake_chroma_path)
+        chroma._chroma_client = None  # reset singleton after path change
+
+        chroma._embed = lambda text, model, url: [0.1, 0.2, 0.3]
 
         with caplog.at_level(logging.WARNING):
             results = chroma.retrieve_relevant_documents(
