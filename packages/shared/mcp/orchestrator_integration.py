@@ -101,6 +101,7 @@ def run_with_mcp_tools(
     messages: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
     total_input = 0
     total_output = 0
+    consecutive_empty = 0  # circuit breaker: abort if Claude returns empty back-to-back
 
     for round_num in range(1, max_rounds + 1):
         round_trace: dict[str, Any] = {
@@ -169,6 +170,7 @@ def run_with_mcp_tools(
             messages.append({"role": "assistant", "content": tool_use_blocks})
             messages.append({"role": "user", "content": tool_result_contents})
 
+            consecutive_empty = 0  # productive round — reset the circuit breaker
             trace["rounds"].append(round_trace)
             continue
 
@@ -195,10 +197,37 @@ def run_with_mcp_tools(
                 success=True,
             )
 
-        logger.warning("Round %d: empty response from Claude", round_num)
+        consecutive_empty += 1
+        logger.warning(
+            "Round %d: empty response from Claude (%d consecutive)",
+            round_num,
+            consecutive_empty,
+        )
         trace["rounds"].append(round_trace)
+        if consecutive_empty >= 2:
+            logger.error(
+                "Aborting orchestration after %d consecutive empty responses",
+                consecutive_empty,
+            )
+            break
 
-    logger.error("Orchestration hit max rounds (%d) without completing", max_rounds)
+    # Flush token totals regardless of whether the loop completed normally,
+    # hit max_rounds, or was aborted by the consecutive-empty circuit breaker.
+    # Previously these keys were only set inside the success branch, leaving
+    # them at 0 in the trace when the loop exhausted without a text response.
+    trace["total_input_tokens"] = total_input
+    trace["total_output_tokens"] = total_output
+    trace["tool_calls_total"] = len(trace["mcp_tool_calls"])
+
+    if consecutive_empty >= 2:
+        error_msg = (
+            f"Aborted after {consecutive_empty} consecutive empty responses "
+            "(no tool calls or content returned)"
+        )
+    else:
+        error_msg = f"Exceeded maximum tool call rounds ({max_rounds})"
+        logger.error("Orchestration hit max rounds (%d) without completing", max_rounds)
+
     return OrchestratedResponse(
         content="",
         model="unknown",
@@ -206,5 +235,5 @@ def run_with_mcp_tools(
         total_tokens=total_input + total_output,
         trace=trace,
         success=False,
-        error=f"Exceeded maximum tool call rounds ({max_rounds})",
+        error=error_msg,
     )
