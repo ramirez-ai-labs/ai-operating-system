@@ -15,6 +15,7 @@ from packages.shared.schemas.brand_os import (
     BrandContentDraftResponse,
 )
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem
+from packages.shared.validation.brand_os import validate_brand_content_draft
 
 logger = logging.getLogger(__name__)
 
@@ -79,16 +80,29 @@ def build_response(state: BrandOSState) -> BrandOSState:
             logger.warning(
                 "Brand OS model synthesis failed — falling back to deterministic path: %s", exc
             )
-            return {"fallback_attempted": True}
 
     response = _build_deterministic_response(request, evidence)
     return {"response": response, "used_model": False}
 
 
-def route_after_build(
+@traceable(name="brand_os.validate_response", run_type="chain")
+def validate_response(state: BrandOSState) -> BrandOSState:
+    """Validate the current response and trigger deterministic fallback when allowed."""
+    response = state["response"]
+    request = state["request"]
+    try:
+        validated = validate_brand_content_draft(response)
+        return {"response": validated}
+    except ValueError:
+        if not state.get("used_model", False) or not request.fallback_to_deterministic:
+            raise
+        return {"fallback_attempted": True}
+
+
+def route_after_validation(
     state: BrandOSState,
-) -> Literal["build_response", "__end__"]:
-    """Retry with deterministic path if model synthesis failed and fallback is allowed."""
+) -> Literal["build_response", END]:
+    """Retry with deterministic path if model output failed validation."""
     if state.get("fallback_attempted", False) and state.get("used_model", False):
         return "build_response"
     return END
@@ -151,12 +165,14 @@ def _build_content_draft_graph():
     graph = StateGraph(BrandOSState)
     graph.add_node("retrieve_evidence", retrieve_evidence)
     graph.add_node("build_response", build_response)
+    graph.add_node("validate_response", validate_response)
 
     graph.add_edge(START, "retrieve_evidence")
     graph.add_edge("retrieve_evidence", "build_response")
+    graph.add_edge("build_response", "validate_response")
     graph.add_conditional_edges(
-        "build_response",
-        route_after_build,
+        "validate_response",
+        route_after_validation,
         {
             "build_response": "build_response",
             END: END,

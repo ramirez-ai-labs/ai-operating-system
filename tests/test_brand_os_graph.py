@@ -178,6 +178,93 @@ def test_brand_os_graph_falls_back_to_deterministic_on_model_error(monkeypatch) 
     assert result.evidence
 
 
+def test_brand_os_graph_validate_response_triggers_fallback_on_empty_sections(
+    monkeypatch,
+) -> None:
+    """validate_response must fall back to deterministic when model returns empty sections."""
+    from packages.shared.graphs import brand_os as graph_module
+
+    def fake_retrieve(*, base_path, query, limit):
+        return [
+            EvidenceItem(
+                source="brand_week_x.md",
+                line_number=3,
+                title="Brand Week X",
+                excerpt="Insight: local-first AI makes grounded content drafts tractable.",
+            )
+        ]
+
+    class EmptySectionsProvider:
+        def generate_brand_content_draft(self, focus, evidence):
+            return BrandContentDraftResponse(
+                insight_summary="ok",
+                post_outline=[],
+                podcast_angles=[],
+                repo_improvements=[],
+                evidence=evidence,
+            )
+
+        def get_last_usage(self):
+            return {"input_tokens": 10, "output_tokens": 5}
+
+    monkeypatch.setattr(graph_module, "retrieve_relevant_documents", fake_retrieve)
+    monkeypatch.setattr(graph_module, "_build_provider", lambda req: EmptySectionsProvider())
+
+    result = run_content_draft_graph(
+        BrandContentDraftRequest(
+            data_path="data/local_only/brand",
+            use_model=True,
+            fallback_to_deterministic=True,
+        )
+    )
+    # Deterministic fallback must populate at least post_outline from the Insight: prefix.
+    assert result.post_outline, "Expected deterministic fallback to populate post_outline"
+
+
+def test_brand_os_graph_validate_response_raises_when_fallback_disabled(monkeypatch) -> None:
+    """validate_response must raise when fallback is disabled and model output is invalid."""
+    from packages.shared.graphs import brand_os as graph_module
+
+    def fake_retrieve(*, base_path, query, limit):
+        return [
+            EvidenceItem(
+                source="brand_week_x.md",
+                line_number=3,
+                title="Brand Week X",
+                excerpt="Insight: local-first AI makes grounded content drafts tractable.",
+            )
+        ]
+
+    class EmptySectionsProvider:
+        def generate_brand_content_draft(self, focus, evidence):
+            return BrandContentDraftResponse(
+                insight_summary="ok",
+                post_outline=[],
+                podcast_angles=[],
+                repo_improvements=[],
+                evidence=evidence,
+            )
+
+        def get_last_usage(self):
+            return {}
+
+    monkeypatch.setattr(graph_module, "retrieve_relevant_documents", fake_retrieve)
+    monkeypatch.setattr(graph_module, "_build_provider", lambda req: EmptySectionsProvider())
+
+    try:
+        run_content_draft_graph(
+            BrandContentDraftRequest(
+                data_path="data/local_only/brand",
+                use_model=True,
+                fallback_to_deterministic=False,
+            )
+        )
+    except ValueError as exc:
+        assert "populated section" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError when fallback disabled and model output invalid.")
+
+
 def test_brand_os_graph_raises_when_fallback_disabled_and_model_fails(monkeypatch) -> None:
     """When fallback_to_deterministic=False and the model fails, the error should propagate."""
     from packages.shared.graphs import brand_os as graph_module

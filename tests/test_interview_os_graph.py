@@ -19,7 +19,9 @@ DATA_PATH = "data/local_only/interviews"
 
 def test_interview_brief_returns_response() -> None:
     """The workflow should return a valid InterviewBriefResponse from local data."""
-    request = InterviewBriefRequest(data_path=DATA_PATH, max_documents=5)
+    request = InterviewBriefRequest(
+        data_path=DATA_PATH, focus="interview questions", max_documents=5
+    )
     response = build_interview_brief(request)
     assert isinstance(response, InterviewBriefResponse)
     assert response.candidate_summary
@@ -120,7 +122,11 @@ def test_interview_brief_use_model_calls_provider() -> None:
     mock_response = InterviewBriefResponse(
         candidate_summary="Claude-synthesized brief for the candidate.",
         key_questions=[
-            GroundedItem(text="Q?", source="role_brief_senior_ai_engineer.md", line_number=5)
+            GroundedItem(
+                text="Question: describe your experience with distributed systems",
+                source="role_brief_senior_ai_engineer.md",
+                line_number=5,
+            )
         ],
         talking_points=[],
         red_flags=[],
@@ -128,7 +134,7 @@ def test_interview_brief_use_model_calls_provider() -> None:
             EvidenceItem(
                 source="role_brief_senior_ai_engineer.md",
                 title="Role Brief",
-                excerpt="Question: example",
+                excerpt="Question: describe your experience with distributed systems",
                 line_number=5,
             )
         ],
@@ -173,6 +179,54 @@ def test_interview_brief_use_model_falls_back_on_error() -> None:
 
     assert isinstance(response, InterviewBriefResponse)
     assert response.candidate_summary  # deterministic path produced a summary
+
+
+def test_interview_brief_validate_response_triggers_fallback_on_empty_sections(
+    monkeypatch,
+) -> None:
+    """validate_response must fall back to deterministic when model returns empty sections."""
+    from packages.shared.schemas.director_os import EvidenceItem
+
+    def fake_retrieve(*, base_path, query, limit):
+        return [
+            EvidenceItem(
+                source="role_brief.md",
+                line_number=1,
+                title="Role Brief",
+                excerpt="Question: describe your approach to system design",
+            )
+        ]
+
+    class EmptySectionsProvider:
+        def generate_interview_brief(self, focus, evidence):
+            return InterviewBriefResponse(
+                candidate_summary="ok",
+                key_questions=[],
+                talking_points=[],
+                red_flags=[],
+                evidence=evidence,
+            )
+
+        def get_last_usage(self):
+            return {"input_tokens": 10, "output_tokens": 5}
+
+    with patch("packages.shared.graphs.interview_os._build_provider",
+               return_value=EmptySectionsProvider()):
+        with patch("packages.shared.graphs.interview_os.retrieve_relevant_documents",
+                   side_effect=fake_retrieve):
+            result = build_interview_brief(
+                InterviewBriefRequest(
+                    data_path=DATA_PATH,
+                    focus="interview questions",
+                    use_model=True,
+                    fallback_to_deterministic=True,
+                    max_documents=5,
+                )
+            )
+    # Deterministic fallback should populate at least key_questions from the data.
+    assert any((result.key_questions, result.talking_points, result.red_flags)), (
+        "Expected deterministic fallback to populate at least one section"
+    )
 
 
 def test_interview_os_keyword_routing() -> None:
