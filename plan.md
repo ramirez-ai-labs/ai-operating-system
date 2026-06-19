@@ -17,22 +17,25 @@ This is meant to keep the project grounded, avoid scope creep, and preserve alig
 
 The repository currently includes:
 
-- project documentation in `README.md` with Mermaid architecture diagram and "Why Claude" section
-- four workflow domains on a shared LangGraph foundation:
+- project documentation in `README.md` with Mermaid architecture diagram and "Why Claude" section; `docs/SHOWCASE.md` with system design walkthrough, eval methodology, and technology stack depth
+- four workflow domains on a shared LangGraph foundation  -  all with Claude provider parity, `validate_response` node, deterministic fallback, ChromaDB eval coverage, LangSmith observability, and committed live eval results:
   - `Director OS`  -  evidence-grounded weekly leadership updates with Claude tool use, prompt caching, Ollama fallback, and deterministic baseline
-  - `Brand OS`  -  content drafts (LinkedIn posts, podcast angles, repo improvements) from local brand notes; Claude-backed synthesis path available
-  - `Interview OS`  -  candidate prep briefs (key questions, talking points, red flags) from local interview notes; Claude-backed synthesis path available
-  - `One-on-One OS`  -  meeting briefs for 1:1s (action items, talking points, blockers, kudos) from direct-report notes; Claude-backed synthesis path available
+  - `Brand OS`  -  content drafts (LinkedIn posts, podcast angles, repo improvements) from local brand notes
+  - `Interview OS`  -  candidate prep briefs (key questions, talking points, red flags) from local interview notes
+  - `One-on-One OS`  -  meeting briefs for 1:1s (action items, talking points, blockers, kudos) from direct-report notes
 - a Chief of Staff orchestration layer with Ollama LLM classification routing and keyword fallback, supporting all four domains
-- ChromaDB semantic retrieval backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
+- ChromaDB semantic retrieval backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback and per-root staleness detection
 - a `ResearcherAgent → WriterAgent` multi-agent pipeline for audience-targeted content formatting
 - prompt caching on the Claude provider with cache metrics surfaced in every `WorkflowTrace`
 - an in-process Claude filesystem tool loop for MCP-style local retrieval traces
 - a standalone MCP server under `apps/mcp` exposing all four workflow domains as tools for Claude Desktop / Claude Code
 - realistic enterprise scenario datasets under `data/local_only/` for all four domains
 - a local operator console at `/` with provider selection, target audience, `use_mcp` toggle, cache hit display, and agent pipeline visualization
-- 25 test files, 224 tests passing; local evals for all four workflow domains running in CI
-- optional LangSmith tracing
+- `packages/shared/providers/grounding.py`  -  single-source-of-truth for `GROUNDED_ITEM_SCHEMA` and `parse_grounded_items` shared across all five provider files
+- `packages/shared/schemas/base.py`  -  `BaseResponse` contract enforcing `evidence`, `provider_usage`, and `section_counts` at the Pydantic level across all domain schemas
+- `scripts/run_evals.py`  -  unified eval dispatcher that auto-discovers domains from `packages/shared/evaluations/`; adding a fifth domain requires zero new scripts
+- 252 tests passing; local and chroma eval gates for all four workflow domains in CI
+- optional LangSmith tracing with `@traceable` on every graph node across all four domains
 - issue templates, `CONTRIBUTING.md`, and branch protection on `main`
 
 The repository does not yet include:
@@ -467,37 +470,24 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–19 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, committed live eval results (100% pass rate each), and CI eval gates. 224 tests passing.
+Sprints 1–22 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, `validate_response` nodes, ChromaDB eval coverage, LangSmith observability, committed live eval results (100% pass rate each), and CI eval gates. 252 tests passing.
 
-**Sprint 16  -  ChromaDB eval coverage (complete, PR #83):**
-Added `is_index_ready()` to `chroma.py`, chroma eval runners for Director OS and Brand OS, CI gates, and live results (7/7 each).
+**Sprint 20  -  Debt paydown (complete, PRs [#93](https://github.com/ramirez-ai-labs/ai-operating-system/pull/93)–[#97](https://github.com/ramirez-ai-labs/ai-operating-system/pull/97)):**
+`_COMPETING_PREFIXES` constant, ChromaDB client singleton, orchestrator circuit breaker, trace token flush, shared `grounding.py`, ghost token fix, `section_counts` in domain schemas, `_build_trace` elif collapse.
 
-**Sprint 17  -  ChromaDB eval parity for all 4 domains (complete, PR #84):**
-Extended chroma eval coverage to Interview OS (4/4) and One-on-One OS (4/4). Extracted console HTML from `main.py` into `apps/api/templates/console.html`  -  `main.py` shrinks from 820 to 125 lines.
+**Sprint 21  -  Validation + fallback parity (complete, PRs [#98](https://github.com/ramirez-ai-labs/ai-operating-system/pull/98)–[#99](https://github.com/ramirez-ai-labs/ai-operating-system/pull/99)):**
+`validate_response` + `route_after_validation` added to Brand OS, Interview OS, and One-on-One OS. All four domains now share the same fallback invariant. Provider-fallback tests added for all three Claude-only domains.
 
-**Sprint 18  -  LangSmith observability parity (complete, PR #85):**
-`@traceable` instrumentation and LangSmith eval integration added to all four domains. All eval scripts now support `--langsmith` for on-demand cloud-backed runs.
-
-**Sprint 19  -  Hardening (complete, PR #90):**
-`_langsmith_tracing_disabled` wired in 3 domains, `_build_trace` catch-all replaced with explicit `ValueError` guard per domain, `console.html` switched to lazy per-request load.
-
-**Sprint 20  -  Debt paydown (recommended next):**
-
-| Item | File | Why now |
-|---|---|---|
-| Extract `_parse_grounded_items` + `_GROUNDED_ITEM_SCHEMA` to `packages/shared/providers/grounding.py` | 5 provider files | Same grounding logic duplicated 5 ways  -  one schema change must be applied everywhere or domains silently diverge |
-| Fix ghost token tracking  -  capture `provider.get_last_usage()` before internal fallback in `_build_model_draft` | `packages/shared/graphs/director_os.py` | Claude API calls that trigger the internal ValueError catch burn tokens with no trace visibility |
-| Fix `trace["total_input_tokens"]` not flushed on exhausted-round path | `packages/shared/mcp/orchestrator_integration.py` | Token accounting discrepancy between `OrchestratedResponse.total_tokens` and `response.trace` |
-| Add consecutive-empty-response circuit breaker in orchestration loop | `packages/shared/mcp/orchestrator_integration.py` | A transient content-filter event burns all 5 rounds before returning `success=False` |
-| Move `section_counts` to domain response schemas | `packages/shared/schemas/` + `chief_of_staff.py` | `_build_trace` currently reaches into domain field names  -  a rename breaks the trace silently |
-| Promote `competing_prefixes` to module-level constant | `packages/shared/graphs/director_os.py` | Dict reconstructed 3 x N times per request; zero-line risk change |
+**Sprint 22  -  ChromaDB staleness + unified dispatcher + BaseResponse contract (complete, PRs [#100](https://github.com/ramirez-ai-labs/ai-operating-system/pull/100)–[#102](https://github.com/ramirez-ai-labs/ai-operating-system/pull/102)):**
+Per-root staleness detection in ChromaDB. `scripts/run_evals.py` unified dispatcher auto-discovers domains  -  adding a fifth domain requires zero new scripts. `packages/shared/schemas/base.py` enforces `BaseResponse` contract at the Pydantic level. CLAUDE.md domain-addition checklist added.
 
 **What's next  -  Phase 8:**
 
 | Candidate | Value | Effort |
 |---|---|---|
-| Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS and the shared graph infrastructure | Medium |
-| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal; strongest portfolio signal for Director/Platform Engineering roles | High |
+| Sprint 23: ai-vic ↔ AI-OS MCP integration | Connects the operational ai-vic chatbot to all four AI-OS domains via the existing MCP server; turns two independent portfolio pieces into one coherent system | Low  -  MCP plumbing already done |
+| Sprint 24: Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS; zero new scripts needed (unified dispatcher); `BaseResponse` contract and CLAUDE.md checklist scaffold the work | Medium |
+| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal; strongest portfolio signal for Director/Platform Engineering roles; lower urgency while ai-vic serves as the conversational layer | High |
 
 Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
 
