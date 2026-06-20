@@ -31,9 +31,14 @@ The repository currently includes:
 - a standalone MCP server under `apps/mcp` exposing all four workflow domains as tools for Claude Desktop / Claude Code
 - realistic enterprise scenario datasets under `data/local_only/` for all four domains
 - a local operator console at `/` with provider selection, target audience, `use_mcp` toggle, cache hit display, and agent pipeline visualization
-- 25 test files, 224 tests passing; local evals for all four workflow domains running in CI
-- optional LangSmith tracing
-- issue templates, `CONTRIBUTING.md`, and branch protection on `main`
+- `validate_response` node + `route_after_validation` conditional edge in all four domain graphs; model output that fails validation falls back to deterministic path
+- shared grounding primitives in `packages/shared/providers/grounding.py`; `GROUNDED_ITEM_SCHEMA` and `parse_grounded_items` are the single source of truth across all providers
+- `BaseResponse` base schema in `packages/shared/schemas/base.py` enforcing `evidence`, `provider_usage`, and `section_counts` across all four domain schemas
+- ChromaDB staleness detection: per-path pre-flight document count before querying; clear warning + keyword fallback when collection exists but has no docs for the requested `data_root`
+- unified `scripts/run_evals.py` dispatcher auto-discovering domains from `packages/shared/evaluations/`; `--domain`, `--backend`, `--langsmith`, `--ci` flags replace 12 standalone scripts
+- 246 tests passing (6 skipped without API keys); local evals for all four domains in CI; chroma evals skip gracefully when index absent
+- optional LangSmith tracing with `@traceable` on all graph nodes across all four domains
+- issue templates, `CONTRIBUTING.md`, branch protection on `main`
 
 The repository does not yet include:
 
@@ -467,37 +472,23 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–19 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, committed live eval results (100% pass rate each), and CI eval gates. 224 tests passing.
+Sprints 1–22 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. 246 tests passing.
 
-**Sprint 16  -  ChromaDB eval coverage (complete, PR #83):**
-Added `is_index_ready()` to `chroma.py`, chroma eval runners for Director OS and Brand OS, CI gates, and live results (7/7 each).
+**Sprint 20  -  Debt paydown (complete, PRs #93–97):**
+Shared grounding primitives extracted to `grounding.py`. Orchestrator circuit breaker and trace token flush. Ghost token capture on fallback path. `section_counts` moved into domain schemas. `_COMPETING_PREFIXES` constant. `_get_chroma_client()` singleton.
 
-**Sprint 17  -  ChromaDB eval parity for all 4 domains (complete, PR #84):**
-Extended chroma eval coverage to Interview OS (4/4) and One-on-One OS (4/4). Extracted console HTML from `main.py` into `apps/api/templates/console.html`  -  `main.py` shrinks from 820 to 125 lines.
+**Sprint 21  -  Validation + fallback parity (complete, PRs #98–99):**
+`validate_response` node wired into Brand OS, Interview OS, and One-on-One OS graphs matching Director OS invariant. Provider-fallback tests added for all Claude-only domains.
 
-**Sprint 18  -  LangSmith observability parity (complete, PR #85):**
-`@traceable` instrumentation and LangSmith eval integration added to all four domains. All eval scripts now support `--langsmith` for on-demand cloud-backed runs.
+**Sprint 22  -  ChromaDB staleness + eval dispatcher + BaseResponse (complete, PRs #100–102):**
+ChromaDB per-path staleness detection. Unified `scripts/run_evals.py` dispatcher. `BaseResponse` schema contract enforced across all four domains.
 
-**Sprint 19  -  Hardening (complete, PR #90):**
-`_langsmith_tracing_disabled` wired in 3 domains, `_build_trace` catch-all replaced with explicit `ValueError` guard per domain, `console.html` switched to lazy per-request load.
-
-**Sprint 20  -  Debt paydown (recommended next):**
-
-| Item | File | Why now |
-|---|---|---|
-| Extract `_parse_grounded_items` + `_GROUNDED_ITEM_SCHEMA` to `packages/shared/providers/grounding.py` | 5 provider files | Same grounding logic duplicated 5 ways  -  one schema change must be applied everywhere or domains silently diverge |
-| Fix ghost token tracking  -  capture `provider.get_last_usage()` before internal fallback in `_build_model_draft` | `packages/shared/graphs/director_os.py` | Claude API calls that trigger the internal ValueError catch burn tokens with no trace visibility |
-| Fix `trace["total_input_tokens"]` not flushed on exhausted-round path | `packages/shared/mcp/orchestrator_integration.py` | Token accounting discrepancy between `OrchestratedResponse.total_tokens` and `response.trace` |
-| Add consecutive-empty-response circuit breaker in orchestration loop | `packages/shared/mcp/orchestrator_integration.py` | A transient content-filter event burns all 5 rounds before returning `success=False` |
-| Move `section_counts` to domain response schemas | `packages/shared/schemas/` + `chief_of_staff.py` | `_build_trace` currently reaches into domain field names  -  a rename breaks the trace silently |
-| Promote `competing_prefixes` to module-level constant | `packages/shared/graphs/director_os.py` | Dict reconstructed 3 x N times per request; zero-line risk change |
-
-**What's next  -  Phase 8:**
+**Phase 8  -  recommended next:**
 
 | Candidate | Value | Effort |
 |---|---|---|
-| Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS and the shared graph infrastructure | Medium |
-| `apps/web` Next.js frontend | Makes the system demonstrable without a terminal; strongest portfolio signal for Director/Platform Engineering roles | High |
+| `apps/web` Next.js frontend | Makes the system fully demonstrable without a terminal; strongest remaining portfolio signal — the evidence grounding, multi-agent trace, and cache metrics need to be visible in a browser to land with a non-technical hiring manager or live demo audience | High |
+| Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS and the shared `BaseResponse` + graph infrastructure; follows the CLAUDE.md domain-addition checklist exactly | Medium |
 
 Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
 
