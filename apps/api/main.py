@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from brand_os.workflows.content_draft import build_content_draft
@@ -31,6 +32,14 @@ app = FastAPI(
     title="AI Operating System API",
     version="0.1.0",
     description="Local-first multi-domain AI-OS API for workflow execution and orchestration.",
+)
+
+# Allow the Next.js dev server (localhost:3000) to call the API from the browser.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 _CONSOLE_HTML_PATH = Path(__file__).parent / "templates" / "console.html"
