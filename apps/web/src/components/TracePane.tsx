@@ -4,6 +4,10 @@ interface Props {
   workflow: string
   rationale?: string
   trace?: WorkflowTrace
+  // Fallback metadata for direct domain calls (no trace wrapper from the API)
+  evidenceCount?: number
+  dataPath?: string
+  sectionCounts?: Record<string, number>
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -60,9 +64,15 @@ function AgentPipeline({ calls }: { calls: AgentCall[] }) {
   )
 }
 
-export function TracePane({ workflow, rationale, trace }: Props) {
+export function TracePane({ workflow, rationale, trace, evidenceCount, dataPath, sectionCounts }: Props) {
   const cacheRead   = trace?.cache_read_input_tokens ?? 0
   const cacheCreate = trace?.cache_creation_input_tokens ?? 0
+
+  // Resolved values — prefer trace fields, fall back to direct-call props
+  const resolvedEvidence   = trace?.evidence_count   ?? evidenceCount
+  const resolvedDataPath   = trace?.data_path        ?? dataPath
+  const resolvedSections   = trace?.section_counts   ?? sectionCounts ?? {}
+  const resolvedSources    = trace?.evidence_sources ?? []
 
   return (
     <div className="flex flex-col gap-4">
@@ -74,26 +84,31 @@ export function TracePane({ workflow, rationale, trace }: Props) {
         <Row label="Workflow"  value={<span className="font-mono text-xs">{workflow || '—'}</span>} />
         {rationale && <Row label="Rationale" value={rationale} />}
         {trace && <Row label="Router" value={<span className="font-mono text-xs">{trace.routing_model}</span>} />}
+        {!trace && <Row label="Mode" value={<span className="text-xs text-aios-muted">direct domain call</span>} />}
       </div>
 
-      {/* Execution */}
-      {trace && (
+      {/* Execution — always shown when we have evidence/data-path info */}
+      {(resolvedEvidence !== undefined || resolvedDataPath) && (
         <div className="rounded-2xl border border-aios-line bg-aios-panel p-4">
           <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-muted">
             Execution
           </p>
-          <Row label="Evidence" value={`${trace.evidence_count} items`} />
-          <Row label="Model used" value={<Flag value={trace.model_used} />} />
-          {trace.model_used && trace.provider_used && (
+          {resolvedEvidence !== undefined && (
+            <Row label="Evidence" value={`${resolvedEvidence} items`} />
+          )}
+          {trace && <Row label="Model used" value={<Flag value={trace.model_used} />} />}
+          {trace?.model_used && trace.provider_used && (
             <Row label="Provider" value={
               <span className="font-mono text-xs">{trace.provider_used} / {trace.model_id_used ?? '—'}</span>
             } />
           )}
-          <Row label="Fallback" value={<Flag value={trace.fallback_used} />} />
-          {trace.validation_summary && (
+          {trace && <Row label="Fallback" value={<Flag value={trace.fallback_used} />} />}
+          {trace?.validation_summary && (
             <Row label="Validation" value={<span className="text-xs">{trace.validation_summary}</span>} />
           )}
-          <Row label="Data path" value={<span className="font-mono text-xs break-all">{trace.data_path}</span>} />
+          {resolvedDataPath && (
+            <Row label="Data path" value={<span className="font-mono text-xs break-all">{resolvedDataPath}</span>} />
+          )}
 
           {/* Cache metrics */}
           {(cacheRead > 0 || cacheCreate > 0) && (
@@ -118,14 +133,14 @@ export function TracePane({ workflow, rationale, trace }: Props) {
         </div>
       )}
 
-      {/* Section counts */}
-      {trace && Object.keys(trace.section_counts).length > 0 && (
+      {/* Section counts — from trace or computed from direct-call result */}
+      {Object.keys(resolvedSections).length > 0 && (
         <div className="rounded-2xl border border-aios-line bg-aios-panel p-4">
           <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-muted">
             Section Counts
           </p>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(trace.section_counts).map(([k, v]) => (
+            {Object.entries(resolvedSections).map(([k, v]) => (
               <div
                 key={k}
                 className="rounded-full border border-aios-line bg-aios-bg px-3 py-1 text-[11px]"
@@ -138,14 +153,14 @@ export function TracePane({ workflow, rationale, trace }: Props) {
         </div>
       )}
 
-      {/* Evidence sources */}
-      {trace && trace.evidence_sources.length > 0 && (
+      {/* Evidence sources — from trace only (not available on direct calls) */}
+      {resolvedSources.length > 0 && (
         <div className="rounded-2xl border border-aios-line bg-aios-panel p-4">
           <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-muted">
             Evidence Sources
           </p>
           <ul className="flex flex-col gap-1">
-            {trace.evidence_sources.map((src, i) => (
+            {resolvedSources.map((src, i) => (
               <li key={i} className="font-mono text-[11px] text-aios-muted">
                 {src}
               </li>

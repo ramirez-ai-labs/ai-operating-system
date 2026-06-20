@@ -27,6 +27,7 @@ function getItems(result: WorkflowResult, sectionKey: string): import('@/lib/typ
 
 export function ResultsPane({ result, domain, error }: Props) {
   const [showRaw, setShowRaw] = useState(false)
+  const [showEvidence, setShowEvidence] = useState(false)
 
   const cfg = DOMAIN_CONFIG[domain]
   const sections = result
@@ -115,25 +116,33 @@ export function ResultsPane({ result, domain, error }: Props) {
         </div>
       )}
 
-      {/* Evidence */}
+      {/* Evidence — collapsed by default; excerpts add noise alongside inline citations */}
       {r.evidence && r.evidence.length > 0 && (
-        <div className="rounded-2xl border border-aios-line bg-aios-panel p-5">
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-muted">
-            Evidence ({r.evidence.length})
-          </p>
-          <div className="flex flex-col gap-2">
-            {r.evidence.map((ev, i) => (
-              <div key={i} className="rounded-lg bg-aios-bg p-3">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-mono text-[11px] text-aios-accent font-semibold">
-                    {ev.source}:{ev.line_number}
-                  </span>
-                  <span className="text-[11px] text-aios-muted truncate">{ev.title}</span>
+        <div className="rounded-2xl border border-aios-line bg-aios-panel overflow-hidden">
+          <button
+            onClick={() => setShowEvidence((v) => !v)}
+            className="flex w-full items-center justify-between px-5 py-3 text-left text-xs text-aios-muted hover:text-aios-ink transition-colors"
+          >
+            <span className="font-semibold uppercase tracking-widest">
+              Evidence ({r.evidence.length} sources)
+            </span>
+            <span>{showEvidence ? '▾' : '▸'}</span>
+          </button>
+          {showEvidence && (
+            <div className="flex flex-col gap-2 px-5 pb-5">
+              {r.evidence.map((ev, i) => (
+                <div key={i} className="rounded-lg bg-aios-bg p-3">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="font-mono text-[11px] text-aios-accent font-semibold">
+                      {ev.source}:{ev.line_number}
+                    </span>
+                    <span className="text-[11px] text-aios-muted truncate">{ev.title}</span>
+                  </div>
+                  <p className="text-xs text-aios-muted leading-relaxed line-clamp-2">{ev.excerpt}</p>
                 </div>
-                <p className="text-xs text-aios-muted leading-relaxed line-clamp-2">{ev.excerpt}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
