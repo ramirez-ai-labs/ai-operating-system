@@ -74,6 +74,19 @@ export default function Page() {
 
   const cfg = DOMAIN_CONFIG[domain]
 
+  // Compute section counts from the result for direct domain calls (no trace wrapper)
+  const directSectionCounts: Record<string, number> | undefined = result && !result.trace
+    ? Object.fromEntries(
+        cfg.sections
+          .map((s) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const items = (result.result as any)[s.key]
+            return [s.key, Array.isArray(items) ? items.length : 0]
+          })
+          .filter(([, v]) => (v as number) > 0),
+      )
+    : undefined
+
   return (
     <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-8 sm:px-6">
 
@@ -148,8 +161,8 @@ export default function Page() {
         {/* Output panel */}
         <div className="flex flex-col gap-6">
 
-          {/* Trace pane — visible once there's a result (or in auto mode with trace) */}
-          {(result?.trace || result?.rationale) && (
+          {/* Trace pane — always shown when there's a result */}
+          {result && (
             <div>
               <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-muted pl-1">
                 Trace
@@ -158,6 +171,9 @@ export default function Page() {
                 workflow={result.workflow}
                 rationale={result.rationale}
                 trace={result.trace}
+                evidenceCount={result.result.evidence?.length}
+                dataPath={values.data_path}
+                sectionCounts={directSectionCounts}
               />
             </div>
           )}
