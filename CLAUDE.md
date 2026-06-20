@@ -15,7 +15,14 @@ Start the API server:
 uvicorn apps.api.main:app --reload --env-file .env
 ```
 
-Open the operator console at `http://127.0.0.1:8000/`.
+Open the legacy operator console at `http://127.0.0.1:8000/`.
+
+Start the Next.js frontend (requires the API server running first):
+```bash
+cd apps/web && npm install && npm run dev
+```
+
+Open the Next.js frontend at `http://localhost:3000/`.
 
 Run tests:
 ```bash
@@ -45,6 +52,7 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 
 | What | Where |
 |---|---|
+| Next.js frontend | `apps/web/src/app/page.tsx` |
 | API entry point | `apps/api/main.py` |
 | Chief of Staff routing | `packages/shared/orchestration/chief_of_staff.py` |
 | Director OS graph | `packages/shared/graphs/director_os.py` |
