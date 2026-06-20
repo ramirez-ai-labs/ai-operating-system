@@ -472,6 +472,60 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 20  -  Technical Debt Paydown
+
+**Objective:** Fix six concrete technical-debt items identified in post-Sprint-19 code review: shared grounding primitives extracted, orchestrator loop hardened, ghost token tracking fixed, `section_counts` moved into domain schemas, quick wins (module-level constant, ChromaDB singleton, CLAUDE.md invariant update).
+
+**Maps to:** plan.md Recommended Immediate Next Steps / Sprint 20
+
+**Status: Complete  -  shipped across PRs #93–97. 246 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Group A  -  `competing_prefixes` promoted to module-level `_COMPETING_PREFIXES`; `_get_chroma_client()` singleton introduced; CLAUDE.md provider invariant updated | Done | [#93](https://github.com/ramirez-ai-labs/ai-operating-system/pull/93) |
+| Group B  -  consecutive-empty-response circuit breaker in `orchestrator_integration.py`; `trace["total_input_tokens"]` flushed on all exit paths | Done | [#94](https://github.com/ramirez-ai-labs/ai-operating-system/pull/94) |
+| Group C  -  `GROUNDED_ITEM_SCHEMA` and `parse_grounded_items` extracted to `packages/shared/providers/grounding.py`; 5 provider files now import from single source | Done | [#95](https://github.com/ramirez-ai-labs/ai-operating-system/pull/95) |
+| Group D  -  ghost token capture: `get_last_usage()` called before `_validate_model_draft` can throw; fallback path also captures usage | Done | [#96](https://github.com/ramirez-ai-labs/ai-operating-system/pull/96) |
+| Group E  -  `section_counts` moved into domain response schemas; `_build_trace` `elif` tower collapses from ~65 lines to ~25 | Done | [#97](https://github.com/ramirez-ai-labs/ai-operating-system/pull/97) |
+
+---
+
+## Sprint 21  -  Validation + Fallback Parity
+
+**Objective:** Add `validate_response` node to Brand OS, Interview OS, and One-on-One OS graphs, matching the invariant Director OS has had since Sprint 16. When model output fails validation, the graph falls back to the deterministic path. Add provider-fallback tests for all three Claude-only domains.
+
+**Maps to:** plan.md Phase 5 (bounded agentic behavior / validation)
+
+**Status: Complete  -  shipped in PRs #98–99. 246 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| Add `packages/shared/validation/brand_os.py`  -  validator for `BrandContentDraftResponse` | Done | [#98](https://github.com/ramirez-ai-labs/ai-operating-system/pull/98) |
+| Add `packages/shared/validation/interview_os.py`  -  validator for `InterviewBriefResponse` | Done | [#98](https://github.com/ramirez-ai-labs/ai-operating-system/pull/98) |
+| Add `packages/shared/validation/one_on_one_os.py`  -  validator for `OneOnOneResponse` | Done | [#98](https://github.com/ramirez-ai-labs/ai-operating-system/pull/98) |
+| Update `graphs/brand_os.py`, `interview_os.py`, `one_on_one_os.py`  -  add `validate_response` node + `route_after_validation` conditional edge; model exception falls through to deterministic | Done | [#98](https://github.com/ramirez-ai-labs/ai-operating-system/pull/98) |
+| Add 6 tests covering fallback-from-validation path across all three domains | Done | [#98](https://github.com/ramirez-ai-labs/ai-operating-system/pull/98) |
+| Add provider-fallback tests for Interview OS and One-on-One OS (`provider='ollama'` falls back or raises); fix E501 violations in `_build_provider` error messages | Done | [#99](https://github.com/ramirez-ai-labs/ai-operating-system/pull/99) |
+
+---
+
+## Sprint 22  -  ChromaDB Staleness + Eval Dispatcher + BaseResponse Contract
+
+**Objective:** Three independent hardening items: (P2a) ChromaDB staleness detection so empty-index paths surface a clear warning instead of silently returning no results; (P2b) unified `scripts/run_evals.py` dispatcher replacing 12 standalone scripts; (P3) `BaseResponse` base schema enforcing `evidence`, `provider_usage`, and `section_counts` across all four domains.
+
+**Maps to:** plan.md Phase 8 (hardening)
+
+**Status: Complete  -  shipped in PRs #100–102. 246 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| P2a  -  `_chroma_retrieve` pre-flight document count; raises `RuntimeError` when collection exists but has no docs for `data_root`; outer wrapper logs warning and falls back to keyword retrieval | Done | [#100](https://github.com/ramirez-ai-labs/ai-operating-system/pull/100) |
+| P2b  -  `scripts/run_evals.py` auto-discovers domains from `packages/shared/evaluations/`; `--domain`, `--backend`, `--langsmith`, `--ci` flags; 12 legacy scripts remain for CI backwards-compat | Done | [#100](https://github.com/ramirez-ai-labs/ai-operating-system/pull/100) |
+| P3  -  `packages/shared/schemas/base.py` with `EvidenceItem`, `GroundedItem`, `BaseRequest`, `BaseResponse`; all four domain response schemas inherit `BaseResponse`; `section_counts` abstract property enforced at runtime | Done | [#101](https://github.com/ramirez-ai-labs/ai-operating-system/pull/101) |
+| Docs  -  fix eval case count (28 → 22) in SHOWCASE.md; add Claude column to eval results table | Done | [#102](https://github.com/ramirez-ai-labs/ai-operating-system/pull/102) |
+
+---
+
 ## Coordination notes
 
 - Sprint 1 is complete. Live Claude eval results committed in PR #56  -  3/3 cases, 100% signal and safety. All five JD requirements are satisfied in the repo.
@@ -492,3 +546,6 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 17 is complete (PR #84, 2026-06-17). ChromaDB eval parity extended to Interview OS (4/4) and One-on-One OS (4/4). All four domains now have full chroma eval coverage and committed live results. Console HTML extracted from `main.py` into `apps/api/templates/console.html`  -  `main.py` shrinks from 820 to 125 lines. 224 tests passing.
 - Sprint 18 is complete (PR #85, 2026-06-17). LangGraph `@traceable` instrumentation and LangSmith eval integration added to all four domains. Brand OS, Interview OS, and One-on-One OS eval scripts now support `--langsmith` for on-demand cloud-backed runs. Full observability parity across the portfolio. 224 tests passing.
 - Sprint 19 is complete (PR #90, 2026-06-17). Three post-Sprint-18 correctness fixes: `_langsmith_tracing_disabled` wired in 3 domains, `_build_trace` catch-all replaced with explicit `elif` + `ValueError` guard, `console.html` switched to lazy per-request load. 224 tests passing.
+- Sprint 20 is complete (PRs #93–97, 2026-06-17). Six technical-debt items resolved: shared grounding primitives extracted to `grounding.py`, orchestrator circuit breaker + trace token flush, ghost token capture on fallback path, `section_counts` moved into domain schemas, `_COMPETING_PREFIXES` constant, `_get_chroma_client()` singleton. 246 tests passing.
+- Sprint 21 is complete (PRs #98–99, 2026-06-17). Validation + fallback parity extended to Brand OS, Interview OS, and One-on-One OS: `validate_response` node + `route_after_validation` conditional edge wired into all three graphs. Provider-fallback tests added for Interview OS and One-on-One OS. 246 tests passing.
+- Sprint 22 is complete (PRs #100–102, 2026-06-17). ChromaDB staleness detection (per-path pre-flight count), unified `scripts/run_evals.py` auto-discovering dispatcher, `packages/shared/schemas/base.py` `BaseResponse` contract enforced across all four domains. SHOWCASE.md eval count corrected (22 cases). 246 tests passing.
