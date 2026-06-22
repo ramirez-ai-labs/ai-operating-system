@@ -24,8 +24,16 @@ __all__ = [
 ]
 
 
-class WeeklyUpdateRequest(BaseModel):
-    """Input contract for the Phase 1 Director OS workflow."""
+class WeeklyUpdateRequest(BaseRequest):
+    """Input contract for the Director OS weekly update workflow.
+
+    Inherits the standard field set from BaseRequest (data_path, focus,
+    max_documents, use_model, provider, claude_model, fallback_to_deterministic).
+    Director OS overrides data_path and provider defaults, and adds the two
+    Ollama-specific fields that only this domain supports.
+    """
+
+    # Director OS reads from the projects directory by default.
     data_path: str = Field(
         default="data/local_only/projects",
         description=(
@@ -33,27 +41,8 @@ class WeeklyUpdateRequest(BaseModel):
             "for synthesis."
         ),
     )
-    focus: str | None = Field(
-        default=None,
-        description="Optional retrieval focus, such as a project or workstream.",
-    )
-    max_documents: int = Field(
-        default=5,
-        ge=1,
-        le=20,
-        description="Maximum number of evidence items to include in the response.",
-    )
-    use_model: bool = Field(
-        default=False,
-        description="Enable optional model-assisted synthesis instead of deterministic extraction.",
-    )
-    fallback_to_deterministic: bool = Field(
-        default=True,
-        description=(
-            "When model synthesis fails or returns weak output, fall back to the "
-            "deterministic workflow instead of raising an error."
-        ),
-    )
+    # Director OS is the only domain that supports Ollama synthesis, so the
+    # provider type is narrowed and the default is "ollama" rather than "claude".
     provider: Literal["ollama", "claude"] = Field(
         default="ollama",
         description=(
@@ -67,10 +56,6 @@ class WeeklyUpdateRequest(BaseModel):
     ollama_model: str = Field(
         default="llama3.2",
         description="Ollama model name used when provider is 'ollama'.",
-    )
-    claude_model: str = Field(
-        default="claude-haiku-4-5-20251001",
-        description="Claude model ID used when provider is 'claude'.",
     )
 
 
