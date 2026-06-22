@@ -388,12 +388,25 @@ at each step.
 The default across all providers is Haiku. Swap via the `claude_model` field on any
 request — no code changes required.
 
-**Cost in practice:** A Director OS weekly update run against 5 evidence items costs
-roughly 400-600 input tokens + 200 output tokens on Haiku (~$0.001). On the second
-run against the same evidence set, prompt caching returns the evidence block from the
-KV cache — input cost drops 60-80% because the evidence tokens are not re-processed.
-The `WorkflowTrace` surfaces `cache_read_input_tokens` on every run so you can see
-the savings without inspecting raw API responses.
+**Cost in practice — measured from committed eval results
+(`evaluations/director_os/results_claude.json`, run 2026-06-14):**
+
+| Case | Input tokens | Output tokens | Cost at Haiku pricing |
+|---|---|---|---|
+| Baseline (5 docs, focused query) | 1,386 | 407 | ~$0.003 |
+| Full scan (10 docs, no focus) | 1,734 | 865 | ~$0.005 |
+| Operating review (10 docs, multi-file) | 1,576 | 593 | ~$0.004 |
+| Sparse risk (3 docs, narrow query) | 1,337 | 306 | ~$0.003 |
+
+Haiku pricing: $0.80/MTok input, $4.00/MTok output. These are real token counts
+from live API calls, not estimates.
+
+On the second run against the same evidence set, prompt caching returns the evidence
+block from the KV cache. The evidence block is roughly 600–900 tokens; at the cache
+read rate ($0.08/MTok — a 90% discount on those tokens), the total input cost drops
+by approximately 40–50% on a typical focused-query run. The `WorkflowTrace` surfaces
+`cache_read_input_tokens` on every run so you can see the savings without inspecting
+raw API responses.
 
 ---
 
