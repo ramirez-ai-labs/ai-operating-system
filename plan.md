@@ -197,9 +197,9 @@ Make model-assisted and selectively agentic behavior more reliable without weake
 - Implemented: deterministic fallback when Ollama is unavailable
 - Implemented: provider error handling in both Ollama and Claude adapters
 - Implemented: structured output validation via the shared validator
-- Remaining: bounded agentic steps beyond the current graph nodes
-- Remaining: broader eval coverage for weak retrieval and malformed model output
-- Remaining: strengthen automated test coverage for provider adapters and MCP orchestration paths, especially `packages/shared/providers/claude.py`, `packages/shared/providers/ollama.py`, and `packages/shared/mcp/orchestrator_integration.py`
+- Implemented: bounded agentic steps via the `ResearcherAgent → WriterAgent` pipeline (Phase 5g, Sprint 7)
+- Implemented: broader eval coverage for weak retrieval and malformed model output (Sprints 14–17)
+- Implemented: automated test coverage for provider adapters and MCP orchestration paths (Sprint 3, PR #52; Sprint 10a, PR #70)
 
 ## Phase 5b: Claude Provider and Layered LLM Architecture
 
@@ -288,7 +288,7 @@ MCP is Anthropic's open standard for connecting AI models to external tools and 
 - Implemented: `mcp` SDK added to `pyproject.toml`
 - Implemented: `claude_desktop_config.json` example for one-step Claude Desktop wiring
 - Implemented: `tests/test_mcp_server.py` and `tests/test_claude_mcp.py`  -  all server-level tests passing
-- Remaining: document the MCP server in `README.md` alongside existing API entry points (tracked in Sprint 4)
+- Implemented: MCP server documented in `README.md` alongside existing API entry points (Sprint 4, PR #60)
 
 ## Phase 5d: ChromaDB  -  Upgrade Retrieval to Semantic Vector Search
 
@@ -350,7 +350,7 @@ Move Ollama from its current position as a parallel synthesis provider to its co
 
 ### Objective
 
-Promote the existing MCP tool use loop from opt-in side-car to the default Director OS experience when `ANTHROPIC_API_KEY` is present. Add Anthropic prompt caching to cut repeated-context costs by 80-90% and surface cache savings in the operator trace.
+Add opt-in MCP-first synthesis (`use_mcp=True`) so the Director OS experience can route through the Claude filesystem tool loop instead of the standard graph retrieval path. Add Anthropic prompt caching to cut repeated-context costs by 80-90% and surface cache savings in the operator trace.
 
 ### Deliverables
 

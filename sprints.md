@@ -53,7 +53,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 5 and Phase 5b
 
-**Status: In progress  -  provider and orchestration paths now covered; filesystem edge cases and CI coverage tracking remain**
+**Status: Complete  -  provider and orchestration paths covered (PR #52); filesystem edge cases and CI coverage tracking rolled into Sprint 9**
 
 | Step | Status | PR |
 |---|---|---|
@@ -251,7 +251,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | Switch the eval runner to use `ClaudeWeeklyUpdateProvider` through the Director OS graph, not `ClaudeProvider.complete()` directly | Done | feat/sprint-10c-10d-11-completeness |
 | Verify scoring logic works with structured tool-use output (not raw text completion) | Done | feat/sprint-10c-10d-11-completeness |
 | Add `evaluations/director_os/multiagent_cases.json`  -  5 eval cases for the researcher→writer pipeline | Done | feat/sprint-10c-10d-11-completeness |
-| Commit `results_claude.json` with real Claude output covering all 7 canonical cases | Pending (requires `ANTHROPIC_API_KEY` at runtime) |  -  |
+| Commit `results_claude.json` with real Claude output covering all 7 canonical cases | Done (Sprint 14, PR #78) | [#78](https://github.com/ramirez-ai-labs/ai-operating-system/pull/78) |
 
 ---
 
