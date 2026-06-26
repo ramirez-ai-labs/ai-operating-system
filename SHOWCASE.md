@@ -2,6 +2,11 @@
 
 ## What this is
 
+**Built by [Victor Ramirez](https://linkedin.com/in/victor-hugo-ramirez-mids)** — Director of Developer & Platform Experience at Moody's Analytics, UC Berkeley MIDS.
+Community: [AI Builders: LatinX Edition podcast](https://rss.com/podcasts/ai-builders-latinx-edition/) · Techqueria RAG/agents workshops · Techqueria Tech Summit, Oakland Tech Week, Latino AI Summit.
+
+---
+
 AI Operating System (AI-OS) is a production-grade multi-agent system I built to
 solve a real problem I face as a Director of Developer & Platform Experience:
 technical leaders operate across fragmented systems - Jira, Confluence, 1:1 notes,
@@ -220,6 +225,26 @@ curl -X POST http://127.0.0.1:8000/one-on-one/brief \
 
 Returns `action_items`, `talking_points`, `blockers`, and `kudos` — drawn from
 the notes I have been collecting, not invented.
+
+---
+
+## Compliance and auditability design
+
+AI-OS is built for environments where AI outputs must be defensible — financial services,
+legal, healthcare, any regulated context where "the model said so" is not an acceptable
+citation.
+
+Four design decisions enforce this:
+
+| Decision | What it means in practice |
+|---|---|
+| **Schema-enforced citation** | Every output item requires `source` (filename) + `line_number` at the tool schema level. Claude cannot return an item without both. Hallucinated citations fail at parse time — not caught by a reviewer after the fact. |
+| **Deterministic fallback always available** | Model synthesis is opt-in (`use_model=true`). The system has a working deterministic path that runs without any API key. If model output fails validation, the graph routes to deterministic automatically — the API caller never receives an ungrounded response. |
+| **Local-first data handling** | Routing and embeddings run on-device via Ollama. No data leaves the local environment until `ANTHROPIC_API_KEY` is set and `use_model=true` is explicitly passed. The default posture is zero data egress. |
+| **CI-gated evaluation** | Committed `results_claude.json` and `results_chroma.json` per domain are the authoritative baseline. The CI gate fails if any eval case regresses before merge — model behavior changes are caught in code review, not in production. |
+
+These are not post-hoc compliance controls. They are structural properties of the
+architecture — a regulated-environment operator cannot accidentally bypass them.
 
 ---
 

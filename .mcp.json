@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ai-operating-system": {
+      "command": "python",
+      "args": [
+        "-m",
+        "apps.mcp.server"
+      ],
+      "env": {
+        "PYTHONPATH": "."
+      }
+    }
+  }
+}

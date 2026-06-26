@@ -188,6 +188,39 @@ continues until Claude produces a final text response.
 
 ---
 
+## Using with Claude Code
+
+The standalone MCP server wires directly into a Claude Code session. Drop
+`.mcp.json` (committed at the repo root) into your project directory and
+Claude Code will discover the server automatically:
+
+```json
+{
+  "mcpServers": {
+    "ai-operating-system": {
+      "command": "python",
+      "args": ["-m", "apps.mcp.server"],
+      "env": { "PYTHONPATH": "." }
+    }
+  }
+}
+```
+
+Once connected, Claude Code can invoke any of the four workflow domains as
+tool calls from a conversation — no HTTP requests, no terminal tab:
+
+```text
+Run a Director OS weekly update against data/local_only/projects with
+focus "platform migration status".
+```
+
+Claude Code resolves this to a `director_os_weekly_update` tool call, runs
+it through the full graph (retrieval → synthesis → validation), and returns
+a grounded structured response inline. For Claude Desktop, use the existing
+`claude_desktop_config.json` at the repo root instead.
+
+---
+
 ## Eval results
 
 All four domains have committed eval results across three retrieval paths:
@@ -225,6 +258,26 @@ python scripts/run_brand_os_evals.py --langsmith
 python scripts/run_interview_os_evals.py --langsmith
 python scripts/run_one_on_one_os_evals.py --langsmith
 ```
+
+---
+
+## Deployment pattern
+
+AI-OS is designed around a four-stage adoption lifecycle — the same pattern
+that applies when deploying any AI synthesis layer into an enterprise team:
+
+| Stage | What happens | Command |
+|---|---|---|
+| **1. Ingest + deterministic baseline** | Index local documents; run eval harness with no API key to establish a grounded baseline | `python scripts/ingest_local_data.py` → `python scripts/run_director_os_evals.py` |
+| **2. Enable model synthesis** | Set `ANTHROPIC_API_KEY`; flip `use_model=true, provider=claude` on any request | `.env` change only — no code changes |
+| **3. Validate against baseline** | Run Claude eval runners; compare results against committed `results_claude.json` | `python scripts/run_director_os_evals_claude.py` |
+| **4. Gate on CI** | Eval runners block merge if any case regresses; committed results are the authoritative record | `.github/workflows/ci.yml` — runs on every PR |
+
+The provider abstraction (`_build_provider()` in each domain graph) means
+switching a deployment from Ollama to Claude — or from one Claude model to
+another — is a single field change on the request. No workflow logic changes.
+This is the pattern that makes AI-OS adaptable to different customer
+environments without rebuilding the core.
 
 ---
 
@@ -349,3 +402,9 @@ It is designed to show how to embed AI into real enterprise workflows:
 provider abstraction, MCP tool integration, evaluation frameworks,
 operator observability, and deployment patterns that survive contact
 with real InfoSec and compliance requirements.
+
+This is a working tool, not a demo. I built it to run my own organization —
+8+ active workstreams, 6-10 direct reports, weekly leadership reviews across
+a large financial services firm. The design constraints (auditability, local-first
+data handling, deterministic fallback, CI-gated evaluation) came from operating
+in that environment, not from engineering for hypothetical requirements.
