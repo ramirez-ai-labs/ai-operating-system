@@ -36,7 +36,7 @@ The repository currently includes:
 - `BaseResponse` base schema in `packages/shared/schemas/base.py` enforcing `evidence`, `provider_usage`, and `section_counts` across all four domain schemas
 - ChromaDB staleness detection: per-path pre-flight document count before querying; clear warning + keyword fallback when collection exists but has no docs for the requested `data_root`
 - unified `scripts/run_evals.py` dispatcher auto-discovering domains from `packages/shared/evaluations/`; `--domain`, `--backend`, `--langsmith`, `--ci` flags replace 12 standalone scripts
-- 246 tests passing (6 skipped without API keys); local evals for all four domains in CI; chroma evals skip gracefully when index absent
+- 252 tests passing (6 skipped without API keys); local evals for all four domains in CI; chroma evals skip gracefully when index absent
 - optional LangSmith tracing with `@traceable` on all graph nodes across all four domains
 - issue templates, `CONTRIBUTING.md`, branch protection on `main`
 
@@ -472,7 +472,7 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–22 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. 246 tests passing.
+Sprints 1–22 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. 252 tests passing.
 
 **Sprint 20  -  Debt paydown (complete, PRs #93–97):**
 Shared grounding primitives extracted to `grounding.py`. Orchestrator circuit breaker and trace token flush. Ghost token capture on fallback path. `section_counts` moved into domain schemas. `_COMPETING_PREFIXES` constant. `_get_chroma_client()` singleton.
