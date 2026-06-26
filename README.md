@@ -19,7 +19,7 @@ server** for workflow entry points.
 
 | Capability | Implementation |
 |---|---|
-| Production Claude integration | `packages/shared/providers/claude_provider.py` |
+| Production Claude integration | `packages/shared/providers/claude.py` |
 | Four workflow domains | Director OS, Brand OS, Interview OS, One-on-One OS |
 | In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `packages/shared/mcp/orchestrator_integration.py` |
 | Standalone MCP server | `apps/mcp/server.py`  -  exports all 4 domain entry points as MCP tools |

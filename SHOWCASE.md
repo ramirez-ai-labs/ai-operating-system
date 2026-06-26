@@ -84,8 +84,8 @@ cannot locate those values in the evidence, it cannot return the item. The schem
 rejects the response at parse time, not post-hoc. Ollama does not have reliable forced
 tool use at the level needed for this invariant.
 
-`packages/shared/providers/claude.py:31-65` — `_TOOL_SCHEMA` defining the grounding
-contract. `packages/shared/providers/claude.py:107-108` — `tool_choice` forcing it.
+`packages/shared/providers/claude.py:23-55` — `_TOOL_SCHEMA` defining the grounding
+contract. `packages/shared/providers/claude.py:99-100` — `tool_choice` forcing it.
 
 ### Why forced tool use and not a system prompt instruction
 
@@ -253,10 +253,10 @@ architecture — a regulated-environment operator cannot accidentally bypass the
 ### LangGraph state machines with conditional routing
 
 All 4 domains run as compiled LangGraph `StateGraph` instances. Each graph has
-a conditional edge after `build_response` that retries with the deterministic path
-if model synthesis fails and `fallback_to_deterministic=True`. Director OS has
-an additional `validate_response` node that enforces evidence grounding before
-the response reaches the API layer.
+a `validate_response` node and a conditional edge after `build_response` that
+retries with the deterministic path if model synthesis fails or validation fails
+and `fallback_to_deterministic=True`. Director OS additionally has `build_draft`
+and `assemble_response` nodes that split generation from assembly before validation.
 
 ```mermaid
 flowchart LR
@@ -348,8 +348,8 @@ Claude supports forced tool use (`tool_choice: {"type": "tool"}`). A prompt
 instruction achieves the same effect 95% of the time. The tool schema achieves it
 structurally.
 
-`packages/shared/providers/claude.py:31` — `_TOOL_SCHEMA` definition.
-`packages/shared/providers/claude.py:107-108` — `tool_choice` forcing it on every call.
+`packages/shared/providers/claude.py:23` — `_TOOL_SCHEMA` definition.
+`packages/shared/providers/claude.py:99-100` — `tool_choice` forcing it on every call.
 
 ### 2. MCP composability in two patterns
 
@@ -387,10 +387,10 @@ without raw JSON inspection.
 The researcher-writer pipeline (`ResearcherAgent` + `WriterAgent`) is not a chat
 between two models. It is a deliberate information-narrowing pipeline.
 
-The `ResearcherAgent` (`packages/shared/agents/researcher.py:84`) has access to
+The `ResearcherAgent` (`packages/shared/agents/researcher.py:78`) has access to
 filesystem tools and produces a `ResearchSynthesis` struct — a structured object with
 `key_findings`, `supporting_evidence`, and `themes`. The `WriterAgent`
-(`packages/shared/agents/writer.py:57`) receives only that struct. It never
+(`packages/shared/agents/writer.py:51`) receives only that struct. It never
 sees the raw evidence files, the retrieval results, or the full message history.
 
 The writer can rephrase, reformat, and adapt tone. It cannot introduce information
@@ -531,7 +531,7 @@ not a summary of past runs.
 | **Used for** | Stateful workflow orchestration for all 4 domain graphs |
 | **Key features used** | `StateGraph` with `TypedDict` state, `add_node` / `add_edge` / `add_conditional_edges`, `compile()` for a reusable compiled graph, `START` / `END` sentinels, conditional routing for deterministic fallback |
 | **Where** | `packages/shared/graphs/director_os.py`, `brand_os.py`, `interview_os.py`, `one_on_one_os.py` |
-| **Pattern** | Each domain graph has two nodes: `retrieve_evidence` and `build_response`. Director OS adds `build_draft`, `assemble_response`, `validate_response`. A conditional edge after `build_response` retries with the deterministic path if model synthesis fails and `fallback_to_deterministic=True`. |
+| **Pattern** | Each domain graph has `retrieve_evidence`, `build_response`, and `validate_response` nodes. Director OS additionally splits generation into `build_draft` and `assemble_response` before validation. A conditional edge after `build_response` retries with the deterministic path if model synthesis or validation fails and `fallback_to_deterministic=True`. |
 
 ### LangSmith
 
