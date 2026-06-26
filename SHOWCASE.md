@@ -372,7 +372,7 @@ drive the MCP tool input shapes — no parallel schema definitions.
 ### 3. Prompt caching on the evidence block
 
 Every Claude synthesis call marks the evidence block with
-`cache_control: {"type": "ephemeral"}` (`packages/shared/providers/claude.py:104`).
+`cache_control: {"type": "ephemeral"}` (`packages/shared/providers/claude.py:96`).
 On the second request with the same evidence set, Anthropic returns the KV cache
 hit — the evidence block is not re-tokenized. This cuts per-request cost by 60-80%
 on repeated queries against the same document set, which is the normal usage pattern
@@ -606,5 +606,5 @@ not a summary of past runs.
 | | |
 |---|---|
 | **ruff** | Linting and import sorting — `pyproject.toml` (config), `.github/workflows/ci.yml` (CI step) |
-| **pytest** | 246 passing tests, 6 skipped (Claude/Ollama tests skipped without API keys). Claude-dependent tests use environment checks so the full suite passes in CI without any API keys. |
+| **pytest** | 252 passing tests, 6 skipped (Claude/Ollama tests skipped without API keys). Claude-dependent tests use environment checks so the full suite passes in CI without any API keys. |
 | **Where** | `tests/` |

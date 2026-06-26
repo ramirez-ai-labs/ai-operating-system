@@ -32,7 +32,7 @@ Current implemented areas include:
 - ChromaDB semantic vector search backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
 - shared schemas, retrieval, validation, provider, observability, and evaluation helpers under `packages/shared`
 - a realistic enterprise scenario dataset under `data/local_only/`
-- 25 test files, 246 tests passing; local evals for all four domains (Director OS, Brand OS, Interview OS, One-on-One OS) running in CI
+- 26 test files, 252 tests passing; local evals for all four domains (Director OS, Brand OS, Interview OS, One-on-One OS) running in CI
 - optional LangSmith tracing
 - GitHub Actions CI running lint, tests, and evals on every PR
 
