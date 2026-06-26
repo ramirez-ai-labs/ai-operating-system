@@ -11,7 +11,7 @@ server** for workflow entry points.
 
 ---
 
-**Recruiter / hiring manager walkthrough:** [docs/SHOWCASE.md](docs/SHOWCASE.md)  -  use cases, domain walkthroughs with live curl examples, and the engineering decisions behind the system.
+**Recruiter / hiring manager walkthrough:** [SHOWCASE.md](SHOWCASE.md)  -  use cases, domain walkthroughs with live curl examples, and the engineering decisions behind the system.
 
 ---
 
@@ -236,7 +236,7 @@ and `LANGSMITH_API_KEY` are set. Every `graph.invoke()` call is wrapped with
 `build_response`, `validate_response`) carries a `@traceable` decorator  -
 giving full input/output visibility at every step with no extra instrumentation code.
 
-![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](LanndSmithOutput.png)
+![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](LangSmithOutput.png)
 
 Traces appear automatically in the `ai-os` project at smith.langsmith.com.
 No code changes required  -  tracing is a silent no-op when the env vars are absent.
@@ -291,7 +291,7 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
 
 ## Technology stack
 
-See [docs/SHOWCASE.md](docs/SHOWCASE.md) for a full mapping of how each tool is used, which features are exercised, and where in the codebase each integration lives.
+See [SHOWCASE.md](SHOWCASE.md) for a full mapping of how each tool is used, which features are exercised, and where in the codebase each integration lives.
 
 | Layer | Tool |
 |---|---|

@@ -40,9 +40,9 @@ The repository currently includes:
 - optional LangSmith tracing with `@traceable` on all graph nodes across all four domains
 - issue templates, `CONTRIBUTING.md`, branch protection on `main`
 
-The repository does not yet include:
+The repository also includes:
 
-- a dedicated `apps/web` frontend beyond the current operator console
+- a Next.js frontend under `apps/web` with domain tabs, workflow form, results pane, and trace pane (shipped Phase 8, PRs #104–105)
 
 ## Guiding Principles
 

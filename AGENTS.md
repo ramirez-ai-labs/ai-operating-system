@@ -16,7 +16,7 @@ This repo should be treated as a reusable local-first agent system, not a generi
 
 ## Current Repository State
 
-The repository is a fully implemented multi-agent AI operating system. Sprints 1–9 are complete.
+The repository is a fully implemented multi-agent AI operating system. Sprints 1–22 are complete.
 
 Current implemented areas include:
 
