@@ -1,17 +1,31 @@
 # AI Operating System (AI-OS)
 
-AI-OS is a production-grade multi-agent system that helps technical leaders
-synthesize fragmented information  -  project status, team signals, brand work,
-candidate briefs, and 1:1 meeting prep  -  into structured, actionable output.
+AI-OS is a production-grade multi-agent system that synthesizes fragmented information — project notes, team signals, candidate briefs, meeting prep — into structured, evidence-grounded output.
 
-Four workflow domains: **Director OS**, **Brand OS**, **Interview OS**, and
-**One-on-One OS**. Built on **Claude** (Anthropic) with **LangGraph
-orchestration**, an in-process filesystem tool loop, and a **standalone MCP
-server** for workflow entry points.
+Four workflow domains share a common architecture: a routing layer that classifies incoming requests and dispatches them to the right domain graph, a retrieval layer that pulls relevant evidence from local markdown files or a semantic vector store, a synthesis layer that produces structured output with mandatory source citations, and a validation layer that enforces grounding before any response reaches the API.
 
 ---
 
-**Recruiter / hiring manager walkthrough:** [SHOWCASE.md](SHOWCASE.md)  -  use cases, domain walkthroughs with live curl examples, and the engineering decisions behind the system.
+**Recruiter / hiring manager walkthrough:** [SHOWCASE.md](SHOWCASE.md) — use cases, domain walkthroughs with live curl examples, and the engineering decisions behind the system.
+
+---
+
+## Why this matters
+
+Production AI deployment fails in predictable ways: hallucinated content with no citation trail, model paths that break silently when the LLM is unavailable, no way to measure whether synthesis quality regresses as the system evolves, and observability that requires code changes to turn on or off. AI-OS is designed to address all four at the architecture level — not as afterthoughts, but as invariants.
+
+Evidence grounding is enforced at the schema level via forced tool use: every output item must carry a `source` filename and `line_number`. The system has no path to a response with an uncited item. Deterministic fallback is always available — if model synthesis fails or no API key is present, the system produces grounded output from keyword extraction with no silent degradation. The evaluation harness runs 22 cases across three retrieval paths in CI on every PR. Observability is opt-in by environment variable: setting `LANGSMITH_TRACING=true` emits node-level traces across all four domain graphs with no code changes.
+
+---
+
+## Domains
+
+| Domain | What it synthesizes |
+|---|---|
+| **Director OS** | Project notes → wins, risks, next steps for a weekly leadership update |
+| **Brand OS** | Technical work notes → content post outlines, podcast angles, repo improvements |
+| **Interview OS** | Hiring notes → candidate brief with key questions, talking points, red flags |
+| **One-on-One OS** | Direct report notes → meeting brief with action items, blockers, kudos |
 
 ---
 
@@ -19,32 +33,36 @@ server** for workflow entry points.
 
 | Capability | Implementation |
 |---|---|
-| Production Claude integration | `packages/shared/providers/claude.py` |
-| Four workflow domains | Director OS, Brand OS, Interview OS, One-on-One OS |
-| In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `packages/shared/mcp/orchestrator_integration.py` |
-| Standalone MCP server | `apps/mcp/server.py`  -  exports all 4 domain entry points as MCP tools |
-| LLM evaluation framework | per-domain eval harness with committed results |
-| Operator trace / observability | `trace.mcp_tool_calls` in every `/orchestrate` response |
-| Repeatable deployment pattern | `docs/DEPLOYMENT.md`  -  secrets, eval gate, rollback, MCP adapters |
-| LangGraph state graphs | `packages/shared/graphs/director_os.py`, `brand_os.py`, `interview_os.py`, `one_on_one_os.py` |
-| LangSmith tracing | Node-level traces on all 4 domain graphs via `@traceable`  -  set `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` |
-| ChromaDB semantic retrieval | `packages/shared/retrieval/chroma.py`  -  embedding-based retrieval with `nomic-embed-text` via Ollama |
-| Chroma eval harness | Per-domain chroma eval runners with `results_chroma.json` committed for all 4 domains |
+| Multi-domain LLM orchestration | Chief of Staff router + 4 domain LangGraph graphs |
+| In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `orchestrator_integration.py` |
+| Standalone MCP server | `apps/mcp/server.py` — all 4 domains as MCP tools |
+| Schema-enforced evidence grounding | Forced tool use with required `source` + `line_number` fields |
+| Provider abstraction | `base.py` interface; `claude.py` / `ollama.py` / `grounding.py` implementations |
+| Pluggable retrieval backend | Keyword (`local_files.py`) or semantic (`chroma.py`) via env var |
+| Multi-agent pipeline | `ResearcherAgent → WriterAgent` with structured handoff contract |
+| LLM evaluation framework | 22 cases, 3 retrieval paths, committed results, CI-gated |
+| Node-level observability | LangSmith `@traceable` on all 4 domain graphs — silent no-op without config |
+| Prompt caching + cost visibility | `cache_read_input_tokens` / `cache_creation_input_tokens` in every `WorkflowTrace` |
 
-The architecture is designed to be adapted. The provider layer, the
-in-process filesystem tool loop, and the standalone MCP server are all
-swappable  -  designed for the kind of customer environment customization that
-enterprise AI work requires.
+The architecture is designed to be adapted. The provider layer, the in-process filesystem tool loop, and the standalone MCP server are all swappable — designed for the kind of environment customization that enterprise AI work requires.
 
 ---
 
 ## Architecture
 
+The system has three independently configurable layers: routing, retrieval, and synthesis. Swapping any layer — routing model, retrieval backend, synthesis provider — requires a single field change, not a workflow rewrite.
+
+**Routing** — The Chief of Staff router classifies each request using a local LLM with a compact one-token classification prompt (`director_os`, `brand_os`, `interview_os`, `one_on_one_os`). When the local model is unreachable, it falls back to keyword rules automatically. Routing decisions don't need reasoning depth — they need to be fast, free, and zero-data-egress. A cloud LLM call on a classification task that returns one word is waste.
+
+**Retrieval** — Two backends share a common interface. The keyword backend (`local_files.py`) does BM25-style scoring with no external dependencies — it runs in CI with no services required. The semantic backend (`chroma.py`) uses ChromaDB with `nomic-embed-text` embeddings via Ollama for richer recall. The backend selector reads `RETRIEVAL_BACKEND` from the environment and switches automatically. If the Chroma index is absent, it falls through to keyword retrieval.
+
+**Synthesis** — Each domain runs as a compiled LangGraph `StateGraph` with typed state. Nodes: `retrieve_evidence → build_draft → assemble_response → validate_response`. A conditional edge after `build_response` routes to `deterministic_fallback` when model synthesis fails and `fallback_to_deterministic=True`. The provider abstraction means switching synthesis providers is a single field on the request — no workflow logic changes.
+
 ```mermaid
 flowchart TB
     In([OrchestratorRequest]) --> MCP{"use_mcp?"}
-    MCP -->|true| MCPLoop["MCP Tool Loop\nClaude reads files via tool calls"]
-    MCP -->|false| CoS["Chief of Staff\nOllama classification\n+ keyword fallback"]
+    MCP -->|true| MCPLoop["MCP Tool Loop\nLLM reads files via tool calls"]
+    MCP -->|false| CoS["Chief of Staff\nLocal LLM classification\n+ keyword fallback"]
     MCPLoop --> CoS
 
     CoS -->|director_os| Dir["Director OS\nretrieve_evidence"]
@@ -53,23 +71,23 @@ flowchart TB
     CoS -->|one_on_one_os| OneOnOne["One-on-One OS\nretrieve_evidence"]
 
     Dir --> DModel{"use_model?"}
-    DModel -->|"provider: claude"| DC["Claude Haiku\ntool use + prompt cache"]
-    DModel -->|"provider: ollama"| DO["Ollama llama3.2\nlocal inference"]
+    DModel -->|"provider: claude"| DC["Claude\ntool use + prompt cache"]
+    DModel -->|"provider: ollama"| DO["Ollama\nlocal inference"]
     DModel -->|false| DDet["Deterministic\nkeyword extraction"]
     DC --> DVal["validate_response\nevidence grounding"]
     DO --> DVal
     DDet --> DVal
 
-    Brand --> BModel{"use_model?\nclaude only"}
-    BModel -->|true| BC["Claude Haiku\ntool use"]
+    Brand --> BModel{"use_model?"}
+    BModel -->|true| BC["Claude\ntool use"]
     BModel -->|false| BDet["Deterministic\nsection formatter"]
 
-    Interview --> IModel{"use_model?\nclaude only"}
-    IModel -->|true| IC["Claude Haiku\ntool use"]
+    Interview --> IModel{"use_model?"}
+    IModel -->|true| IC["Claude\ntool use"]
     IModel -->|false| IDet["Deterministic\ngrounded extraction"]
 
-    OneOnOne --> OModel{"use_model?\nclaude only"}
-    OModel -->|true| OC["Claude Haiku\ntool use"]
+    OneOnOne --> OModel{"use_model?"}
+    OModel -->|true| OC["Claude\ntool use"]
     OModel -->|false| ODet["Deterministic\ngrounded extraction"]
 
     DVal --> TA{"target_audience?"}
@@ -80,8 +98,8 @@ flowchart TB
     OC --> TA
     ODet --> TA
 
-    TA -->|set| Researcher["ResearcherAgent\nClaude Haiku\nstructured synthesis"]
-    Researcher --> Writer["WriterAgent\nClaude Haiku\naudience formatting"]
+    TA -->|set| Researcher["ResearcherAgent\nstructured synthesis"]
+    Researcher --> Writer["WriterAgent\naudience formatting"]
     Writer --> RespA(["OrchestratorResponse\nformatted_content + agent_calls + trace"])
     TA -->|not set| RespB(["OrchestratorResponse\nWorkflowTrace + cache metrics"])
 
@@ -97,28 +115,41 @@ flowchart TB
 
 ---
 
+## Key design decisions
+
+**Forced tool use over prompt instructions.** The grounding invariant is enforced via the LLM tool use API's JSON schema, not a system prompt instruction. A prompt instruction achieves correct citation ~95% of the time. A required schema field (`source` + `line_number` on every output item) achieves it structurally: the API call either produces a fully-cited response or raises a parse error, which triggers the deterministic fallback. There is no "approximately cited" middle ground.
+
+**Schema as the single source of truth.** The same Pydantic `BaseModel` definitions drive FastAPI request validation, LangGraph state shape, eval case deserialization from JSON on disk, and LangSmith dataset sync. One schema change propagates through the full stack with no manual wiring.
+
+**Evaluation tests failure modes, not just happy paths.** Each domain's eval suite includes cases for: baseline grounding pass, multi-file retrieval, provider failure (`_FailingProvider`), weak output / empty sections (`_WeakProvider`), and unsupported claims that cite wrong evidence (`_UnsupportedClaimProvider`). All three retrieval paths are CI-gated before merge.
+
+**Multi-agent pipeline via information narrowing.** The `ResearcherAgent → WriterAgent` pipeline is not two models chatting. The researcher produces a structured `ResearchSynthesis` object via tool use. The writer receives only that object — not raw evidence. The writer can rephrase and reformat; it cannot introduce information the researcher didn't extract. Hallucination surface is bounded to the reformatting step.
+
+**Prompt caching on the evidence block.** The evidence block is marked with `cache_control: {"type": "ephemeral"}` on every synthesis call. On repeated queries against the same document set — the normal usage pattern — the LLM reuses the cached KV representation. Savings surface in every `WorkflowTrace` via `cache_read_input_tokens` and `cache_creation_input_tokens`.
+
+---
+
 ## Quick start
 
 Requirements: Python 3.11+
 
 ```bash
-# Install
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-
-# Copy env and optionally add your Anthropic API key
 cp .env.example .env
-
-# Run the API
 uvicorn apps.api.main:app --reload --env-file .env
+```
 
-# Run all evals  -  local, no API key required
+The system runs fully without any API keys. Model synthesis is opt-in via `use_model=True` on any request. Open the operator console at `http://127.0.0.1:8000/`.
+
+```bash
+# Run all local evals — no API key required
 python scripts/run_director_os_evals.py
 python scripts/run_brand_os_evals.py
 python scripts/run_interview_os_evals.py
 python scripts/run_one_on_one_os_evals.py
 
-# Run tests (Claude tests skipped without API key)
+# Run tests
 pytest tests/ -v
 ```
 
@@ -126,23 +157,21 @@ pytest tests/ -v
 
 ## Working with Claude
 
-The Claude provider is active when `ANTHROPIC_API_KEY` is set.
-Falls back to the Ollama deterministic path when the key is absent  -
-no code changes required.
+Set `ANTHROPIC_API_KEY` in `.env`. The Claude provider activates automatically — no code changes required.
 
 ```bash
-# Director OS  -  weekly update with Claude
+# Director OS — weekly update with Claude
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
     "data_path": "data/local_only/projects",
     "focus": "leadership update",
-    "max_documents": 5
+    "use_model": true,
+    "provider": "claude"
   }'
 ```
 
-The response includes a `trace` object showing which MCP tools were called,
-what data was retrieved, and token counts:
+Every response includes a `trace` object showing which tools were called, what data was retrieved, and token counts including cache hits:
 
 ```json
 {
@@ -157,24 +186,23 @@ what data was retrieved, and token counts:
       }
     ],
     "total_input_tokens": 842,
+    "cache_read_input_tokens": 680,
     "total_output_tokens": 312
   }
 }
 ```
 
+Falls back to the Ollama / deterministic path when the key is absent.
+
 ---
 
 ## MCP entry points
 
-AI-OS supports two MCP-related paths:
+Two MCP integration patterns:
 
-1. The in-process filesystem tool loop used by the FastAPI `/orchestrate` flow.
-2. The standalone MCP server in `apps/mcp/server.py`, which exports all four
-   workflow domains as MCP tools for Claude Desktop or Claude Code:
-   `director_os.weekly_update`, `brand_os.content_draft`,
-   `interview_os.brief`, and `one_on_one_os.brief`.
+**In-process tool loop** — When `use_mcp=True` on `/orchestrate`, the LLM calls `list_files`, `read_file`, and `search_content` tools autonomously. The orchestrator executes each call, appends the result to the message history, and continues until the model produces a final response. No pre-selected evidence — the model decides what to read.
 
-The filesystem loop exposes three tools Claude can invoke during synthesis:
+**Standalone MCP server** — `apps/mcp/server.py` exports all four domain workflows as MCP tools (`director_os.weekly_update`, `brand_os.content_draft`, `interview_os.brief`, `one_on_one_os.brief`) for Claude Desktop or Claude Code. Wire via `claude_desktop_config.json` and all four workflows are available as tool calls without touching the HTTP API.
 
 | Tool | Description |
 |---|---|
@@ -182,66 +210,21 @@ The filesystem loop exposes three tools Claude can invoke during synthesis:
 | `read_file(path)` | Retrieve full file contents for synthesis |
 | `search_content(path, query)` | Find documents mentioning a specific topic or risk |
 
-Claude calls these autonomously during the orchestration loop. The orchestrator
-executes each tool call, appends the result to the message history, and
-continues until Claude produces a final text response.
-
----
-
-## Using with Claude Code
-
-The standalone MCP server wires directly into a Claude Code session. Drop
-`.mcp.json` (committed at the repo root) into your project directory and
-Claude Code will discover the server automatically:
-
-```json
-{
-  "mcpServers": {
-    "ai-operating-system": {
-      "command": "python",
-      "args": ["-m", "apps.mcp.server"],
-      "env": { "PYTHONPATH": "." }
-    }
-  }
-}
-```
-
-Once connected, Claude Code can invoke any of the four workflow domains as
-tool calls from a conversation — no HTTP requests, no terminal tab:
-
-```text
-Run a Director OS weekly update against data/local_only/projects with
-focus "platform migration status".
-```
-
-Claude Code resolves this to a `director_os_weekly_update` tool call, runs
-it through the full graph (retrieval → synthesis → validation), and returns
-a grounded structured response inline. For Claude Desktop, use the existing
-`claude_desktop_config.json` at the repo root instead.
-
 ---
 
 ## Eval results
 
-All four domains have committed eval results across three retrieval paths:
+All 22 eval cases pass across all four domains on local (keyword) and semantic (ChromaDB) retrieval paths. Results are committed — CI fails if any case regresses.
 
 | Domain | Local (keyword) | Chroma (semantic) | Claude (live) |
 |---|---|---|---|
-| Director OS | `weekly_update_cases.json` | `results_chroma.json` | `results_claude.json` |
-| Brand OS | `content_draft_cases.json` | `results_chroma.json` | `results_claude.json` |
-| Interview OS | `interview_cases.json` | `results_chroma.json` | `results_claude.json` |
-| One-on-One OS | `meeting_brief_cases.json` | `results_chroma.json` | `results_claude.json` |
+| Director OS | 7/7 | 7/7 | 4/4 |
+| Brand OS | 7/7 | 7/7 | 7/7 |
+| Interview OS | 4/4 | 4/4 | 4/4 |
+| One-on-One OS | 4/4 | 4/4 | 4/4 |
+| **Total** | **22/22** | **22/22** | **19/19** |
 
-Run all local evals (no API key required):
-
-```bash
-python scripts/run_director_os_evals.py
-python scripts/run_brand_os_evals.py
-python scripts/run_interview_os_evals.py
-python scripts/run_one_on_one_os_evals.py
-```
-
-Run ChromaDB semantic retrieval evals (requires local Ollama + `nomic-embed-text`):
+Run ChromaDB semantic evals (requires local Ollama + `nomic-embed-text`):
 
 ```bash
 python -m scripts.run_director_os_evals_chroma
@@ -254,72 +237,38 @@ Run LangSmith cloud-backed evals (requires `LANGSMITH_API_KEY`):
 
 ```bash
 python scripts/run_director_os_evals.py --langsmith
-python scripts/run_brand_os_evals.py --langsmith
-python scripts/run_interview_os_evals.py --langsmith
-python scripts/run_one_on_one_os_evals.py --langsmith
 ```
-
----
-
-## Deployment pattern
-
-AI-OS is designed around a four-stage adoption lifecycle — the same pattern
-that applies when deploying any AI synthesis layer into an enterprise team:
-
-| Stage | What happens | Command |
-|---|---|---|
-| **1. Ingest + deterministic baseline** | Index local documents; run eval harness with no API key to establish a grounded baseline | `python scripts/ingest_local_data.py` → `python scripts/run_director_os_evals.py` |
-| **2. Enable model synthesis** | Set `ANTHROPIC_API_KEY`; flip `use_model=true, provider=claude` on any request | `.env` change only — no code changes |
-| **3. Validate against baseline** | Run Claude eval runners; compare results against committed `results_claude.json` | `python scripts/run_director_os_evals_claude.py` |
-| **4. Gate on CI** | Eval runners block merge if any case regresses; committed results are the authoritative record | `.github/workflows/ci.yml` — runs on every PR |
-
-The provider abstraction (`_build_provider()` in each domain graph) means
-switching a deployment from Ollama to Claude — or from one Claude model to
-another — is a single field change on the request. No workflow logic changes.
-This is the pattern that makes AI-OS adaptable to different customer
-environments without rebuilding the core.
 
 ---
 
 ## LangSmith observability
 
-All four domain graphs emit node-level traces to LangSmith when `LANGSMITH_TRACING=true`
-and `LANGSMITH_API_KEY` are set. Every `graph.invoke()` call is wrapped with
-`get_langsmith_tracing_context()` and each graph node (`retrieve_evidence`,
-`build_response`, `validate_response`) carries a `@traceable` decorator  -
-giving full input/output visibility at every step with no extra instrumentation code.
+All four domain graphs emit node-level traces to LangSmith when `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` are set. Every `graph.invoke()` call is wrapped with `get_langsmith_tracing_context()` and each graph node carries a `@traceable` decorator — full input/output visibility at every step with no extra instrumentation code.
 
 ![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](LangSmithOutput.png)
 
-Traces appear automatically in the `ai-os` project at smith.langsmith.com.
-No code changes required  -  tracing is a silent no-op when the env vars are absent.
+Tracing is a silent no-op when the env vars are absent. Zero code paths branch on whether tracing is enabled.
 
 ```bash
 # .env
 LANGSMITH_TRACING=true
-LANGSMITH_API_KEY=<your key from smith.langsmith.com>
-# LANGSMITH_PROJECT=ai-os  # default  -  override if needed
+LANGSMITH_API_KEY=<your key>
 ```
 
 ---
 
 ## Model provider strategy
 
-AI-OS uses different models for different workloads  -  local inference for
-routing and low-stakes tasks, Claude for structured synthesis, Sonnet/Opus
-on demand for complex runs:
-
 | Layer | Model | Workload |
 |---|---|---|
-| Local inference | Ollama (`llama3.2`) | Routing, classification, low-stakes summarization  -  free, on-device, no API key |
-| Cloud synthesis | Claude Haiku 4.5 | Structured output via tool use, MCP orchestration  -  cost-effective |
-| Premium synthesis | Claude Sonnet / Opus | Complex or high-stakes runs  -  on demand |
+| Local inference | Ollama (`llama3.2`) | Routing, classification, low-stakes summarization — free, on-device, no API key |
+| Cloud synthesis | Claude Haiku | Structured output via tool use, MCP orchestration — cost-effective |
+| Premium synthesis | Claude Sonnet / Opus | Complex or high-stakes runs — on demand |
 
-All providers implement the same interface. Switching is a single field
-change in the request  -  no workflow logic changes required.
+All providers implement the same interface. Switching is a single field change on the request — no workflow logic changes required.
 
 ```bash
-# Ollama  -  no API key required
+# Ollama — no API key required
 curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   -H "Content-Type: application/json" \
   -d '{
@@ -328,83 +277,32 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
     "provider": "ollama",
     "ollama_model": "llama3.2"
   }'
-
-# Claude Haiku  -  structured synthesis
-curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
-  -H "Content-Type: application/json" \
-  -d '{
-    "data_path": "data/local_only/projects",
-    "use_model": true,
-    "provider": "claude",
-    "claude_model": "claude-haiku-4-5-20251001"
-  }'
 ```
 
 ---
 
 ## Technology stack
 
-See [SHOWCASE.md](SHOWCASE.md) for a full mapping of how each tool is used, which features are exercised, and where in the codebase each integration lives.
-
 | Layer | Tool |
 |---|---|
 | Language | Python 3.11+ |
 | API | FastAPI + Pydantic |
 | Workflow orchestration | LangGraph |
-| Model provider (cloud) | Anthropic SDK  -  Claude Haiku / Sonnet / Opus |
-| Model provider (local) | Ollama |
-| In-process MCP loop | `packages/shared/mcp/filesystem_server.py` |
+| LLM synthesis (cloud) | Claude — tool use, prompt caching |
+| LLM inference (local) | Ollama (`llama3.2`, `nomic-embed-text`) |
+| In-process MCP loop | `packages/shared/mcp/` |
 | Standalone MCP server | `apps/mcp/server.py` |
-| Semantic retrieval | ChromaDB + Ollama `nomic-embed-text` embeddings |
-| Observability | LangSmith  -  `@traceable` on all 4 domain graphs, node-level traces |
-| Evaluation | Per-domain eval harness  -  local, chroma, and LangSmith cloud paths |
-| CI/CD | GitHub Actions (lint, test, evals on every PR) |
+| Semantic retrieval | ChromaDB + `nomic-embed-text` embeddings |
+| Observability | LangSmith — `@traceable` on all 4 domain graphs, node-level traces |
+| Evaluation | Per-domain harness — keyword, semantic, and cloud paths; results committed |
+| CI/CD | GitHub Actions — lint, test, evals on every PR; no API keys required |
 
----
-
-## Why Claude
-
-Claude is the primary synthesis engine for three specific reasons:
-
-**Tool use for structured output.** The Director OS workflow requires grounded
-output  -  every win, risk, and next step must cite a source file and line number
-from the retrieved evidence. Claude's tool use API enforces this contract at the
-schema level. The `generate_weekly_update` tool schema declares required
-`source` and `line_number` fields; hallucinated citations are caught at parse
-time, not post-hoc.
-
-**Prompt caching reduces per-request cost.** The system prompt (instructions +
-grounding rules) is stable across all calls for the same deployment. Marking it
-with `cache_control: {"type": "ephemeral"}` lets Claude reuse the KV
-representation within a 5-minute window. Cache savings surface in every
-`WorkflowTrace` via `cache_read_input_tokens` and `cache_creation_input_tokens`
-so operators can see the cost trajectory over time.
-
-**Multi-agent coordination via explicit handoff contracts.** The
-`ResearcherAgent → WriterAgent` pipeline separates synthesis from formatting.
-The researcher uses tool use to produce structured findings
-(`ResearchSynthesis`); the writer takes only that struct  -  not raw evidence  -
-and formats it for the target audience. This explicit contract bounds
-hallucination risk: the writer can only rephrase what the researcher already
-extracted. Each agent emits an `AgentCall` with token counts so the full
-pipeline cost is visible in the trace.
+See [SHOWCASE.md](SHOWCASE.md) for a full mapping of how each tool is used, which features are exercised, and where each integration lives in the codebase.
 
 ---
 
 ## Why this exists
 
-Technical leaders operate across fragmented systems: Jira, Confluence,
-meeting notes, roadmap docs, 1:1 notes. AI-OS synthesizes these into
-structured, evidence-grounded output  -  weekly updates, risk summaries,
-content drafts  -  without defaulting to opaque or autonomous agent behavior.
+Technical leaders operate across fragmented systems — notes, roadmap docs, meeting prep, hiring pipelines — and spend significant time each week synthesizing that information into structured output for stakeholders. AI-OS automates that synthesis while keeping every output traceable to the source.
 
-It is designed to show how to embed AI into real enterprise workflows:
-provider abstraction, MCP tool integration, evaluation frameworks,
-operator observability, and deployment patterns that survive contact
-with real InfoSec and compliance requirements.
-
-This is a working tool, not a demo. I built it to run my own organization —
-8+ active workstreams, 6-10 direct reports, weekly leadership reviews across
-a large financial services firm. The design constraints (auditability, local-first
-data handling, deterministic fallback, CI-gated evaluation) came from operating
-in that environment, not from engineering for hypothetical requirements.
+It is also a design artifact: a reference implementation for how production AI belongs in enterprise workflows. Provider abstraction that survives a model swap. MCP tool integration in two patterns. An evaluation framework that tests failure modes, not just happy paths. Observability that ships with the system. Deployment patterns that survive contact with real InfoSec requirements. The architecture is designed to be adapted — each layer is independently swappable for the kind of environment customization that enterprise AI deployment requires.
