@@ -137,18 +137,21 @@ def _build_deterministic_response(
         candidate_summary=_build_summary(request, evidence),
         key_questions=_collect_items(
             evidence,
+            section_name="key_questions",
             allowed_prefixes=("Question:", "Q:"),
             keywords=("question", "ask", "explore", "probe", "assess"),
             limit=4,
         ),
         talking_points=_collect_items(
             evidence,
+            section_name="talking_points",
             allowed_prefixes=("Talking Point:", "Topic:", "Discuss:"),
             keywords=("discuss", "cover", "highlight", "mention", "experience", "background"),
             limit=4,
         ),
         red_flags=_collect_items(
             evidence,
+            section_name="red_flags",
             allowed_prefixes=("Red Flag:", "Concern:", "Risk:", "Watch:"),
             keywords=("concern", "risk", "gap", "flag", "watch", "unclear", "missing"),
             limit=3,
@@ -170,6 +173,7 @@ def _build_summary(request: InterviewBriefRequest, evidence: list[EvidenceItem])
 def _collect_items(
     evidence: list[EvidenceItem],
     *,
+    section_name: str,
     allowed_prefixes: tuple[str, ...],
     keywords: tuple[str, ...],
     limit: int,
@@ -179,10 +183,12 @@ def _collect_items(
     seen: set[str] = set()
     for item in evidence:
         lowered = item.excerpt.lower()
-        norm_prefixes = tuple(p.lower() for p in allowed_prefixes)
-        prefix_match = any(lowered.startswith(p) for p in norm_prefixes)
-        keyword_match = any(kw in lowered for kw in keywords)
-        if (prefix_match or keyword_match) and item.excerpt not in seen:
+        if _matches_interview_section(
+            lowered_excerpt=lowered,
+            section_name=section_name,
+            allowed_prefixes=allowed_prefixes,
+            keywords=keywords,
+        ) and item.excerpt not in seen:
             seen.add(item.excerpt)
             results.append(
                 GroundedItem(
@@ -194,6 +200,38 @@ def _collect_items(
         if len(results) >= limit:
             break
     return results
+
+
+# Explicit prefixes per section, used to keep an excerpt claimed by one
+# section's prefix from also leaking into another section via keyword
+# fallback (e.g. "Concern: gap in background" matching red_flags' "Concern:"
+# prefix should not also match talking_points' "background" keyword).
+_INTERVIEW_SECTION_PREFIXES: dict[str, tuple[str, ...]] = {
+    "key_questions": ("question:", "q:"),
+    "talking_points": ("talking point:", "topic:", "discuss:"),
+    "red_flags": ("red flag:", "concern:", "risk:", "watch:"),
+}
+
+
+def _matches_interview_section(
+    *,
+    lowered_excerpt: str,
+    section_name: str,
+    allowed_prefixes: tuple[str, ...],
+    keywords: tuple[str, ...],
+) -> bool:
+    """Prefer explicit section prefixes before falling back to loose keyword matching."""
+    normalized_prefixes = tuple(p.lower() for p in allowed_prefixes)
+    if any(lowered_excerpt.startswith(p) for p in normalized_prefixes):
+        return True
+
+    for other_section, other_prefixes in _INTERVIEW_SECTION_PREFIXES.items():
+        if other_section != section_name and any(
+            lowered_excerpt.startswith(p) for p in other_prefixes
+        ):
+            return False
+
+    return any(keyword in lowered_excerpt for keyword in keywords)
 
 
 def _build_interview_brief_graph():

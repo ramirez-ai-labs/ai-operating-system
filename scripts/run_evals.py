@@ -131,7 +131,13 @@ def _run_claude(domain: str, cases_path: str | None, ci_mode: bool) -> int:
 
     logger.info("Running %d %s eval cases against Claude...", len(cases), domain)
     run_fn = getattr(mod, f"run_local_{domain}_evaluations")
-    results = run_fn(cases)
+
+    # Some domains swap in a Claude-calibrated evaluator set (e.g. Brand OS
+    # drops prefix-purity checks that only make sense for the deterministic
+    # path). Use it when the domain defines one; otherwise use the default.
+    claude_evaluators = getattr(mod, f"{domain.upper()}_CLAUDE_EVALUATORS", None)
+    run_kwargs = {"evaluators": claude_evaluators} if claude_evaluators is not None else {}
+    results = run_fn(cases, **run_kwargs)
 
     passed = sum(1 for r in results if r["passed"])
     failed_count = len(results) - passed

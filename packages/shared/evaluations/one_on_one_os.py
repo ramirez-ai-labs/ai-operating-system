@@ -58,6 +58,27 @@ def load_one_on_one_os_eval_cases(
     return [OneOnOneBriefEvalCase.model_validate(item) for item in raw_cases]
 
 
+def apply_provider_override(
+    cases: list[OneOnOneBriefEvalCase],
+    provider: str,
+) -> list[OneOnOneBriefEvalCase]:
+    """Return cases with use_model=True and the given provider set.
+
+    One-on-One OS is Claude-only, so every case is eligible (unlike Director
+    OS, there are no Ollama-scenario cases to skip).
+    """
+    return [
+        case.model_copy(
+            update={
+                "inputs": case.inputs.model_copy(
+                    update={"use_model": True, "provider": provider}
+                )
+            }
+        )
+        for case in cases
+    ]
+
+
 def run_one_on_one_os_eval_target(inputs: dict[str, Any]) -> dict[str, Any]:
     """Run the public One-on-One OS workflow entrypoint for local evaluations."""
     request = OneOnOneRequest.model_validate(inputs)
@@ -318,6 +339,7 @@ __all__ = [
     "OneOnOneBriefEvalReference",
     "DEFAULT_ONE_ON_ONE_OS_EVAL_DATASET",
     "DEFAULT_ONE_ON_ONE_OS_EVALS_PATH",
+    "apply_provider_override",
     "load_one_on_one_os_eval_cases",
     "run_one_on_one_os_eval_target",
     "run_langsmith_one_on_one_os_evaluations",

@@ -31,7 +31,11 @@ class OneOnOneRequest(BaseModel):
     )
     provider: str = Field(
         default="claude",
-        description="Synthesis provider when use_model=True. 'claude' or 'ollama'.",
+        description=(
+            "Synthesis provider when use_model=True. Only 'claude' is supported "
+            "for One-on-One OS — any other value raises ValueError and falls "
+            "back to deterministic synthesis when fallback_to_deterministic=True."
+        ),
     )
     claude_model: str = Field(
         default="claude-haiku-4-5-20251001",

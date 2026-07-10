@@ -31,11 +31,13 @@ Open the console at `http://127.0.0.1:8000/`.
 pytest                                # full test suite
 pytest tests/test_director_os*.py -v # one domain
 ruff check .                          # lint
-python scripts/run_director_os_evals.py   # local evals (no API key)
-python scripts/run_brand_os_evals.py
+python scripts/run_evals.py           # all 4 domains, local (no API key)
+python scripts/run_evals.py --domain director_os
 ```
 
-CI runs `ruff`, `pytest`, and both eval scripts on every PR to `main`. The build must be green before merge.
+CI runs `ruff`, `pytest`, and local eval steps for all four domains (Director OS, Brand OS,
+Interview OS, One-on-One OS) — plus a Director OS multi-agent set and a ChromaDB pass per
+domain, nine eval steps in total. The build must be green before merge.
 
 ## Architecture rules
 

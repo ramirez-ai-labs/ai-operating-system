@@ -81,20 +81,33 @@ class ClaudeBrandContentDraftProvider:
         client = anthropic.Anthropic(api_key=api_key)
         prompt = _build_prompt(focus, evidence)
 
-        response = client.messages.create(
-            model=self.model,
-            max_tokens=1024,
-            system=[
-                {
-                    "type": "text",
-                    "text": _SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            tools=[_TOOL_SCHEMA],
-            tool_choice={"type": "tool", "name": _TOOL_NAME},
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=1024,
+                system=[
+                    {
+                        "type": "text",
+                        "text": _SYSTEM_PROMPT,
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ],
+                tools=[_TOOL_SCHEMA],
+                tool_choice={"type": "tool", "name": _TOOL_NAME},
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except anthropic.APIError as exc:
+            # Rate limits, 5xx, and connection errors are not ValueError
+            # subclasses, but the graph's fallback path only catches
+            # ValueError. Normalize so a live API hiccup falls back to
+            # deterministic synthesis instead of crashing the request.
+            raise ValueError(f"Claude API call failed: {exc}") from exc
+
+        if response.stop_reason == "max_tokens":
+            raise ValueError(
+                "Claude response was truncated at max_tokens before completing "
+                "the tool call — the evidence set may be too large for this limit."
+            )
 
         usage = response.usage
         self._last_usage = {

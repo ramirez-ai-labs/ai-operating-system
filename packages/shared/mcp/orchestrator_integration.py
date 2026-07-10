@@ -174,6 +174,28 @@ def run_with_mcp_tools(
             trace["rounds"].append(round_trace)
             continue
 
+        if not response.success:
+            # The provider itself failed (no API key, SDK error, etc). Its
+            # content is a stub/error message, not a real answer — surface it
+            # as a failure rather than reporting success with that text.
+            round_trace["text_produced"] = False
+            trace["rounds"].append(round_trace)
+            trace["total_input_tokens"] = total_input
+            trace["total_output_tokens"] = total_output
+            trace["tool_calls_total"] = len(trace["mcp_tool_calls"])
+
+            logger.error("Orchestration aborted: provider failure — %s", response.content)
+
+            return OrchestratedResponse(
+                content="",
+                model=response.model,
+                provider=response.provider,
+                total_tokens=total_input + total_output,
+                trace=trace,
+                success=False,
+                error=response.content,
+            )
+
         if response.content:
             round_trace["text_produced"] = True
             trace["rounds"].append(round_trace)

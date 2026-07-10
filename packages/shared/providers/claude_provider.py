@@ -55,6 +55,7 @@ class ProviderResponse:
     output_tokens: int = 0
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
     raw: Any = None
+    success: bool = True
 
     @property
     def total_tokens(self) -> int:
@@ -230,6 +231,7 @@ Rules:
             ),
             model="stub",
             provider="claude-stub",
+            success=False,
         )
 
     @staticmethod
@@ -238,6 +240,7 @@ Rules:
             content=f"[ClaudeProvider error] {error}",
             model="error",
             provider="claude-error",
+            success=False,
         )
 
 
