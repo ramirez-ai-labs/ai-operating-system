@@ -210,7 +210,11 @@ def _parse_results(results: dict) -> list[EvidenceItem]:
         raw_path = meta.get("relative_path", "unknown")
         evidence.append(
             EvidenceItem(
-                source=Path(raw_path).name if raw_path != "unknown" else raw_path,
+                # Keep the full relative path (not just the basename) so
+                # citations match the local_files backend exactly — two files
+                # with the same name in different folders must stay
+                # distinguishable in the evidence a caller cites back.
+                source=raw_path,
                 line_number=int(meta.get("line_number", 0)),
                 title=meta.get("title", ""),
                 excerpt=doc[:280],

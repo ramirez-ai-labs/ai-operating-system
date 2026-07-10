@@ -83,23 +83,36 @@ class ClaudeWeeklyUpdateProvider(WeeklyUpdateProvider):
         client = anthropic.Anthropic(api_key=api_key)
         prompt = _build_prompt(focus, evidence)
 
-        response = client.messages.create(
-            model=self.model,
-            max_tokens=1024,
-            # The system prompt is cached so repeated calls within the same
-            # 5-minute cache window reuse the KV representation without
-            # re-processing the instructions on every request.
-            system=[
-                {
-                    "type": "text",
-                    "text": _SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            tools=[_TOOL_SCHEMA],
-            tool_choice={"type": "tool", "name": _TOOL_NAME},
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=1024,
+                # The system prompt is cached so repeated calls within the same
+                # 5-minute cache window reuse the KV representation without
+                # re-processing the instructions on every request.
+                system=[
+                    {
+                        "type": "text",
+                        "text": _SYSTEM_PROMPT,
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ],
+                tools=[_TOOL_SCHEMA],
+                tool_choice={"type": "tool", "name": _TOOL_NAME},
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except anthropic.APIError as exc:
+            # Rate limits, 5xx, and connection errors are not ValueError
+            # subclasses, but every caller's fallback path only catches
+            # ValueError. Normalize so a live API hiccup falls back to
+            # deterministic synthesis instead of crashing the request.
+            raise ValueError(f"Claude API call failed: {exc}") from exc
+
+        if response.stop_reason == "max_tokens":
+            raise ValueError(
+                "Claude response was truncated at max_tokens before completing "
+                "the tool call — the evidence set may be too large for this limit."
+            )
 
         # Record usage so the orchestration layer can surface cache savings
         # in the WorkflowTrace without needing to know about this provider.

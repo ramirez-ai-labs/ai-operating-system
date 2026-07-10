@@ -43,10 +43,21 @@ def parse_grounded_items(
     for raw in items:
         if not isinstance(raw, dict):
             raise ValueError("Model returned a malformed grounded item.")
+        # `.get(..., 0)` only substitutes the default when the key is absent —
+        # an explicit `"line_number": null` still yields None here, and
+        # int(None) raises TypeError rather than the ValueError callers
+        # expect. Normalize both cases explicitly.
+        raw_line_number = raw.get("line_number")
+        try:
+            line_number = int(raw_line_number) if raw_line_number is not None else 0
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Model returned a non-numeric line_number: {raw_line_number!r}"
+            ) from exc
         item = GroundedItem(
             text=str(raw.get("text", "")),
             source=str(raw.get("source", "")),
-            line_number=int(raw.get("line_number", 0)),
+            line_number=line_number,
         )
         if (item.source, item.line_number) not in evidence_locations:
             raise ValueError(

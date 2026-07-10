@@ -55,6 +55,27 @@ def load_brand_os_eval_cases(
     return [BrandContentDraftEvalCase.model_validate(item) for item in raw_cases]
 
 
+def apply_provider_override(
+    cases: list[BrandContentDraftEvalCase],
+    provider: str,
+) -> list[BrandContentDraftEvalCase]:
+    """Return cases with use_model=True and the given provider set.
+
+    Brand OS is Claude-only, so every case is eligible (unlike Director OS,
+    there are no Ollama-scenario cases to skip).
+    """
+    return [
+        case.model_copy(
+            update={
+                "inputs": case.inputs.model_copy(
+                    update={"use_model": True, "provider": provider}
+                )
+            }
+        )
+        for case in cases
+    ]
+
+
 def run_brand_os_eval_target(inputs: dict[str, Any]) -> dict[str, Any]:
     """Run the public Brand OS workflow entrypoint for local evaluations."""
     request = BrandContentDraftRequest.model_validate(inputs)
@@ -354,6 +375,7 @@ __all__ = [
     "BrandContentDraftEvalReference",
     "DEFAULT_BRAND_OS_EVAL_DATASET",
     "DEFAULT_BRAND_OS_EVALS_PATH",
+    "apply_provider_override",
     "load_brand_os_eval_cases",
     "run_brand_os_eval_target",
     "run_langsmith_brand_os_evaluations",

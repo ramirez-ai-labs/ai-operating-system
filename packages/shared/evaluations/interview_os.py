@@ -57,6 +57,27 @@ def load_interview_os_eval_cases(
     return [InterviewBriefEvalCase.model_validate(item) for item in raw_cases]
 
 
+def apply_provider_override(
+    cases: list[InterviewBriefEvalCase],
+    provider: str,
+) -> list[InterviewBriefEvalCase]:
+    """Return cases with use_model=True and the given provider set.
+
+    Interview OS is Claude-only, so every case is eligible (unlike Director OS,
+    there are no Ollama-scenario cases to skip).
+    """
+    return [
+        case.model_copy(
+            update={
+                "inputs": case.inputs.model_copy(
+                    update={"use_model": True, "provider": provider}
+                )
+            }
+        )
+        for case in cases
+    ]
+
+
 def run_interview_os_eval_target(inputs: dict[str, Any]) -> dict[str, Any]:
     """Run the public Interview OS workflow entrypoint for local evaluations."""
     request = InterviewBriefRequest.model_validate(inputs)
@@ -316,6 +337,7 @@ __all__ = [
     "InterviewBriefEvalReference",
     "DEFAULT_INTERVIEW_OS_EVAL_DATASET",
     "DEFAULT_INTERVIEW_OS_EVALS_PATH",
+    "apply_provider_override",
     "load_interview_os_eval_cases",
     "run_interview_os_eval_target",
     "run_langsmith_interview_os_evaluations",

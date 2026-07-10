@@ -111,8 +111,9 @@ hard dependency that makes the system fragile.
 
 ### Why local evals run before LangSmith
 
-The CI pipeline runs eight eval steps — four deterministic, four ChromaDB — all without
-API keys. LangSmith evals are on-demand only: `python scripts/run_*_evals.py --langsmith`
+The CI pipeline runs nine eval steps — five deterministic-path (one per domain, plus a
+Director OS multi-agent set), four ChromaDB — all without API keys. LangSmith evals are
+on-demand only: `python scripts/run_*_evals.py --langsmith`
 when you want cloud-backed tracing on a specific investigation. The separation is not
 about cost — it is about what CI should gate on. CI gates on correctness (does the
 system produce grounded, structured output from local data?). LangSmith answers a
@@ -477,7 +478,8 @@ prefix the deterministic scorer expects.
 
 Results are not computed at CI time and discarded. Every domain has committed
 `results_claude.json` and `results_chroma.json` in `evaluations/<domain>/`. The
-CI pipeline runs eight eval scripts — four keyword-path, four chroma-path — and
+CI pipeline runs nine eval scripts — five keyword-path (one per domain, plus a
+Director OS multi-agent set), four chroma-path — and
 compares against these files. A regression in any case fails the PR gate before
 merge. The committed files are the authoritative record of what the system produces,
 not a summary of past runs.
@@ -513,7 +515,7 @@ not a summary of past runs.
 | **Used for** | HTTP API layer — request parsing, response serialization, route registration |
 | **Key features used** | Pydantic model integration for automatic request validation and 422 errors, `response_model` for typed responses, `HTMLResponse` for the operator console, `HTTPException` for structured error envelopes |
 | **Where** | `apps/api/main.py` |
-| **Why thin** | All workflow logic lives in domain packages so it can be tested without starting FastAPI. The API layer is intentionally under 125 lines. |
+| **Why thin** | All workflow logic lives in domain packages so it can be tested without starting FastAPI. The API layer is intentionally kept small — around 130 lines. |
 
 ### Pydantic v2
 
