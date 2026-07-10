@@ -11,18 +11,18 @@ requirements constrain how AI systems are deployed and operated.
 ```mermaid
 graph TB
     subgraph Enterprise["Enterprise environment (no inbound traffic)"]
-        API["apps/api\nFastAPI — internal network only"]
-        Data["data/local_only/\nproject notes · brand docs\ninterview notes · 1:1s"]
-        Ollama["Ollama\nllama3.2 routing\nnomic-embed-text embeddings"]
-        Chroma["ChromaDB\nlocal vector index\ndata/chroma/"]
+        API["apps/api<br/>FastAPI - internal network only"]
+        Data["data/local_only/<br/>project notes, brand docs<br/>interview notes, 1:1s"]
+        Ollama["Ollama<br/>llama3.2 routing<br/>nomic-embed-text embeddings"]
+        Chroma["ChromaDB<br/>local vector index<br/>data/chroma/"]
 
         API --> Data
         API --> Ollama
         Ollama --> Chroma
     end
 
-    API -->|"HTTPS outbound only\napi.anthropic.com:443"| Anthropic["Anthropic API\nClaude Haiku synthesis\nno data stored by default"]
-    API -.->|"optional — LANGSMITH_TRACING=true"| LangSmith["LangSmith\nnode-level execution traces"]
+    API -->|"HTTPS outbound only<br/>api.anthropic.com:443"| Anthropic["Anthropic API<br/>Claude Haiku synthesis<br/>no data stored by default"]
+    API -.->|"optional - LANGSMITH_TRACING=true"| LangSmith["LangSmith<br/>node-level execution traces"]
 ```
 
 No customer data is stored or logged by Anthropic by default. For

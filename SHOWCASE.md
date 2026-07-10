@@ -289,7 +289,7 @@ smith.langsmith.com, with inputs, outputs, and latency at each node.
 
 ```mermaid
 flowchart TB
-    Root["director_os.run_weekly_update_graph\nrun_type: chain"]
+    Root["director_os.run_weekly_update_graph<br/>run_type: chain"]
     Root --> N1["director_os.retrieve_evidence"]
     Root --> N2["director_os.build_draft"]
     Root --> N3["director_os.assemble_response"]

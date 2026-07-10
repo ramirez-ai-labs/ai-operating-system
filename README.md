@@ -61,34 +61,34 @@ The system has three independently configurable layers: routing, retrieval, and 
 ```mermaid
 flowchart TB
     In([OrchestratorRequest]) --> MCP{"use_mcp?"}
-    MCP -->|true| MCPLoop["MCP Tool Loop\nLLM reads files via tool calls"]
-    MCP -->|false| CoS["Chief of Staff\nLocal LLM classification\n+ keyword fallback"]
+    MCP -->|true| MCPLoop["MCP Tool Loop<br/>LLM reads files via tool calls"]
+    MCP -->|false| CoS["Chief of Staff<br/>Local LLM classification<br/>+ keyword fallback"]
     MCPLoop --> CoS
 
-    CoS -->|director_os| Dir["Director OS\nretrieve_evidence"]
-    CoS -->|brand_os| Brand["Brand OS\nretrieve_evidence"]
-    CoS -->|interview_os| Interview["Interview OS\nretrieve_evidence"]
-    CoS -->|one_on_one_os| OneOnOne["One-on-One OS\nretrieve_evidence"]
+    CoS -->|director_os| Dir["Director OS<br/>retrieve_evidence"]
+    CoS -->|brand_os| Brand["Brand OS<br/>retrieve_evidence"]
+    CoS -->|interview_os| Interview["Interview OS<br/>retrieve_evidence"]
+    CoS -->|one_on_one_os| OneOnOne["One-on-One OS<br/>retrieve_evidence"]
 
     Dir --> DModel{"use_model?"}
-    DModel -->|"provider: claude"| DC["Claude\ntool use + prompt cache"]
-    DModel -->|"provider: ollama"| DO["Ollama\nlocal inference"]
-    DModel -->|false| DDet["Deterministic\nkeyword extraction"]
-    DC --> DVal["validate_response\nevidence grounding"]
+    DModel -->|"provider: claude"| DC["Claude<br/>tool use + prompt cache"]
+    DModel -->|"provider: ollama"| DO["Ollama<br/>local inference"]
+    DModel -->|false| DDet["Deterministic<br/>keyword extraction"]
+    DC --> DVal["validate_response<br/>evidence grounding"]
     DO --> DVal
     DDet --> DVal
 
     Brand --> BModel{"use_model?"}
-    BModel -->|true| BC["Claude\ntool use"]
-    BModel -->|false| BDet["Deterministic\nsection formatter"]
+    BModel -->|true| BC["Claude<br/>tool use"]
+    BModel -->|false| BDet["Deterministic<br/>section formatter"]
 
     Interview --> IModel{"use_model?"}
-    IModel -->|true| IC["Claude\ntool use"]
-    IModel -->|false| IDet["Deterministic\ngrounded extraction"]
+    IModel -->|true| IC["Claude<br/>tool use"]
+    IModel -->|false| IDet["Deterministic<br/>grounded extraction"]
 
     OneOnOne --> OModel{"use_model?"}
-    OModel -->|true| OC["Claude\ntool use"]
-    OModel -->|false| ODet["Deterministic\ngrounded extraction"]
+    OModel -->|true| OC["Claude<br/>tool use"]
+    OModel -->|false| ODet["Deterministic<br/>grounded extraction"]
 
     DVal --> TA{"target_audience?"}
     BC --> TA
@@ -98,10 +98,10 @@ flowchart TB
     OC --> TA
     ODet --> TA
 
-    TA -->|set| Researcher["ResearcherAgent\nstructured synthesis"]
-    Researcher --> Writer["WriterAgent\naudience formatting"]
-    Writer --> RespA(["OrchestratorResponse\nformatted_content + agent_calls + trace"])
-    TA -->|not set| RespB(["OrchestratorResponse\nWorkflowTrace + cache metrics"])
+    TA -->|set| Researcher["ResearcherAgent<br/>structured synthesis"]
+    Researcher --> Writer["WriterAgent<br/>audience formatting"]
+    Writer --> RespA(["OrchestratorResponse<br/>formatted_content + agent_calls + trace"])
+    TA -->|not set| RespB(["OrchestratorResponse<br/>WorkflowTrace + cache metrics"])
 
     style DC fill:#e8f5e9,stroke:#388e3c
     style BC fill:#e8f5e9,stroke:#388e3c
