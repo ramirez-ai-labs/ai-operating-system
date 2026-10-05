@@ -142,6 +142,8 @@ uvicorn apps.api.main:app --reload --env-file .env
 
 The system runs fully without any API keys. Model synthesis is opt-in via `use_model=True` on any request. Open the operator console at `http://127.0.0.1:8000/`.
 
+> **Sample data is synthetic.** The 1:1 meeting notes, project updates, and interview materials under `data/local_only/` (`one_on_one/`, `projects/`, `interviews/`) are fictional and were written for demos and evals. The people, team members, and candidates named in them are invented and do not refer to real colleagues.
+
 ```bash
 # Run all local evals — no API key required
 python scripts/run_director_os_evals.py
