@@ -81,6 +81,9 @@ jobs:
       - name: Run One-on-One OS local evaluation set
         run: python scripts/run_one_on_one_os_evals.py
 
+      - name: Run planner routing and planning evaluation set (rules planner)
+        run: python scripts/run_evals.py --domain planner --backend local --ci
+
       - name: Run Director OS chroma evaluation set (skips if index absent)
         run: python -m scripts.run_director_os_evals_chroma --ci
 

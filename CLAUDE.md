@@ -44,9 +44,21 @@ Run Brand OS evals:
 python scripts/run_brand_os_evals.py
 ```
 
+Run planner routing/planning evals (rules planner, no model required):
+```bash
+python scripts/run_evals.py --domain planner
+```
+
+Score the Ollama planner on all planning cases (requires local Ollama):
+```bash
+python scripts/run_evals.py --domain planner --backend ollama
+```
+
 ## Environment setup
 
 Copy `.env.example` to `.env` and fill in keys. The system runs fully without any API keys  -  both `ANTHROPIC_API_KEY` and `LANGSMITH_API_KEY` are opt-in.
+
+**`.env` overrides your shell.** `scripts/run_evals.py` and the `scripts/run_*_evals_claude.py` runners load `.env` themselves. If `.env` contains `ANTHROPIC_API_KEY`, then `--backend claude` makes live API calls even when the variable is unset in the shell and `--ci` is passed. Test skip and fallback paths with unit tests and patched providers, not by running the Claude backend.
 
 ## Key file locations
 
@@ -55,6 +67,11 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 | Next.js frontend | `apps/web/src/app/page.tsx` |
 | API entry point | `apps/api/main.py` |
 | Chief of Staff routing | `packages/shared/orchestration/chief_of_staff.py` |
+| Planner (rules / Ollama / Claude) | `packages/shared/orchestration/planner.py` |
+| Planner/supervisor graph + `POST /plan` | `packages/shared/graphs/planner.py` |
+| Planner schemas | `packages/shared/schemas/planner.py` |
+| Merge-time grounding validation | `packages/shared/validation/plan.py` |
+| Planner eval cases | `evaluations/planner/planning_cases.json` |
 | Domain registry | `packages/shared/domains/__init__.py` (`_REGISTERED`), one spec per domain in `packages/shared/domains/<domain>.py` |
 | Model-facing tool definitions snapshot | `tests/snapshots/domain_tool_definitions.json` (regenerate: `python -m packages.shared.domains --write`) |
 | Director OS graph | `packages/shared/graphs/director_os.py` |
@@ -91,6 +108,8 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 - The domain registry (`packages/shared/domains/`) is the only place domains are listed. The router prompt, keyword fallback, `_run_workflow`, `_build_trace`, API routes, and MCP tools are all derived from it — do not name individual domains in those files.
 - A domain's tool input schema (`DomainTool.input_model`) exposes only what a model may choose: retrieval focus, `data_path` under `data/local_only/`, `max_documents`, and domain context fields. Provider, model ID, Ollama URL, `use_model`, and fallback policy stay operator-controlled and must never appear in it (test-enforced).
 - Domain spec modules import their workflow inside `run`, not at module level, so importing the registry (and starting the MCP server) does not load LangGraph or ChromaDB.
+- The planner's default is `rules`, which is deterministic and needs no model. A model plan (`ollama`/`claude`) is used only after every tool call validates against its domain's `DomainToolInput` and the plan fits `max_steps`. Otherwise the planner falls back to `rules` and records `plan.fallback_reason`. Do not let planner output set operator settings; those come only from `PlanRequest.operator_settings()`.
+- The supervisor re-validates every step's grounding at merge (`validation/plan.py`). A step that fails is reported as `status: "error"` in the response, never dropped or passed through.
 - Deterministic fallback must always be available. Any model-assisted path must have a fallback when `fallback_to_deterministic=True`.
 - Evidence grounding is non-negotiable. Every output item must cite a source and line number that appears in the retrieved evidence. Do not relax this in the validator or provider.
 - All domain response schemas must inherit from `BaseResponse` in `packages/shared/schemas/base.py`. This enforces `evidence: list[EvidenceItem]` and `provider_usage: dict[str, int]` at the Pydantic level and requires a `section_counts` property (`NotImplementedError` at runtime if missing).

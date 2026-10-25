@@ -18,7 +18,7 @@ fallback policy — those stay with the operator's request.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 from typing import Any
@@ -108,3 +108,21 @@ class DomainSpec:
     keyword_priority: int
     # Exactly one domain is the default for unmatched or empty prompts.
     is_default: bool = False
+
+    def request_from_tool_input(
+        self,
+        tool_input: DomainToolInput,
+        operator_settings: Mapping[str, Any],
+    ) -> BaseModel:
+        """Build the domain request from a model's tool call plus operator settings.
+
+        The two inputs never overlap: tool inputs carry *what* to retrieve,
+        operator settings carry provider, model, and fallback policy. Only fields
+        the domain request model declares are passed through, so an operator
+        setting a domain does not support (e.g. `ollama_model` for a Claude-only
+        domain) is dropped rather than rejected.
+        """
+        fields = self.request_model.model_fields
+        values = {key: value for key, value in operator_settings.items() if key in fields}
+        values.update(tool_input.model_dump())
+        return self.request_model(**values)

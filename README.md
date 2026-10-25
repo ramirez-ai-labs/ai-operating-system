@@ -33,6 +33,7 @@ Evidence grounding is enforced at the schema level via forced tool use: every ou
 
 | Capability | Implementation |
 |---|---|
+| Multi-domain planning with parallel execution | `POST /plan`: rules, Ollama, or Claude planner turns a goal into domain tool calls; a LangGraph supervisor fans them out with `Send` and re-validates grounding at merge |
 | LLM routing across domains | Chief of Staff router (local Ollama classification, keyword fallback) + 4 domain LangGraph graphs |
 | Domain registry as tool definitions | `packages/shared/domains/`: one `DomainSpec` per domain drives the router prompt, API routes, and MCP tools; model-facing input schemas exclude provider/model/fallback settings; snapshot-tested |
 | In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `orchestrator_integration.py` |
@@ -41,7 +42,7 @@ Evidence grounding is enforced at the schema level via forced tool use: every ou
 | Provider abstraction | `base.py` interface; `claude.py` / `ollama.py` / `grounding.py` implementations |
 | Pluggable retrieval backend | Keyword (`local_files.py`) or semantic (`chroma.py`) via env var |
 | Two-stage agent pipeline | `ResearcherAgent → WriterAgent` with structured handoff contract |
-| LLM evaluation framework | 22 cases, 3 retrieval paths, committed results, CI-gated |
+| LLM evaluation framework | 22 domain cases across 3 retrieval paths + 19 routing/planning cases, committed results, CI-gated |
 | Node-level observability | LangSmith `@traceable` on all 4 domain graphs — silent no-op without config |
 | Prompt caching + cost visibility | `cache_read_input_tokens` / `cache_creation_input_tokens` in every `WorkflowTrace` |
 
@@ -51,16 +52,45 @@ The architecture is designed to be adapted. The provider layer, the in-process f
 
 ## Scope today and the path to orchestration
 
-AI-OS today is a **routed workflow system**: each request goes to exactly one domain, and each domain runs a fixed, validated graph. That is a deliberate first layer. Fixed workflows are predictable, cheap, and testable, and they are what an orchestrator needs underneath it — a planner is only as reliable as the tools it calls.
+AI-OS has two layers. Underneath are **fixed, validated domain workflows**: predictable, cheap, and testable. On top is a **planner** that decides which of those workflows a goal needs and calls them as tools. A planner is only as reliable as the tools it calls, so the workflows came first.
 
-| Today | Where it is going (Phase 9 in [plan.md](plan.md)) |
+| Shipped | Still ahead (Phase 9 in [plan.md](plan.md)) |
 |---|---|
-| Router picks one of four domains per request | Planner breaks a goal ("prep my week") into steps across domains and runs them in parallel |
-| ✅ **Shipped (9a):** domain registry in `packages/shared/domains/`. Each domain registers its schemas, routing rules, and a model-facing tool definition; the router, API, and MCP server are derived from it | The planner (9b) takes the same tool definitions as its tool list |
-| The MCP tool loop is the one model-directed path, and its free-form output is not grounding-validated | Tool loop ends in the same forced-tool grounding schema and `validate_response` as every workflow |
-| Each request is stateless | LangGraph checkpointing, run history, and human approval before final output |
-| Routing accuracy is not scored | Routing and planning eval set gated in CI alongside the domain evals |
-| Local markdown is the only data source | External MCP servers (GitHub first) as data sources |
+| ✅ **9a** Domain registry in `packages/shared/domains/`: each domain registers its schemas, routing rules, and a model-facing tool definition; the router, API, and MCP server are derived from it | **9c** The MCP tool loop's free-form output is not yet grounding-validated; it will end in the same forced-tool schema and `validate_response` as every workflow |
+| ✅ **9b** `POST /plan`: a goal ("prep my week") becomes steps across domains, run in parallel, each re-validated for grounding at merge | **9d** Requests are stateless; LangGraph checkpointing, run history, and human approval come next |
+| ✅ **9b** Routing and planning eval set (19 cases) gated in CI | **9e** Local markdown is the only data source; external MCP servers (GitHub first) are next |
+
+---
+
+## Planner
+
+`POST /plan` takes a goal and returns a plan plus one grounded result per step.
+
+```bash
+curl -X POST http://127.0.0.1:8000/plan \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "Interview prep for Alex Chen and 1:1 with Sarah about blockers"}'
+```
+
+```text
+make_plan ──Send×N──▶ run_step (parallel) ──▶ merge_results
+```
+
+- **Three planners, one contract.** `rules` (default) splits the goal into clauses and routes each with the router's keyword rules; it needs no model. `ollama` and `claude` receive every registered domain as a tool and plan by making parallel tool calls, so planning *is* tool selection.
+- **A model plan is never trusted as-is.** Each call must name a registered tool, and its arguments must pass that domain's input schema. That schema rejects `data_path` outside `data/local_only/` and has no provider, model, or fallback fields; those come only from the operator's request. A plan over `max_steps` is rejected. Any failure falls back to the rules planner, and the response records why in `plan.fallback_reason`.
+- **Grounding is checked again at the merge.** Every step's grounded items are re-validated against that step's evidence before they reach the response, so a regressed workflow cannot slip an uncited item into a plan.
+- **Partial results are kept.** A failing step is reported with its error (`status: "partial"`) and the other steps still return.
+
+**Why a model planner is worth having**, measured on the committed eval set (`evaluations/planner/planning_cases.json`):
+
+| Rules planner | Cases | Exact plan match |
+|---|---|---|
+| Single-intent routing | 9 | 100% |
+| Multi-domain goals with keywords | 5 | 100% |
+| Goals with no routing keywords, or "and" inside one deliverable | 5 | **0%** |
+| **All cases** | 19 | 73.7% |
+
+The last group ("Help me get ready for my conversation with Priya about her promotion case") is what the model planners exist for. CI gates the rules planner on the 14 cases it should solve. Score a model planner on all 19 with `python scripts/run_evals.py --domain planner --backend ollama` (local, free) or `--backend claude` (opt-in, uses the API).
 
 ---
 

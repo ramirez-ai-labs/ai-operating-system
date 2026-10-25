@@ -551,18 +551,39 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 9a
 
-**Status: Complete. 293 tests passing.**
+**Status: Complete  -  shipped in PR #115. 293 tests passing.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| `packages/shared/domains/spec.py`  -  `DomainSpec` (operator-facing: request/response models, `build_request`, `model_used`, keywords + priority, API path, providers) + `DomainTool` (model-facing: name, description, input model, `to_tool_definition()`) | Done | This PR |
-| `DomainToolInput` base  -  narrow model-facing input (`focus`, `data_path`, `max_documents` + domain context fields); `data_path` validated under `data/local_only/` before a workflow runs | Done | This PR |
-| One spec module per domain; workflows imported inside `run` so the registry and MCP server stay free of LangGraph/ChromaDB at import | Done | This PR |
-| `packages/shared/domains/__init__.py`  -  explicit `_REGISTERED` list, read-only `DOMAINS` mapping, import-time validation (unique names/ids/tools/paths/priorities, exactly one default) | Done | This PR |
-| `chief_of_staff.py`  -  router prompt, keyword fallback, `_run_workflow`, `_build_trace` derived from the registry; generated prompt is byte-identical to the previous hand-written one | Done | This PR |
-| `apps/api/main.py` and `apps/mcp/server.py`  -  routes and tools registered by looping over the registry; paths, tool names, and request schemas unchanged | Done | This PR |
-| `tests/test_domain_registry.py` (39 tests) + `tests/snapshots/domain_tool_definitions.json`; 8 existing tests retargeted to patch the workflow entry point instead of a router import | Done | This PR |
-| CLAUDE.md domain checklist: router, API, and MCP server no longer touched when adding a domain | Done | This PR |
+| `packages/shared/domains/spec.py`  -  `DomainSpec` (operator-facing: request/response models, `build_request`, `model_used`, keywords + priority, API path, providers) + `DomainTool` (model-facing: name, description, input model, `to_tool_definition()`) | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+| `DomainToolInput` base  -  narrow model-facing input (`focus`, `data_path`, `max_documents` + domain context fields); `data_path` validated under `data/local_only/` before a workflow runs | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+| One spec module per domain; workflows imported inside `run` so the registry and MCP server stay free of LangGraph/ChromaDB at import | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+| `packages/shared/domains/__init__.py`  -  explicit `_REGISTERED` list, read-only `DOMAINS` mapping, import-time validation (unique names/ids/tools/paths/priorities, exactly one default) | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+| `chief_of_staff.py`  -  router prompt, keyword fallback, `_run_workflow`, `_build_trace` derived from the registry; generated prompt is byte-identical to the previous hand-written one | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+| `apps/api/main.py` and `apps/mcp/server.py`  -  routes and tools registered by looping over the registry; paths, tool names, and request schemas unchanged | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+| `tests/test_domain_registry.py` (39 tests) + `tests/snapshots/domain_tool_definitions.json`; 8 existing tests retargeted to patch the workflow entry point instead of a router import | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+| CLAUDE.md domain checklist: router, API, and MCP server no longer touched when adding a domain | Done | [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115) |
+
+---
+
+## Sprint 25  -  Phase 9b Planner/Supervisor + Routing Evals
+
+**Objective:** Turn one goal into steps across several domains, run them in parallel, and return a merged result in which every item is still grounded. Measure routing and planning quality from day one.
+
+**Maps to:** plan.md Phase 9b
+
+**Status: Complete. 335 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| `schemas/planner.py`  -  `PlanRequest` (goal, planner, max_steps, operator settings), `PlanStep`, `Plan` (planner_used, fallback_reason), `StepResult`, `PlanResponse` (ok / partial / error) | Done | This PR |
+| `orchestration/planner.py`  -  `rules` planner (clause split + keyword routing, default domain, dedupe, max_steps); `ollama` and `claude` planners plan via parallel tool calls over `tool_definitions()`; every call validated against `DomainToolInput`; fallback to `rules` with recorded reason and retained token usage | Done | This PR |
+| `graphs/planner.py`  -  LangGraph supervisor: `make_plan` → `Send` fan-out → `run_step` → `merge_results`; `@traceable` on every node | Done | This PR |
+| `validation/plan.py`  -  generic merge-time grounding check over every `GroundedItem` in any domain response | Done | This PR |
+| `DomainSpec.request_from_tool_input`  -  tool input + operator settings → domain request, fields kept apart; `domain_for_tool_name`; public `match_keyword` and `build_trace` in the router | Done | This PR |
+| `POST /plan` in `apps/api/main.py`; `ClaudeProvider.complete(tool_choice=...)` | Done | This PR |
+| `evaluations/planner/planning_cases.json` (19 cases: 9 routing, 5 multi-domain, 4 keyword-free, 1 over-split) + `packages/shared/evaluations/planner.py`; CI gate on the 14 rules-supported cases; `--backend ollama` added to `scripts/run_evals.py` | Done | This PR |
+| `tests/test_planner.py` (34 tests, no live model calls) + 8 registry contract tests | Done | This PR |
 
 ---
 

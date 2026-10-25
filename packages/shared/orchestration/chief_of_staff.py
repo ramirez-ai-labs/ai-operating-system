@@ -107,7 +107,7 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
     return OrchestratorResponse(
         selected_workflow=workflow,
         rationale=rationale,
-        trace=_build_trace(
+        trace=build_trace(
             request,
             workflow,
             result,
@@ -210,21 +210,35 @@ def _classify_with_ollama(
     return workflow, rationale, f"keyword-match (ollama/{model} unexpected token)"
 
 
-def _select_workflow_keyword(prompt: str | None) -> tuple[str, str]:
-    """Keyword fallback router — used when Ollama is unavailable."""
-    lowered = (prompt or "").lower()
+def match_keyword(text: str | None) -> tuple[DomainSpec, str] | None:
+    """Return the first domain whose routing keyword appears in the text, with the keyword.
+
+    Domains are checked in keyword-priority order. Returns None when nothing
+    matches, so callers decide what "no match" means (the router falls back to
+    the default domain; the rules planner skips the clause).
+    """
+    lowered = (text or "").lower()
     for spec in keyword_routing_order():
         for keyword in spec.routing_keywords:
             if keyword in lowered:
-                return (
-                    spec.workflow_id,
-                    f"Selected {spec.workflow_id} because the prompt matched '{keyword}'.",
-                )
+                return spec, keyword
+    return None
+
+
+def _select_workflow_keyword(prompt: str | None) -> tuple[str, str]:
+    """Keyword fallback router — used when Ollama is unavailable."""
+    match = match_keyword(prompt)
+    if match is not None:
+        spec, keyword = match
+        return (
+            spec.workflow_id,
+            f"Selected {spec.workflow_id} because the prompt matched '{keyword}'.",
+        )
     default = default_domain()
     return default.workflow_id, f"Selected {default.workflow_id} as the default workflow."
 
 
-def _build_trace(
+def build_trace(
     request: OrchestratorRequest,
     workflow: str,
     result,
@@ -232,7 +246,11 @@ def _build_trace(
     agent_calls: list[AgentCall] | None = None,
     routing_model: str = "keyword-match",
 ) -> WorkflowTrace:
-    """Summarize the execution path in a shape that operators can inspect easily."""
+    """Summarize the execution path in a shape that operators can inspect easily.
+
+    Shared by the single-domain router and the planner, so a step in a plan
+    reports the same trace fields as a routed request.
+    """
     spec: DomainSpec = get_domain(workflow)
     evidence_sources = list(dict.fromkeys(item.source for item in result.evidence))
     focus_used = request.focus or request.prompt

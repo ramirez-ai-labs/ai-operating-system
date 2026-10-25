@@ -16,6 +16,7 @@ Usage:
     python scripts/run_evals.py --domain director_os --backend claude
     python scripts/run_evals.py --domain all --backend chroma --ci
     python scripts/run_evals.py --domain brand_os --langsmith
+    python scripts/run_evals.py --domain planner --backend ollama   # model planner, local
 """
 from __future__ import annotations
 
@@ -183,6 +184,47 @@ def _run_chroma(domain: str, cases_path: str | None, ci_mode: bool) -> int:
     return 0 if failed_count == 0 else 1
 
 
+def _ollama_reachable(url: str) -> bool:
+    from urllib import error as urllib_error
+    from urllib import request as urllib_request
+
+    try:
+        with urllib_request.urlopen(f"{url.rstrip('/')}/api/tags", timeout=2):
+            return True
+    except (urllib_error.URLError, OSError):
+        return False
+
+
+def _run_ollama(domain: str, cases_path: str | None, ci_mode: bool) -> int:
+    mod = _load_module(domain)
+    # Only modules that opt in are run against Ollama; for the others an
+    # "ollama" run would not mean anything (e.g. Claude-only domains).
+    if not getattr(mod, "SUPPORTS_OLLAMA_BACKEND", False):
+        logger.info("%s does not support the ollama backend — skipping", domain)
+        return 0
+
+    ollama_url = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+    if not _ollama_reachable(ollama_url):
+        msg = f"Ollama not reachable at {ollama_url}. Start it with: ollama serve"
+        if ci_mode:
+            logger.info("%s — skipping %s ollama evals in CI", msg, domain)
+            return 0
+        logger.error(msg)
+        return 1
+
+    cases = mod.apply_provider_override(_load_cases(mod, domain, cases_path), "ollama")
+    logger.info("Running %d %s eval cases against Ollama...", len(cases), domain)
+    results = getattr(mod, f"run_local_{domain}_evaluations")(cases)
+
+    passed = sum(1 for r in results if r["passed"])
+    pass_rate = round(passed / len(results), 3) if results else 0.0
+    out_path = _write_results(domain, "ollama", results)
+    logger.info("Results written to %s", out_path)
+    logger.info("Summary: %d/%d passed (%.0f%%)", passed, len(results), pass_rate * 100)
+    _log_case_results(results)
+    return 0 if passed == len(results) else 1
+
+
 def _run_langsmith(domain: str, cases_path: str | None, ci_mode: bool) -> int:
     mod = _load_module(domain)
     langsmith_fn = getattr(mod, f"run_langsmith_{domain}_evaluations", None)
@@ -197,6 +239,7 @@ _BACKEND_RUNNERS = {
     "local": _run_local,
     "claude": _run_claude,
     "chroma": _run_chroma,
+    "ollama": _run_ollama,
 }
 
 
@@ -217,7 +260,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--backend",
-        choices=["local", "claude", "chroma"],
+        choices=["local", "claude", "chroma", "ollama"],
         default="local",
         help="Retrieval/model backend (default: local).",
     )

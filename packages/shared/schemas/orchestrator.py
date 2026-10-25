@@ -8,6 +8,13 @@ from packages.shared.schemas.director_os import WeeklyUpdateResponse
 from packages.shared.schemas.interview_os import InterviewBriefResponse
 from packages.shared.schemas.one_on_one_os import OneOnOneResponse
 
+# Every registered domain's response type. Kept explicit (rather than built from
+# the domain registry at runtime) so the OpenAPI schema stays fully typed;
+# tests/test_domain_registry.py fails if it drifts from the registry.
+DomainResult = (
+    WeeklyUpdateResponse | BrandContentDraftResponse | InterviewBriefResponse | OneOnOneResponse
+)
+
 
 class OrchestratorRequest(BaseModel):
     """Generic request accepted by the Chief of Staff orchestration layer."""
@@ -138,9 +145,7 @@ class OrchestratorResponse(BaseModel):
     selected_workflow: str
     rationale: str
     trace: WorkflowTrace
-    result: (
-        WeeklyUpdateResponse | BrandContentDraftResponse | InterviewBriefResponse | OneOnOneResponse
-    )
+    result: DomainResult
     # Populated when target_audience is set — the writer agent's audience-
     # formatted output alongside the structured workflow result.
     formatted_content: str | None = None

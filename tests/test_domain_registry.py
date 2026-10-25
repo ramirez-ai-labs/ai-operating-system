@@ -145,6 +145,32 @@ def test_tool_input_schema_hides_operator_settings(spec) -> None:
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=SPEC_IDS)
+def test_tool_input_fields_exist_on_the_domain_request(spec) -> None:
+    # request_from_tool_input copies every tool-input field onto the domain
+    # request; a field the request does not declare would be silently lost.
+    tool_fields = set(spec.tool.input_model.model_fields)
+    assert tool_fields <= set(spec.request_model.model_fields)
+
+
+@pytest.mark.parametrize("spec", SPECS, ids=SPEC_IDS)
+def test_request_from_tool_input_keeps_tool_and_operator_fields_apart(spec) -> None:
+    tool_input = spec.tool.input_model(focus="focus from the model")
+    request = spec.request_from_tool_input(
+        tool_input,
+        {"use_model": True, "claude_model": "operator-model", "ollama_model": "operator-local"},
+    )
+    assert request.focus == "focus from the model"
+    assert request.data_path == tool_input.data_path
+    assert request.use_model is True
+    assert request.claude_model == "operator-model"
+    # Operator settings a domain does not declare are dropped, not rejected.
+    if "ollama_model" in spec.request_model.model_fields:
+        assert request.ollama_model == "operator-local"
+    else:
+        assert "ollama_model" not in request.model_dump()
+
+
+@pytest.mark.parametrize("spec", SPECS, ids=SPEC_IDS)
 def test_tool_input_default_data_path_is_valid(spec) -> None:
     assert spec.tool.input_model().data_path.startswith("data/local_only/")
 

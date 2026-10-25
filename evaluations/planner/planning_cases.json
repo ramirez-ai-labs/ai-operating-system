@@ -1,0 +1,154 @@
+[
+  {
+    "id": "route-director-leadership-update",
+    "description": "Single-intent leadership update routes to Director OS.",
+    "goal": "Prepare my leadership weekly update",
+    "expected_workflows": ["director_os.weekly_update"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "route-director-operating-review",
+    "description": "Operating review language routes to Director OS.",
+    "goal": "Operating review: platform risks",
+    "expected_workflows": ["director_os.weekly_update"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "route-director-default",
+    "description": "A goal with no domain keywords falls back to the default domain.",
+    "goal": "summarize project status",
+    "expected_workflows": ["director_os.weekly_update"],
+    "tags": ["routing", "default"]
+  },
+  {
+    "id": "route-brand-linkedin",
+    "description": "LinkedIn content routes to Brand OS.",
+    "goal": "Draft a LinkedIn post about our RAG evaluation work",
+    "expected_workflows": ["brand_os.content_draft"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "route-brand-podcast",
+    "description": "Podcast planning routes to Brand OS.",
+    "goal": "Podcast episode angles for next month",
+    "expected_workflows": ["brand_os.content_draft"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "route-interview-candidate",
+    "description": "Candidate prep routes to Interview OS.",
+    "goal": "Interview prep for the senior AI engineer candidate",
+    "expected_workflows": ["interview_os.brief"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "route-interview-screening",
+    "description": "Screening questions route to Interview OS.",
+    "goal": "Screening questions for Alex Chen",
+    "expected_workflows": ["interview_os.brief"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "route-one-on-one-prep",
+    "description": "1:1 prep routes to One-on-One OS.",
+    "goal": "1:1 prep for Marcus",
+    "expected_workflows": ["one_on_one_os.brief"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "route-one-on-one-direct-report",
+    "description": "Direct-report check-in routes to One-on-One OS.",
+    "goal": "Check-in agenda with my direct report Priya",
+    "expected_workflows": ["one_on_one_os.brief"],
+    "tags": ["routing"]
+  },
+  {
+    "id": "plan-prep-my-week",
+    "description": "Three deliverables across three domains in one goal.",
+    "goal": "Prep my week: leadership update, 1:1 brief for Priya, and a LinkedIn post on the platform migration",
+    "expected_workflows": [
+      "director_os.weekly_update",
+      "one_on_one_os.brief",
+      "brand_os.content_draft"
+    ],
+    "tags": ["multi_domain"]
+  },
+  {
+    "id": "plan-interview-and-one-on-one",
+    "description": "Two domains; executed end to end and every step must be grounded.",
+    "goal": "Interview prep for Alex Chen and 1:1 with Sarah about blockers",
+    "expected_workflows": ["interview_os.brief", "one_on_one_os.brief"],
+    "tags": ["multi_domain"],
+    "execute": true,
+    "expected_status": "ok"
+  },
+  {
+    "id": "plan-leadership-and-one-on-one",
+    "description": "Leadership update plus a 1:1 brief; executed end to end.",
+    "goal": "Leadership weekly update and 1:1 with Priya",
+    "expected_workflows": ["director_os.weekly_update", "one_on_one_os.brief"],
+    "tags": ["multi_domain"],
+    "execute": true,
+    "expected_status": "ok"
+  },
+  {
+    "id": "plan-three-one-on-ones",
+    "description": "Same domain for three people produces three separate steps.",
+    "goal": "1:1 prep for Marcus; 1:1 prep for Sarah; 1:1 prep for Priya",
+    "expected_workflows": [
+      "one_on_one_os.brief",
+      "one_on_one_os.brief",
+      "one_on_one_os.brief"
+    ],
+    "tags": ["multi_domain", "repeat_domain"],
+    "execute": true,
+    "expected_status": "ok"
+  },
+  {
+    "id": "plan-update-then-podcast",
+    "description": "Sequencing words ('then') still split into two deliverables.",
+    "goal": "Weekly update for leadership, then a podcast outline",
+    "expected_workflows": ["director_os.weekly_update", "brand_os.content_draft"],
+    "tags": ["multi_domain"]
+  },
+  {
+    "id": "semantic-promotion-conversation",
+    "description": "No routing keyword: a conversation with a direct report is a 1:1 brief.",
+    "goal": "Help me get ready for my conversation with Priya tomorrow about her promotion case",
+    "expected_workflows": ["one_on_one_os.brief"],
+    "tags": ["semantic"],
+    "rules_supported": false
+  },
+  {
+    "id": "semantic-what-to-ask-candidate",
+    "description": "No routing keyword: questions for a named candidate are an interview brief.",
+    "goal": "What should I ask Alex Chen on Thursday?",
+    "expected_workflows": ["interview_os.brief"],
+    "tags": ["semantic"],
+    "rules_supported": false
+  },
+  {
+    "id": "semantic-share-publicly",
+    "description": "No routing keyword: sharing work publicly is a Brand OS content draft.",
+    "goal": "Turn this week's migration wins into something I can share publicly",
+    "expected_workflows": ["brand_os.content_draft"],
+    "tags": ["semantic"],
+    "rules_supported": false
+  },
+  {
+    "id": "semantic-monday-prep",
+    "description": "No routing keywords: status and risk is Director OS; talking points for a report is a 1:1.",
+    "goal": "Get me ready for Monday: what shipped, what is at risk, and talking points for Sarah",
+    "expected_workflows": ["director_os.weekly_update", "one_on_one_os.brief"],
+    "tags": ["semantic", "multi_domain"],
+    "rules_supported": false
+  },
+  {
+    "id": "over-split-single-deliverable",
+    "description": "'and' inside one deliverable must not create a second step. The rules planner splits on 'and' and gets this wrong.",
+    "goal": "Weekly update covering wins and risks for leadership",
+    "expected_workflows": ["director_os.weekly_update"],
+    "tags": ["over_split"],
+    "rules_supported": false
+  }
+]
