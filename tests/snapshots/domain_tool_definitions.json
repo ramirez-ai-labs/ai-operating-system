@@ -1,0 +1,189 @@
+[
+  {
+    "name": "director_os_weekly_update",
+    "description": "Build a weekly leadership update — wins, risks, and next steps — from local project notes. Every item cites its source file and line number. Use for: status updates, project reviews, leadership summaries, risk tracking, or weekly updates.",
+    "input_schema": {
+      "properties": {
+        "focus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What to retrieve and synthesize, e.g. a project, theme, or person.",
+          "title": "Focus"
+        },
+        "data_path": {
+          "default": "data/local_only/projects",
+          "description": "Directory under data/local_only containing project notes.",
+          "title": "Data Path",
+          "type": "string"
+        },
+        "max_documents": {
+          "default": 5,
+          "description": "Maximum number of evidence items to retrieve.",
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max Documents",
+          "type": "integer"
+        }
+      },
+      "title": "WeeklyUpdateToolInput",
+      "type": "object"
+    }
+  },
+  {
+    "name": "brand_os_content_draft",
+    "description": "Draft content — post outlines, podcast angles, and repo improvement notes — from local technical work notes. Every item cites its source file and line number. Use for: content creation, LinkedIn posts, podcasts, thought leadership, brand strategy, writing, or social media.",
+    "input_schema": {
+      "properties": {
+        "focus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What to retrieve and synthesize, e.g. a project, theme, or person.",
+          "title": "Focus"
+        },
+        "data_path": {
+          "default": "data/local_only/brand",
+          "description": "Directory under data/local_only containing brand and work notes.",
+          "title": "Data Path",
+          "type": "string"
+        },
+        "max_documents": {
+          "default": 5,
+          "description": "Maximum number of evidence items to retrieve.",
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max Documents",
+          "type": "integer"
+        }
+      },
+      "title": "ContentDraftToolInput",
+      "type": "object"
+    }
+  },
+  {
+    "name": "interview_os_brief",
+    "description": "Build a candidate interview brief — key questions, talking points, and red flags — from local hiring notes. Every item cites its source file and line number. Use for: interview prep, candidate briefs, hiring questions, screening notes, or candidate research.",
+    "input_schema": {
+      "properties": {
+        "focus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What to retrieve and synthesize, e.g. a project, theme, or person.",
+          "title": "Focus"
+        },
+        "data_path": {
+          "default": "data/local_only/interviews",
+          "description": "Directory under data/local_only with candidate notes and role briefs.",
+          "title": "Data Path",
+          "type": "string"
+        },
+        "max_documents": {
+          "default": 5,
+          "description": "Maximum number of evidence items to retrieve.",
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max Documents",
+          "type": "integer"
+        },
+        "candidate_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Candidate name, included in the brief summary when provided.",
+          "title": "Candidate Name"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Role being interviewed for; focuses question and talking-point selection.",
+          "title": "Role"
+        }
+      },
+      "title": "InterviewBriefToolInput",
+      "type": "object"
+    }
+  },
+  {
+    "name": "one_on_one_os_brief",
+    "description": "Build a 1:1 meeting brief — action items, talking points, blockers, and kudos — from local direct-report notes. Every item cites its source file and line number. Use for: 1:1 meeting prep, direct report check-ins, manager notes, action item tracking, team health, or meeting briefs.",
+    "input_schema": {
+      "properties": {
+        "focus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What to retrieve and synthesize, e.g. a project, theme, or person.",
+          "title": "Focus"
+        },
+        "data_path": {
+          "default": "data/local_only/one_on_one",
+          "description": "Directory under data/local_only with 1:1 notes and action logs.",
+          "title": "Data Path",
+          "type": "string"
+        },
+        "max_documents": {
+          "default": 5,
+          "description": "Maximum number of evidence items to retrieve.",
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max Documents",
+          "type": "integer"
+        },
+        "direct_report": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Direct report name, included in the brief summary when provided.",
+          "title": "Direct Report"
+        }
+      },
+      "title": "MeetingBriefToolInput",
+      "type": "object"
+    }
+  }
+]

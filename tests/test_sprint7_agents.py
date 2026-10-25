@@ -24,6 +24,11 @@ from packages.shared.schemas.orchestrator import AgentCall, OrchestratorRequest
 # ---------------------------------------------------------------------------
 
 
+# Patch the public workflow entry point; the router reaches it through the
+# domain registry, which imports it at call time.
+_WEEKLY_UPDATE_PATCH = "director_os.workflows.weekly_update.build_weekly_update"
+
+
 def _make_evidence(
     source: str = "notes.md",
     line_number: int = 1,
@@ -204,7 +209,7 @@ def test_orchestrator_populates_formatted_content_and_agent_calls(
         risk_signals=[],
     )
 
-    monkeypatch.setattr(csm, "build_weekly_update", lambda _req: _fake_result())
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, lambda _req: _fake_result())
     monkeypatch.setattr(
         "packages.shared.agents.researcher.ResearcherAgent.synthesize",
         lambda self, focus, evidence: (
@@ -239,7 +244,7 @@ def test_orchestrator_formatted_content_is_none_without_target_audience(
 ) -> None:
     from packages.shared.orchestration import chief_of_staff as csm
 
-    monkeypatch.setattr(csm, "build_weekly_update", lambda _req: _fake_result())
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, lambda _req: _fake_result())
 
     resp = csm.route_request(
         OrchestratorRequest(

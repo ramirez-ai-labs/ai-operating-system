@@ -1,51 +1,52 @@
 from __future__ import annotations
 
+import inspect
+
 from mcp.server.fastmcp import FastMCP
 
-from packages.shared.schemas.brand_os import BrandContentDraftRequest, BrandContentDraftResponse
-from packages.shared.schemas.director_os import WeeklyUpdateRequest, WeeklyUpdateResponse
-from packages.shared.schemas.interview_os import InterviewBriefRequest, InterviewBriefResponse
-from packages.shared.schemas.one_on_one_os import OneOnOneRequest, OneOnOneResponse
+from packages.shared.domains import DOMAINS, DomainSpec
 
-# Workflow modules are imported inside each tool, not at module load. They pull
-# in LangGraph, LangChain, LangSmith, and ChromaDB, which on a cold start can
-# take longer than an MCP client's connect timeout (30s in Claude Code). The
-# schemas above are plain Pydantic, so the server can answer `initialize` and
-# `tools/list` immediately and defer the heavy imports to the first tool call.
+# Importing the registry loads only Pydantic schemas. Each domain spec imports
+# its workflow — and with it LangGraph, LangChain, LangSmith, and ChromaDB — on
+# first call. On a cold start those imports can take longer than an MCP
+# client's connect timeout (30s in Claude Code), so deferring them lets the
+# server answer `initialize` and `tools/list` immediately.
+
+
+def _make_tool(spec: DomainSpec):
+    """Build the MCP tool function for one registered domain."""
+
+    def run_domain_workflow(request):
+        return spec.run(request)
+
+    # FastMCP derives the tool's input and output schemas from the signature,
+    # so give the shared handler this domain's concrete request/response types.
+    run_domain_workflow.__signature__ = inspect.Signature(
+        parameters=[
+            inspect.Parameter(
+                "request",
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                annotation=spec.request_model,
+            )
+        ],
+        return_annotation=spec.response_model,
+    )
+    run_domain_workflow.__annotations__ = {
+        "request": spec.request_model,
+        "return": spec.response_model,
+    }
+    return run_domain_workflow
 
 
 def create_server() -> FastMCP:
-    """Create the standalone MCP server exposing AI-OS workflows as tools."""
+    """Create the standalone MCP server exposing every registered domain as a tool."""
     server = FastMCP("ai-operating-system")
-
-    @server.tool()
-    def director_os_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
-        """Run the Director OS weekly update workflow from an MCP client."""
-        from director_os.workflows.weekly_update import build_weekly_update
-
-        return build_weekly_update(request)
-
-    @server.tool()
-    def brand_os_content_draft(request: BrandContentDraftRequest) -> BrandContentDraftResponse:
-        """Run the Brand OS content-draft workflow from an MCP client."""
-        from brand_os.workflows.content_draft import build_content_draft
-
-        return build_content_draft(request)
-
-    @server.tool()
-    def interview_os_brief(request: InterviewBriefRequest) -> InterviewBriefResponse:
-        """Run the Interview OS brief workflow from an MCP client."""
-        from interview_os.workflows.interview_brief import build_interview_brief
-
-        return build_interview_brief(request)
-
-    @server.tool()
-    def one_on_one_os_brief(request: OneOnOneRequest) -> OneOnOneResponse:
-        """Run the One-on-One OS meeting brief workflow from an MCP client."""
-        from one_on_one_os.workflows.meeting_brief import build_meeting_brief
-
-        return build_meeting_brief(request)
-
+    for spec in DOMAINS.values():
+        server.add_tool(
+            _make_tool(spec),
+            name=spec.tool.name,
+            description=spec.tool.description,
+        )
     return server
 
 

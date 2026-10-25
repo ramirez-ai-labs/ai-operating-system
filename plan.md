@@ -502,12 +502,14 @@ Each item ships as its own PR, in order — later items depend on earlier ones.
 
 ### Status
 
-- Not started. Prerequisite hygiene shipped first: model IDs centralized in `config/models.yaml` with the validated default test-enforced, MCP server startup no longer imports LangGraph/ChromaDB (fixes cold-start connect timeouts), README and SHOWCASE scope wording aligned with what the system does today.
-- Deferred: a fifth workflow domain (Recruiting OS). It adds breadth on the existing pattern; Phase 9 adds the orchestration depth the project is missing. Revisit after 9a, when adding a domain becomes a single registration.
+- Prerequisites (Sprint 23, [#114](https://github.com/ramirez-ai-labs/ai-operating-system/pull/114)): model IDs centralized in `config/models.yaml` with the validated default test-enforced, MCP server startup no longer imports LangGraph/ChromaDB (fixes cold-start connect timeouts), README and SHOWCASE scope wording aligned with what the system does today.
+- 9a implemented (Sprint 24): `packages/shared/domains/` registry. Each `DomainSpec` pairs a model-facing `DomainTool` (name, description, narrow input schema, `to_tool_definition()`) with operator-facing routing, request-building, and trace rules. The router prompt (byte-identical to the previous hand-written one), keyword fallback, `_run_workflow`, `_build_trace`, API routes, and MCP tools are all derived from it. Tool definitions are snapshotted in `tests/snapshots/domain_tool_definitions.json` so description changes show up as reviewable diffs.
+- Next: 9b planner/supervisor, which consumes `tool_definitions()` directly.
+- Deferred: a fifth workflow domain (Recruiting OS). It adds breadth on the existing pattern; Phase 9 adds the orchestration depth the project is missing. With 9a in place, adding a domain no longer touches the router, API, or MCP server.
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–23 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. 254 tests passing.
+Sprints 1–24 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. 293 tests passing.
 
 **Sprint 20  -  Debt paydown (complete, PRs #93–97):**
 Shared grounding primitives extracted to `grounding.py`. Orchestrator circuit breaker and trace token flush. Ghost token capture on fallback path. `section_counts` moved into domain schemas. `_COMPETING_PREFIXES` constant. `_get_chroma_client()` singleton.
@@ -520,10 +522,13 @@ ChromaDB per-path staleness detection. Unified `scripts/run_evals.py` dispatcher
 
 **Phase 8  -  Next.js frontend (complete, PRs #104–105).**
 
-**Sprint 23  -  Model config + MCP startup + scope wording (complete):**
+**Sprint 23  -  Model config + MCP startup + scope wording (complete, PR #114):**
 Single source of truth for model IDs in `config/models.yaml`. MCP server defers workflow imports so `initialize` answers before the client's connect timeout. README/SHOWCASE wording matches current scope.
 
-**Phase 9  -  recommended next: start with 9a (domain registry).** It is the enabler for the planner in 9b and shrinks the domain-addition checklist from ten files to the domain's own files plus one registration. See [Phase 9](#phase-9-from-router-to-orchestrator) above.
+**Sprint 24  -  Phase 9a domain registry (complete):**
+`packages/shared/domains/` is the single list of domains. Router, trace builder, API routes, and MCP tools derive from it; model-facing tool definitions are snapshotted and their input schemas exclude operator settings.
+
+**Phase 9  -  recommended next: 9b (planner/supervisor + routing evals).** The planner receives `tool_definitions()` as its tool list and calls the registered workflows as grounded tools. Ship the routing/planning eval set in the same PR so planner quality is measured from day one. See [Phase 9](#phase-9-from-router-to-orchestrator) above.
 
 ## Definition of Success
 

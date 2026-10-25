@@ -1,28 +1,13 @@
+import inspect
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-from brand_os.workflows.content_draft import build_content_draft
-from director_os.workflows.weekly_update import build_weekly_update
-from interview_os.workflows.interview_brief import build_interview_brief
-from one_on_one_os.workflows.meeting_brief import build_meeting_brief
+from packages.shared.domains import DOMAINS, DomainSpec
 from packages.shared.orchestration.chief_of_staff import route_request
-from packages.shared.schemas.brand_os import (
-    BrandContentDraftRequest,
-    BrandContentDraftResponse,
-)
-from packages.shared.schemas.director_os import (
-    ErrorResponse,
-    WeeklyUpdateRequest,
-    WeeklyUpdateResponse,
-)
-from packages.shared.schemas.interview_os import (
-    InterviewBriefRequest,
-    InterviewBriefResponse,
-)
-from packages.shared.schemas.one_on_one_os import OneOnOneRequest, OneOnOneResponse
+from packages.shared.schemas.director_os import ErrorResponse
 from packages.shared.schemas.orchestrator import (
     OrchestratorRequest,
     OrchestratorResponse,
@@ -57,37 +42,49 @@ def operator_console() -> HTMLResponse:
     return HTMLResponse(_CONSOLE_HTML_PATH.read_text(encoding="utf-8"))
 
 
-@app.post(
-    "/director-os/weekly-update",
-    response_model=WeeklyUpdateResponse,
-    responses={400: {"model": ErrorResponse}},
-)
-def create_weekly_update(request: WeeklyUpdateRequest) -> WeeklyUpdateResponse:
-    """Run the Director OS weekly update workflow against local project notes."""
-    try:
-        # FastAPI handles HTTP parsing and validation for us. After that, the
-        # route simply hands the typed request object to the workflow layer.
-        # The API layer stays intentionally thin. The real workflow logic lives
-        # in Director OS so it can be tested without starting FastAPI.
-        return build_weekly_update(request)
-    except ValueError as exc:
-        # Validation and retrieval failures are returned as client-facing 400 errors.
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+def _register_domain_route(spec: DomainSpec) -> None:
+    """Expose one registered domain workflow as a typed POST route.
+
+    The API layer stays intentionally thin: FastAPI parses and validates the
+    request against the domain's request model, then hands the typed object to
+    the workflow. The real workflow logic lives in the domain graph so it can be
+    tested without starting FastAPI.
+    """
+
+    def run_domain_workflow(request):
+        try:
+            return spec.run(request)
+        except ValueError as exc:
+            # Validation and retrieval failures are returned as client-facing 400 errors.
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # FastAPI reads the signature to build request validation and the OpenAPI
+    # schema, so give the shared handler this domain's concrete types.
+    run_domain_workflow.__signature__ = inspect.Signature(
+        parameters=[
+            inspect.Parameter(
+                "request",
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                annotation=spec.request_model,
+            )
+        ],
+        return_annotation=spec.response_model,
+    )
+
+    app.add_api_route(
+        spec.api_path,
+        run_domain_workflow,
+        methods=["POST"],
+        response_model=spec.response_model,
+        responses={400: {"model": ErrorResponse}},
+        name=spec.tool.name,
+        summary=f"Run {spec.workflow_id}",
+        description=spec.tool.description,
+    )
 
 
-@app.post(
-    "/brand-os/content-draft",
-    response_model=BrandContentDraftResponse,
-    responses={400: {"model": ErrorResponse}},
-)
-def create_brand_content_draft(
-    request: BrandContentDraftRequest,
-) -> BrandContentDraftResponse:
-    """Run the Brand OS content-draft workflow against local brand notes."""
-    try:
-        return build_content_draft(request)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+for _spec in DOMAINS.values():
+    _register_domain_route(_spec)
 
 
 @app.post(
@@ -102,31 +99,5 @@ def orchestrate(request: OrchestratorRequest) -> OrchestratorResponse:
         # sends one generic request, and the orchestrator decides which domain
         # workflow should handle it.
         return route_request(request)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.post(
-    "/interview-os/brief",
-    response_model=InterviewBriefResponse,
-    responses={400: {"model": ErrorResponse}},
-)
-def create_interview_brief(request: InterviewBriefRequest) -> InterviewBriefResponse:
-    """Run the Interview OS brief workflow against local candidate and role notes."""
-    try:
-        return build_interview_brief(request)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.post(
-    "/one-on-one/brief",
-    response_model=OneOnOneResponse,
-    responses={400: {"model": ErrorResponse}},
-)
-def create_one_on_one_brief(request: OneOnOneRequest) -> OneOnOneResponse:
-    """Run the One-on-One OS brief workflow against local 1:1 notes."""
-    try:
-        return build_meeting_brief(request)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -34,6 +34,7 @@ Evidence grounding is enforced at the schema level via forced tool use: every ou
 | Capability | Implementation |
 |---|---|
 | LLM routing across domains | Chief of Staff router (local Ollama classification, keyword fallback) + 4 domain LangGraph graphs |
+| Domain registry as tool definitions | `packages/shared/domains/`: one `DomainSpec` per domain drives the router prompt, API routes, and MCP tools; model-facing input schemas exclude provider/model/fallback settings; snapshot-tested |
 | In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `orchestrator_integration.py` |
 | Standalone MCP server | `apps/mcp/server.py` — all 4 domains as MCP tools |
 | Schema-enforced evidence grounding | Forced tool use with required `source` + `line_number` fields |
@@ -55,7 +56,7 @@ AI-OS today is a **routed workflow system**: each request goes to exactly one do
 | Today | Where it is going (Phase 9 in [plan.md](plan.md)) |
 |---|---|
 | Router picks one of four domains per request | Planner breaks a goal ("prep my week") into steps across domains and runs them in parallel |
-| Domains are wired into the router by hand | Domain registry: each workflow registers its schema, description, and graph; the router and planner discover them |
+| ✅ **Shipped (9a):** domain registry in `packages/shared/domains/`. Each domain registers its schemas, routing rules, and a model-facing tool definition; the router, API, and MCP server are derived from it | The planner (9b) takes the same tool definitions as its tool list |
 | The MCP tool loop is the one model-directed path, and its free-form output is not grounding-validated | Tool loop ends in the same forced-tool grounding schema and `validate_response` as every workflow |
 | Each request is stateless | LangGraph checkpointing, run history, and human approval before final output |
 | Routing accuracy is not scored | Routing and planning eval set gated in CI alongside the domain evals |

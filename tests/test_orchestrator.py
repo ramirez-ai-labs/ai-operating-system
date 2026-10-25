@@ -8,6 +8,11 @@ from packages.shared.schemas.orchestrator import OrchestratorRequest
 _MCP_RUN_PATCH = "packages.shared.orchestration.chief_of_staff.run_with_mcp_tools"
 
 
+# Patch the public workflow entry point; the router reaches it through the
+# domain registry, which imports it at call time.
+_WEEKLY_UPDATE_PATCH = "director_os.workflows.weekly_update.build_weekly_update"
+
+
 def test_orchestrator_routes_director_os_prompt() -> None:
     """Leadership-style prompts should route to the Director OS weekly update workflow."""
     response = route_request(
@@ -70,7 +75,6 @@ def test_orchestrator_defaults_to_director_when_prompt_is_missing() -> None:
 
 def test_orchestrator_reports_director_fallback_in_trace(monkeypatch) -> None:
     """The trace should make deterministic fallback visible to the operator."""
-    from packages.shared.orchestration import chief_of_staff as orchestration_module
 
     def fake_weekly_update(_request):
         return WeeklyUpdateResponse(
@@ -103,7 +107,7 @@ def test_orchestrator_reports_director_fallback_in_trace(monkeypatch) -> None:
             ],
         )
 
-    monkeypatch.setattr(orchestration_module, "build_weekly_update", fake_weekly_update)
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, fake_weekly_update)
 
     response = route_request(
         OrchestratorRequest(
@@ -120,7 +124,6 @@ def test_orchestrator_reports_director_fallback_in_trace(monkeypatch) -> None:
 
 def test_orchestrator_forwards_director_provider_selection(monkeypatch) -> None:
     """Director OS routing should preserve the caller's explicit synthesis provider."""
-    from packages.shared.orchestration import chief_of_staff as orchestration_module
 
     captured_request = None
 
@@ -148,7 +151,7 @@ def test_orchestrator_forwards_director_provider_selection(monkeypatch) -> None:
             ],
         )
 
-    monkeypatch.setattr(orchestration_module, "build_weekly_update", fake_weekly_update)
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, fake_weekly_update)
 
     response = route_request(
         OrchestratorRequest(
@@ -208,17 +211,15 @@ def test_orchestrator_mcp_skips_model_synthesis_in_workflow(monkeypatch) -> None
         success=True,
     )
 
-    from packages.shared.orchestration import chief_of_staff as cs_module
-
     captured_request = {}
 
-    real_build = cs_module.build_weekly_update
+    from director_os.workflows.weekly_update import build_weekly_update as real_build
 
     def capturing_build(req):
         captured_request["use_model"] = req.use_model
         return real_build(req)
 
-    monkeypatch.setattr(cs_module, "build_weekly_update", capturing_build)
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, capturing_build)
 
     with patch(_MCP_RUN_PATCH, return_value=mock_mcp_response):
         route_request(

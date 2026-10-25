@@ -5,17 +5,17 @@ import logging
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
-from brand_os.workflows.content_draft import build_content_draft
-from director_os.workflows.weekly_update import build_weekly_update
-from interview_os.workflows.interview_brief import build_interview_brief
-from one_on_one_os.workflows.meeting_brief import build_meeting_brief
 from packages.shared.agents.researcher import ResearcherAgent
 from packages.shared.agents.writer import WriterAgent
+from packages.shared.domains import (
+    DOMAINS,
+    DomainSpec,
+    default_domain,
+    domain_for_routing_token,
+    get_domain,
+    keyword_routing_order,
+)
 from packages.shared.mcp.orchestrator_integration import run_with_mcp_tools
-from packages.shared.schemas.brand_os import BrandContentDraftRequest
-from packages.shared.schemas.director_os import WeeklyUpdateRequest
-from packages.shared.schemas.interview_os import InterviewBriefRequest
-from packages.shared.schemas.one_on_one_os import OneOnOneRequest
 from packages.shared.schemas.orchestrator import (
     AgentCall,
     OrchestratorRequest,
@@ -25,49 +25,31 @@ from packages.shared.schemas.orchestrator import (
 
 logger = logging.getLogger(__name__)
 
-DIRECTOR_WORKFLOW = "director_os.weekly_update"
-BRAND_WORKFLOW = "brand_os.content_draft"
-INTERVIEW_WORKFLOW = "interview_os.brief"
-ONE_ON_ONE_WORKFLOW = "one_on_one_os.brief"
-DETERMINISTIC_SUMMARY_PREFIX = "Weekly update synthesized from local project evidence"
-BRAND_ROUTING_KEYWORDS = (
-    "podcast",
-    "linkedin",
-    "thought leadership",
-    "brand",
-    "content",
-)
-DIRECTOR_ROUTING_KEYWORDS = ("leadership", "weekly update", "operating review")
-INTERVIEW_ROUTING_KEYWORDS = (
-    "interview",
-    "candidate",
-    "hiring",
-    "interviewer",
-    "screening",
-    "debrief",
-)
-ONE_ON_ONE_ROUTING_KEYWORDS = (
-    "1:1",
-    "1on1",
-    "one-on-one",
-    "direct report",
-    "meeting prep",
-    "check-in",
-)
 
-_ROUTING_SYSTEM_PROMPT = (
-    "You are a workflow router. Reply with exactly one word — either "
-    "'director_os', 'brand_os', 'interview_os', or 'one_on_one_os' — with no punctuation "
-    "or explanation.\n"
-    "Use 'brand_os' for: content creation, LinkedIn posts, podcasts, thought "
-    "leadership, brand strategy, writing, or social media.\n"
-    "Use 'interview_os' for: interview prep, candidate briefs, hiring questions, "
-    "screening notes, or candidate research.\n"
-    "Use 'one_on_one_os' for: 1:1 meeting prep, direct report check-ins, manager "
-    "notes, action item tracking, team health, or meeting briefs.\n"
-    "Use 'director_os' for everything else: status updates, project reviews, "
-    "leadership summaries, risk tracking, or weekly updates."
-)
+def _build_routing_system_prompt() -> str:
+    """Build the one-word classification prompt from the domain registry.
+
+    Each registered domain contributes its routing token and routing hint, so
+    the prompt can never list a domain that is not registered or miss one that is.
+    """
+    specs = list(DOMAINS.values())
+    tokens = [f"'{spec.domain}'" for spec in specs]
+    either = ", ".join(tokens[:-1]) + f", or {tokens[-1]}"
+    lines = [
+        "You are a workflow router. Reply with exactly one word — either "
+        f"{either} — with no punctuation or explanation."
+    ]
+    lines += [
+        f"Use '{spec.domain}' for: {spec.routing_hint}."
+        for spec in specs
+        if not spec.is_default
+    ]
+    default = default_domain()
+    lines.append(f"Use '{default.domain}' for everything else: {default.routing_hint}.")
+    return "\n".join(lines)
+
+
+_ROUTING_SYSTEM_PROMPT = _build_routing_system_prompt()
 
 
 def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
@@ -145,67 +127,9 @@ def _run_workflow(
     use_model_override: bool | None = None,
 ):
     """Adapt the generic request into the selected workflow contract and execute it."""
+    spec = get_domain(workflow)
     effective_use_model = request.use_model if use_model_override is None else use_model_override
-    if workflow == DIRECTOR_WORKFLOW:
-        return build_weekly_update(
-            WeeklyUpdateRequest(
-                data_path=request.data_path,
-                focus=request.focus or request.prompt,
-                max_documents=request.max_documents,
-                use_model=effective_use_model,
-                fallback_to_deterministic=request.fallback_to_deterministic,
-                # Keep provider choice at the workflow boundary so routing can
-                # stay deterministic while synthesis remains explicitly opt-in.
-                provider=request.provider,
-                ollama_url=request.ollama_url,
-                ollama_model=request.ollama_model,
-                claude_model=request.claude_model,
-            )
-        )
-
-    if workflow == BRAND_WORKFLOW:
-        return build_content_draft(
-            BrandContentDraftRequest(
-                data_path=request.data_path,
-                focus=request.focus or request.prompt,
-                max_documents=request.max_documents,
-                use_model=effective_use_model,
-                provider=request.provider,
-                claude_model=request.claude_model,
-                fallback_to_deterministic=request.fallback_to_deterministic,
-            )
-        )
-
-    if workflow == INTERVIEW_WORKFLOW:
-        return build_interview_brief(
-            InterviewBriefRequest(
-                data_path=request.data_path,
-                focus=request.focus or request.prompt,
-                max_documents=request.max_documents,
-                use_model=effective_use_model,
-                provider=request.provider,
-                claude_model=request.claude_model,
-                fallback_to_deterministic=request.fallback_to_deterministic,
-            )
-        )
-
-    if workflow == ONE_ON_ONE_WORKFLOW:
-        return build_meeting_brief(
-            OneOnOneRequest(
-                data_path=request.data_path,
-                focus=request.focus or request.prompt,
-                max_documents=request.max_documents,
-                use_model=effective_use_model,
-                provider=request.provider,
-                claude_model=request.claude_model,
-                fallback_to_deterministic=request.fallback_to_deterministic,
-            )
-        )
-
-    raise ValueError(
-        "Unsupported workflow. Current supported workflows: "
-        f"{DIRECTOR_WORKFLOW}, {BRAND_WORKFLOW}, {INTERVIEW_WORKFLOW}, {ONE_ON_ONE_WORKFLOW}."
-    )
+    return spec.run(spec.build_request(request, effective_use_model))
 
 
 def _select_workflow(request: OrchestratorRequest) -> tuple[str, str, str]:
@@ -270,30 +194,12 @@ def _classify_with_ollama(
         workflow, rationale = _select_workflow_keyword(prompt)
         return workflow, rationale, f"keyword-match (ollama/{model} error)"
 
-    routing_model_id = f"ollama/{model}"
-    if content == "brand_os":
+    spec = domain_for_routing_token(content)
+    if spec is not None:
         return (
-            BRAND_WORKFLOW,
-            f"Selected {BRAND_WORKFLOW} via Ollama classification ({model}).",
-            routing_model_id,
-        )
-    if content == "director_os":
-        return (
-            DIRECTOR_WORKFLOW,
-            f"Selected {DIRECTOR_WORKFLOW} via Ollama classification ({model}).",
-            routing_model_id,
-        )
-    if content == "interview_os":
-        return (
-            INTERVIEW_WORKFLOW,
-            f"Selected {INTERVIEW_WORKFLOW} via Ollama classification ({model}).",
-            routing_model_id,
-        )
-    if content == "one_on_one_os":
-        return (
-            ONE_ON_ONE_WORKFLOW,
-            f"Selected {ONE_ON_ONE_WORKFLOW} via Ollama classification ({model}).",
-            routing_model_id,
+            spec.workflow_id,
+            f"Selected {spec.workflow_id} via Ollama classification ({model}).",
+            f"ollama/{model}",
         )
     # Model did not return a recognised token — fall back to keyword rules.
     logger.warning(
@@ -307,31 +213,15 @@ def _classify_with_ollama(
 def _select_workflow_keyword(prompt: str | None) -> tuple[str, str]:
     """Keyword fallback router — used when Ollama is unavailable."""
     lowered = (prompt or "").lower()
-    for keyword in ONE_ON_ONE_ROUTING_KEYWORDS:
-        if keyword in lowered:
-            return (
-                ONE_ON_ONE_WORKFLOW,
-                f"Selected {ONE_ON_ONE_WORKFLOW} because the prompt matched '{keyword}'.",
-            )
-    for keyword in INTERVIEW_ROUTING_KEYWORDS:
-        if keyword in lowered:
-            return (
-                INTERVIEW_WORKFLOW,
-                f"Selected {INTERVIEW_WORKFLOW} because the prompt matched '{keyword}'.",
-            )
-    for keyword in BRAND_ROUTING_KEYWORDS:
-        if keyword in lowered:
-            return (
-                BRAND_WORKFLOW,
-                f"Selected {BRAND_WORKFLOW} because the prompt matched '{keyword}'.",
-            )
-    for keyword in DIRECTOR_ROUTING_KEYWORDS:
-        if keyword in lowered:
-            return (
-                DIRECTOR_WORKFLOW,
-                f"Selected {DIRECTOR_WORKFLOW} because the prompt matched '{keyword}'.",
-            )
-    return DIRECTOR_WORKFLOW, f"Selected {DIRECTOR_WORKFLOW} as the default workflow."
+    for spec in keyword_routing_order():
+        for keyword in spec.routing_keywords:
+            if keyword in lowered:
+                return (
+                    spec.workflow_id,
+                    f"Selected {spec.workflow_id} because the prompt matched '{keyword}'.",
+                )
+    default = default_domain()
+    return default.workflow_id, f"Selected {default.workflow_id} as the default workflow."
 
 
 def _build_trace(
@@ -343,39 +233,26 @@ def _build_trace(
     routing_model: str = "keyword-match",
 ) -> WorkflowTrace:
     """Summarize the execution path in a shape that operators can inspect easily."""
+    spec: DomainSpec = get_domain(workflow)
     evidence_sources = list(dict.fromkeys(item.source for item in result.evidence))
     focus_used = request.focus or request.prompt
 
     usage = getattr(result, "provider_usage", {})
     cache_read = usage.get("cache_read_input_tokens", 0)
     cache_creation = usage.get("cache_creation_input_tokens", 0)
-    model_supported = True
-    section_counts = result.section_counts
 
-    if workflow == DIRECTOR_WORKFLOW:
-        fallback_used = request.use_model and result.summary.startswith(
-            DETERMINISTIC_SUMMARY_PREFIX
+    # Each domain decides how to tell whether its model path produced the
+    # result (e.g. Director OS checks the deterministic summary prefix).
+    model_used = spec.model_used(request, result)
+    fallback_used = request.use_model and not model_used
+    if model_used:
+        provider_used = request.provider
+        model_id_used = (
+            request.claude_model if request.provider == "claude" else request.ollama_model
         )
-        model_used = request.use_model and not fallback_used
-        if model_used:
-            provider_used = request.provider
-            model_id_used = (
-                request.claude_model if request.provider == "claude"
-                else request.ollama_model
-            )
-        else:
-            provider_used = None
-            model_id_used = None
-    elif workflow in (BRAND_WORKFLOW, INTERVIEW_WORKFLOW, ONE_ON_ONE_WORKFLOW):
-        model_used = bool(usage)
-        fallback_used = request.use_model and not model_used
-        provider_used = request.provider if model_used else None
-        model_id_used = request.claude_model if model_used else None
     else:
-        raise ValueError(
-            f"_build_trace: unrecognised workflow {workflow!r}. "
-            "Add an explicit branch for each new domain."
-        )
+        provider_used = None
+        model_id_used = None
 
     return WorkflowTrace(
         data_path=request.data_path,
@@ -383,12 +260,12 @@ def _build_trace(
         evidence_count=len(result.evidence),
         evidence_sources=evidence_sources,
         model_requested=request.use_model,
-        model_supported=model_supported,
+        model_supported=True,
         model_used=model_used,
         provider_used=provider_used,
         model_id_used=model_id_used,
         fallback_used=fallback_used,
-        section_counts=section_counts,
+        section_counts=result.section_counts,
         validation_summary=(
             f"Grounded output assembled from {len(result.evidence)} evidence items "
             f"across {len(evidence_sources)} source files."
