@@ -3,7 +3,7 @@ from unittest.mock import patch
 from packages.shared.mcp.orchestrator_integration import OrchestratedResponse
 from packages.shared.orchestration.chief_of_staff import route_request
 from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, WeeklyUpdateResponse
-from packages.shared.schemas.orchestrator import OrchestratorRequest
+from packages.shared.schemas.orchestrator import McpSynthesis, OrchestratorRequest
 
 _MCP_RUN_PATCH = "packages.shared.orchestration.chief_of_staff.run_with_mcp_tools"
 
@@ -176,14 +176,30 @@ def test_orchestrator_forwards_director_provider_selection(monkeypatch) -> None:
 # ---------------------------------------------------------------------------
 
 def test_orchestrator_mcp_synthesis_populated_when_use_mcp(monkeypatch) -> None:
-    """When use_mcp=True, mcp_synthesis on the response must contain the MCP content."""
+    """When the MCP loop returns a validated synthesis, the response carries it."""
+    evidence = EvidenceItem(
+        source="projects/director_week_14.md",
+        line_number=3,
+        title="Director Week 14",
+        excerpt="Win: shipped the internal status dashboard refresh for leadership review.",
+    )
+    synthesis = McpSynthesis(
+        summary="MCP synthesis: project is on track.",
+        items=[
+            GroundedItem(
+                text=evidence.excerpt, source=evidence.source, line_number=evidence.line_number
+            )
+        ],
+        evidence=[evidence],
+    )
     mock_mcp_response = OrchestratedResponse(
-        content="MCP synthesis: project is on track.",
+        content=synthesis.summary,
         model="claude-haiku-4-5-20251001",
         provider="claude",
         total_tokens=50,
         trace={"mcp_tool_calls": [{"tool": "read_file", "input": {}, "success": True}]},
         success=True,
+        synthesis=synthesis,
     )
 
     with patch(_MCP_RUN_PATCH, return_value=mock_mcp_response):
@@ -196,6 +212,8 @@ def test_orchestrator_mcp_synthesis_populated_when_use_mcp(monkeypatch) -> None:
         )
 
     assert response.mcp_synthesis == "MCP synthesis: project is on track."
+    assert response.mcp_result == synthesis
+    assert response.trace.mcp_fallback_reason is None
     assert response.trace.mcp_tool_calls == mock_mcp_response.trace["mcp_tool_calls"]
 
 
@@ -259,6 +277,10 @@ def test_orchestrator_mcp_synthesis_none_on_failed_mcp(monkeypatch) -> None:
         )
 
     assert response.mcp_synthesis is None
+    assert response.mcp_result is None
+    assert "maximum tool call rounds" in response.trace.mcp_fallback_reason
+    # The deterministic workflow result is still returned.
+    assert response.result.evidence
 
 
 def test_orchestrator_rejects_unknown_workflow() -> None:

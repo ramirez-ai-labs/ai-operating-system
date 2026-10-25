@@ -18,6 +18,7 @@ from packages.shared.domains import (
 from packages.shared.mcp.orchestrator_integration import run_with_mcp_tools
 from packages.shared.schemas.orchestrator import (
     AgentCall,
+    McpSynthesis,
     OrchestratorRequest,
     OrchestratorResponse,
     WorkflowTrace,
@@ -61,12 +62,14 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
     else:
         workflow, rationale, routing_model = _select_workflow(request)
 
-    # When use_mcp=True, run the MCP retrieval loop first so Claude reads
-    # project files via tool calls and produces the primary synthesis.
-    # _run_workflow then runs with use_model forced off — we only need its
-    # structured evidence and section counts, not a redundant model call.
+    # When use_mcp=True, run the grounded MCP loop first: Claude reads project
+    # files via tool calls and submits a synthesis whose every item cites a
+    # line it read. _run_workflow then runs with use_model forced off — it is
+    # the deterministic fallback, and it supplies structured evidence and
+    # section counts without a redundant model call.
     mcp_tool_calls: list[dict] = []
-    mcp_synthesis: str | None = None
+    mcp_result: McpSynthesis | None = None
+    mcp_fallback_reason: str | None = None
     if request.use_mcp:
         mcp_response = run_with_mcp_tools(
             prompt=request.prompt or request.focus or "Synthesize project status",
@@ -74,8 +77,11 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
             model=request.claude_model,
         )
         mcp_tool_calls = mcp_response.trace.get("mcp_tool_calls", [])
-        if mcp_response.success:
-            mcp_synthesis = mcp_response.content
+        if mcp_response.success and mcp_response.synthesis is not None:
+            mcp_result = mcp_response.synthesis
+        else:
+            # Never surface an unvalidated synthesis; say why it was dropped.
+            mcp_fallback_reason = mcp_response.error or "MCP loop returned no synthesis"
 
     result = _run_workflow(
         request,
@@ -104,20 +110,23 @@ def route_request(request: OrchestratorRequest) -> OrchestratorResponse:
         )
         agent_calls.append(writer_call)
 
+    trace = build_trace(
+        request,
+        workflow,
+        result,
+        mcp_tool_calls=mcp_tool_calls,
+        agent_calls=agent_calls,
+        routing_model=routing_model,
+    )
+    trace.mcp_fallback_reason = mcp_fallback_reason
     return OrchestratorResponse(
         selected_workflow=workflow,
         rationale=rationale,
-        trace=build_trace(
-            request,
-            workflow,
-            result,
-            mcp_tool_calls=mcp_tool_calls,
-            agent_calls=agent_calls,
-            routing_model=routing_model,
-        ),
+        trace=trace,
         result=result,
         formatted_content=formatted_content,
-        mcp_synthesis=mcp_synthesis,
+        mcp_result=mcp_result,
+        mcp_synthesis=mcp_result.summary if mcp_result else None,
     )
 
 

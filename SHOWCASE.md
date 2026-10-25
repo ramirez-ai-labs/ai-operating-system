@@ -364,9 +364,11 @@ AI-OS implements MCP in two distinct patterns to show both use cases.
 **In-process tool loop** (`packages/shared/mcp/orchestrator_integration.py`):
 When `use_mcp=True` on `/orchestrate`, Claude runs autonomously — calling
 `list_files`, `read_file`, and `search_content` tools in a loop until it has
-enough context to produce a synthesis. The orchestrator executes each tool call,
-appends the result to the message thread, and continues until Claude stops calling
-tools. No pre-selected evidence. Claude decides what to read.
+enough context, then submitting through a forced `submit_grounded_synthesis` tool.
+No pre-selected evidence: Claude decides what to read. But it cannot answer in free
+text. Every submitted item must cite a file and line the tools actually served, and
+the shared grounding validator checks it against that line; a failing synthesis is
+dropped and the deterministic workflow result is returned.
 
 **Standalone MCP server** (`apps/mcp/server.py`): All four domain workflows are
 registered as MCP tools — `director_os_weekly_update`, `brand_os_content_draft`,
@@ -586,7 +588,7 @@ not a summary of past runs.
 | | |
 |---|---|
 | **Used for** | Two distinct integration patterns |
-| **Pattern 1 — In-process tool loop** | Claude calls `list_files`, `read_file`, `search_content` autonomously during synthesis. The orchestrator executes each tool call, appends the result to the message history, and continues until Claude produces a final response. Activated via `use_mcp=True` on `/orchestrate`. |
+| **Pattern 1 — In-process tool loop** | Claude calls `list_files`, `read_file`, `search_content` autonomously during synthesis. The orchestrator executes each tool call, appends the result to the message history, and continues until Claude calls `submit_grounded_synthesis`; every item is validated against the lines the model read. Activated via `use_mcp=True` on `/orchestrate`. |
 | **Pattern 2 — Standalone MCP server** | `apps/mcp/server.py` exports all 4 domain entry points as MCP tools (`director_os_weekly_update`, `brand_os_content_draft`, `interview_os_brief`, `one_on_one_os_brief`) for use with Claude Desktop or Claude Code. |
 | **Where** | `packages/shared/mcp/filesystem_server.py` (tool definitions), `packages/shared/mcp/orchestrator_integration.py` (loop runner), `apps/mcp/server.py` (standalone server) |
 

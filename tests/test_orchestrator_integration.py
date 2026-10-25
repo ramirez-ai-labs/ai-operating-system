@@ -140,10 +140,11 @@ def test_provider_context_injected_with_xml_delimiters(
 
 
 # ---------------------------------------------------------------------------
-# run_with_mcp_tools — happy path (text on first round)
+# run_with_mcp_tools — a text reply is not an answer (Phase 9c)
 # ---------------------------------------------------------------------------
 
-def test_run_with_mcp_tools_returns_on_first_text_response(tmp_path) -> None:
+def test_run_with_mcp_tools_rejects_text_reply_without_submission(tmp_path) -> None:
+    """Free text cannot end the loop successfully: only a grounded submit can."""
     mock_provider = MagicMock(spec=ClaudeProvider)
     mock_provider.complete.return_value = ProviderResponse(
         content="Here is your summary.",
@@ -156,51 +157,66 @@ def test_run_with_mcp_tools_returns_on_first_text_response(tmp_path) -> None:
     with patch(_PROVIDER_PATCH, return_value=mock_provider):
         result = run_with_mcp_tools(prompt="weekly update", data_path=str(tmp_path))
 
-    assert result.success is True
-    assert result.content == "Here is your summary."
+    assert result.success is False
+    assert result.synthesis is None
+    assert result.content == ""
+    assert "without calling a tool or submitting" in result.error
     assert result.total_tokens == 30
     assert mock_provider.complete.call_count == 1
 
 
 # ---------------------------------------------------------------------------
-# run_with_mcp_tools — tool call round-trip
+# run_with_mcp_tools — read, then submit a grounded synthesis
 # ---------------------------------------------------------------------------
 
-def test_run_with_mcp_tools_executes_one_tool_round(tmp_path) -> None:
-    (tmp_path / "notes.md").write_text("- shipped v2")
+def test_run_with_mcp_tools_executes_one_tool_round_then_submits(tmp_path) -> None:
+    (tmp_path / "notes.md").write_text("# Notes\n- Win: shipped the v2 billing export\n")
 
-    tool_response = ProviderResponse(
+    read_response = ProviderResponse(
         content="",
         model="claude-haiku-4-5-20251001",
         provider="claude",
         input_tokens=10,
         output_tokens=5,
-        tool_calls=[{"id": "t1", "name": "list_directory", "input": {"path": str(tmp_path)}}],
+        tool_calls=[{"id": "t1", "name": "read_file", "input": {"path": "notes.md"}}],
     )
-    text_response = ProviderResponse(
-        content="Done.",
+    submit_response = ProviderResponse(
+        content="",
         model="claude-haiku-4-5-20251001",
         provider="claude",
         input_tokens=15,
         output_tokens=8,
+        tool_calls=[
+            {
+                "id": "t2",
+                "name": "submit_grounded_synthesis",
+                "input": {
+                    "summary": "Billing export shipped.",
+                    "items": [
+                        {
+                            "text": "Win: shipped the v2 billing export",
+                            "source": "notes.md",
+                            "line_number": 2,
+                        }
+                    ],
+                },
+            }
+        ],
     )
 
     mock_provider = MagicMock(spec=ClaudeProvider)
-    mock_provider.complete.side_effect = [tool_response, text_response]
+    mock_provider.complete.side_effect = [read_response, submit_response]
 
-    mock_mcp = MagicMock()
-    mock_mcp.call_tool.return_value = {"success": True, "result": "notes.md", "error": None}
+    with patch(_PROVIDER_PATCH, return_value=mock_provider):
+        result = run_with_mcp_tools(prompt="what shipped?", data_path=str(tmp_path))
 
-    with (
-        patch(_PROVIDER_PATCH, return_value=mock_provider),
-        patch(_MCP_PATCH, return_value=mock_mcp),
-    ):
-        result = run_with_mcp_tools(prompt="list files", data_path=str(tmp_path))
-
-    assert result.success is True
-    assert result.content == "Done."
+    assert result.success is True, result.error
+    assert result.content == "Billing export shipped."
+    assert [item.line_number for item in result.synthesis.items] == [2]
+    assert [(ev.source, ev.line_number) for ev in result.synthesis.evidence] == [("notes.md", 2)]
     assert len(result.trace["mcp_tool_calls"]) == 1
-    assert result.trace["mcp_tool_calls"][0]["tool"] == "list_directory"
+    assert result.trace["mcp_tool_calls"][0]["tool"] == "read_file"
+    assert result.trace["submitted"] is True
     assert mock_provider.complete.call_count == 2
 
 
@@ -224,19 +240,30 @@ def test_run_with_mcp_tools_batches_parallel_tool_calls(tmp_path) -> None:
             {"id": "t2", "name": "search_content", "input": {"path": "projects", "query": "risk"}},
         ],
     )
-    text_response = ProviderResponse(
-        content="Summary complete.",
+    submit_response = ProviderResponse(
+        content="",
         model="claude-haiku-4-5-20251001",
         provider="claude",
         input_tokens=20,
         output_tokens=10,
+        tool_calls=[
+            {
+                "id": "t3",
+                "name": "submit_grounded_synthesis",
+                "input": {
+                    "summary": "s",
+                    "items": [{"text": "x", "source": "a", "line_number": 1}],
+                },
+            }
+        ],
     )
 
     mock_provider = MagicMock(spec=ClaudeProvider)
-    mock_provider.complete.side_effect = [parallel_tool_response, text_response]
+    mock_provider.complete.side_effect = [parallel_tool_response, submit_response]
 
     mock_mcp = MagicMock()
     mock_mcp.call_tool.return_value = {"success": True, "result": "file contents", "error": None}
+    mock_mcp.served_evidence.return_value = []
 
     with (
         patch(_PROVIDER_PATCH, return_value=mock_provider),
@@ -244,8 +271,9 @@ def test_run_with_mcp_tools_batches_parallel_tool_calls(tmp_path) -> None:
     ):
         result = run_with_mcp_tools(prompt="summarize risks", data_path=str(tmp_path))
 
-    assert result.success is True
-    assert result.content == "Summary complete."
+    # The mocked server served no real lines, so the submission is rejected;
+    # this test is about message batching, asserted below.
+    assert result.success is False
     assert len(result.trace["mcp_tool_calls"]) == 2
 
     # Verify the second provider call received correctly batched messages.
