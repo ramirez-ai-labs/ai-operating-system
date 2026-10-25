@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+from packages.shared.config.models import DEFAULT_CLAUDE_MODEL
 from packages.shared.schemas.base import BaseResponse
 from packages.shared.schemas.director_os import GroundedItem
 
@@ -38,7 +39,7 @@ class OneOnOneRequest(BaseModel):
         ),
     )
     claude_model: str = Field(
-        default="claude-haiku-4-5-20251001",
+        default=DEFAULT_CLAUDE_MODEL,
         description="Claude model ID for synthesis when provider='claude'.",
     )
     fallback_to_deterministic: bool = Field(

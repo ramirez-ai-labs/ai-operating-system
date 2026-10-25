@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from packages.shared.config.models import DEFAULT_CLAUDE_MODEL
+
 
 class EvidenceItem(BaseModel):
     """Minimal evidence payload returned from local retrieval."""
@@ -33,7 +35,7 @@ class BaseRequest(BaseModel):
     max_documents: int = Field(default=5, ge=1, le=20)
     use_model: bool = False
     provider: str = "claude"
-    claude_model: str = "claude-haiku-4-5-20251001"
+    claude_model: str = DEFAULT_CLAUDE_MODEL
     fallback_to_deterministic: bool = True
 
 

@@ -12,6 +12,7 @@ dependencies = [
   "langsmith>=0.3.45,<1.0.0",
   "mcp>=1.27.2,<2.0.0",
   "pydantic>=2.8.0,<3.0.0",
+  "pyyaml>=6.0,<7.0",
   "uvicorn>=0.30.0,<1.0.0",
 ]
 
@@ -42,6 +43,7 @@ packages = [
   "one_on_one_os.workflows",
   "packages",
   "packages.shared",
+  "packages.shared.config",
   "packages.shared.evaluations",
   "packages.shared.graphs",
   "packages.shared.observability",

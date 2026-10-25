@@ -526,6 +526,25 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 ---
 
+## Sprint 23  -  Model Config Single Source of Truth + MCP Startup + Scope Wording
+
+**Objective:** Clear the hygiene items that block Phase 9: one place to set model IDs, an MCP server that connects reliably on cold start, and docs that describe the system as it is today.
+
+**Maps to:** plan.md Phase 9 (prerequisites)
+
+**Status: Complete. 254 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| `packages/shared/config/models.py` reads `config/models.yaml`; request schemas, `ClaudeProvider`, researcher/writer agents, and Claude eval runners take default model IDs from it (12 hardcoded IDs removed) | Done | This PR |
+| `models.yaml` registry gains `validated` flag; Claude 5.5 models listed as available, unvalidated; default stays on the model the committed live eval results were produced with | Done | This PR |
+| `tests/test_model_config.py`  -  defaults match config; default is registered, unique, and validated; missing config fails loudly; MCP server import does not load LangGraph/ChromaDB | Done | This PR |
+| `apps/mcp/server.py` defers workflow imports to first tool call (warm startup 2.4s → 1.2s; cold ~56s → ~28s, under Claude Code's 30s connect timeout) | Done | This PR |
+| README, SHOWCASE, DEPLOYMENT: scope wording matches the routed-workflow design; ungrounded `mcp_synthesis` called out; fictional `models.yaml` example replaced | Done | This PR |
+| plan.md: Phase 6/8 status corrected; Phase 9 (router → orchestrator) defined | Done | This PR |
+
+---
+
 ## Coordination notes
 
 - Sprint 1 is complete. Live Claude eval results committed in PR #56  -  3/3 cases, 100% signal and safety. All five JD requirements are satisfied in the repo.

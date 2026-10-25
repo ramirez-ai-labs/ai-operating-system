@@ -1,6 +1,6 @@
 # AI Operating System (AI-OS)
 
-AI-OS is a production-grade multi-agent system that synthesizes fragmented information — project notes, team signals, candidate briefs, meeting prep — into structured, evidence-grounded output.
+AI-OS is an evidence-grounded workflow platform that synthesizes fragmented information — project notes, team signals, candidate briefs, meeting prep — into structured output where every item cites its source file and line. An LLM router dispatches each request to one of four LangGraph domain workflows; every workflow validates its own grounding and falls back to a deterministic path when the model fails.
 
 Four workflow domains share a common architecture: a routing layer that classifies incoming requests and dispatches them to the right domain graph, a retrieval layer that pulls relevant evidence from local markdown files or a semantic vector store, a synthesis layer that produces structured output with mandatory source citations, and a validation layer that enforces grounding before any response reaches the API.
 
@@ -14,7 +14,7 @@ Four workflow domains share a common architecture: a routing layer that classifi
 
 Production AI deployment fails in predictable ways: hallucinated content with no citation trail, model paths that break silently when the LLM is unavailable, no way to measure whether synthesis quality regresses as the system evolves, and observability that requires code changes to turn on or off. AI-OS is designed to address all four at the architecture level — not as afterthoughts, but as invariants.
 
-Evidence grounding is enforced at the schema level via forced tool use: every output item must carry a `source` filename and `line_number`. The system has no path to a response with an uncited item. Deterministic fallback is always available — if model synthesis fails or no API key is present, the system produces grounded output from keyword extraction with no silent degradation. The evaluation harness runs 22 cases across three retrieval paths in CI on every PR. Observability is opt-in by environment variable: setting `LANGSMITH_TRACING=true` emits node-level traces across all four domain graphs with no code changes.
+Evidence grounding is enforced at the schema level via forced tool use: every output item must carry a `source` filename and `line_number`. No structured workflow result can contain an uncited item. (The one exception is the free-form `mcp_synthesis` text returned by the opt-in MCP tool loop, which is not yet validated — see [Scope today](#scope-today-and-the-path-to-orchestration).) Deterministic fallback is always available — if model synthesis fails or no API key is present, the system produces grounded output from keyword extraction with no silent degradation. The evaluation harness runs 22 cases across three retrieval paths in CI on every PR. Observability is opt-in by environment variable: setting `LANGSMITH_TRACING=true` emits node-level traces across all four domain graphs with no code changes.
 
 ---
 
@@ -33,18 +33,33 @@ Evidence grounding is enforced at the schema level via forced tool use: every ou
 
 | Capability | Implementation |
 |---|---|
-| Multi-domain LLM orchestration | Chief of Staff router + 4 domain LangGraph graphs |
+| LLM routing across domains | Chief of Staff router (local Ollama classification, keyword fallback) + 4 domain LangGraph graphs |
 | In-process MCP tool loop | `packages/shared/mcp/filesystem_server.py` + `orchestrator_integration.py` |
 | Standalone MCP server | `apps/mcp/server.py` — all 4 domains as MCP tools |
 | Schema-enforced evidence grounding | Forced tool use with required `source` + `line_number` fields |
 | Provider abstraction | `base.py` interface; `claude.py` / `ollama.py` / `grounding.py` implementations |
 | Pluggable retrieval backend | Keyword (`local_files.py`) or semantic (`chroma.py`) via env var |
-| Multi-agent pipeline | `ResearcherAgent → WriterAgent` with structured handoff contract |
+| Two-stage agent pipeline | `ResearcherAgent → WriterAgent` with structured handoff contract |
 | LLM evaluation framework | 22 cases, 3 retrieval paths, committed results, CI-gated |
 | Node-level observability | LangSmith `@traceable` on all 4 domain graphs — silent no-op without config |
 | Prompt caching + cost visibility | `cache_read_input_tokens` / `cache_creation_input_tokens` in every `WorkflowTrace` |
 
 The architecture is designed to be adapted. The provider layer, the in-process filesystem tool loop, and the standalone MCP server are all swappable — designed for the kind of environment customization that enterprise AI work requires.
+
+---
+
+## Scope today and the path to orchestration
+
+AI-OS today is a **routed workflow system**: each request goes to exactly one domain, and each domain runs a fixed, validated graph. That is a deliberate first layer. Fixed workflows are predictable, cheap, and testable, and they are what an orchestrator needs underneath it — a planner is only as reliable as the tools it calls.
+
+| Today | Where it is going (Phase 9 in [plan.md](plan.md)) |
+|---|---|
+| Router picks one of four domains per request | Planner breaks a goal ("prep my week") into steps across domains and runs them in parallel |
+| Domains are wired into the router by hand | Domain registry: each workflow registers its schema, description, and graph; the router and planner discover them |
+| The MCP tool loop is the one model-directed path, and its free-form output is not grounding-validated | Tool loop ends in the same forced-tool grounding schema and `validate_response` as every workflow |
+| Each request is stateless | LangGraph checkpointing, run history, and human approval before final output |
+| Routing accuracy is not scored | Routing and planning eval set gated in CI alongside the domain evals |
+| Local markdown is the only data source | External MCP servers (GitHub first) as data sources |
 
 ---
 

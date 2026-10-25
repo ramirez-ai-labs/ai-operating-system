@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
+from packages.shared.config.models import DEFAULT_CLAUDE_MODEL
 from packages.shared.schemas.director_os import EvidenceItem
 from packages.shared.schemas.orchestrator import AgentCall
 
@@ -78,7 +79,7 @@ class ResearchSynthesis:
 class ResearcherAgent:
     """Claude agent that synthesizes evidence into structured research findings."""
 
-    def __init__(self, model: str = "claude-haiku-4-5-20251001") -> None:
+    def __init__(self, model: str = DEFAULT_CLAUDE_MODEL) -> None:
         self.model = model
 
     def synthesize(

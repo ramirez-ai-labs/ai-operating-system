@@ -36,7 +36,8 @@ The repository currently includes:
 - `BaseResponse` base schema in `packages/shared/schemas/base.py` enforcing `evidence`, `provider_usage`, and `section_counts` across all four domain schemas
 - ChromaDB staleness detection: per-path pre-flight document count before querying; clear warning + keyword fallback when collection exists but has no docs for the requested `data_root`
 - unified `scripts/run_evals.py` dispatcher auto-discovering domains from `packages/shared/evaluations/`; `--domain`, `--backend`, `--langsmith`, `--ci` flags replace 12 standalone scripts
-- 252 tests passing (6 skipped without API keys); local evals for all four domains in CI; chroma evals skip gracefully when index absent
+- `config/models.yaml` as the single source of truth for default model IDs, read by `packages/shared/config/models.py`; the validated default is test-enforced
+- 254 tests passing (6 skipped without API keys); local evals for all four domains in CI; chroma evals skip gracefully when index absent
 - optional LangSmith tracing with `@traceable` on all graph nodes across all four domains
 - issue templates, `CONTRIBUTING.md`, branch protection on `main`
 
@@ -440,7 +441,7 @@ Expose workflow execution in a way that supports both usability and project cred
 
 - Implemented: operator console at `/` through `apps/api` with provider selector, target audience dropdown, cache hit metrics, agent pipeline card (researcher → writer with per-agent token counts), and formatted content card
 - Shipped in Sprint 9  -  [#62](https://github.com/ramirez-ai-labs/ai-operating-system/pull/62)
-- Remaining: a dedicated `apps/web` frontend remains optional  -  current console satisfies traceability and operator control goals without the extra surface area
+- Implemented: dedicated `apps/web` Next.js frontend with domain tabs, workflow form, results pane, and trace pane  -  [#104](https://github.com/ramirez-ai-labs/ai-operating-system/pull/104), [#105](https://github.com/ramirez-ai-labs/ai-operating-system/pull/105)
 
 ## Phase 7: Harden the Project for Ongoing Growth
 
@@ -470,9 +471,43 @@ Turn the MVP into a sustainable open-source project with a repeatable engineerin
 - Implemented: branch protection on `main`, `.github/ISSUE_TEMPLATE/` (feature, bug, workflow), `CONTRIBUTING.md`
 - Implemented: `v1.0` release tag cut (Sprint 9)
 
+## Phase 9: From Router to Orchestrator
+
+### Objective
+
+Turn the Chief of Staff from a single-hop router into an orchestration layer: given a goal, decide which domain workflows to run, in what order, and with what inputs, then merge their grounded outputs — while keeping every invariant the domain workflows already guarantee (evidence grounding, deterministic fallback, CI-gated evals, no required API keys).
+
+### Background
+
+Today each request reaches exactly one domain, and the domain list is hardcoded across the router, the trace builder, the response union, and the API. The one model-directed path (the MCP tool loop) returns free-form text that skips grounding validation. Requests are stateless, routing accuracy is unscored, and local markdown is the only data source. The fixed domain workflows are the right foundation; Phase 9 adds the layer above them.
+
+### Deliverables
+
+Each item ships as its own PR, in order — later items depend on earlier ones.
+
+- **9a  -  Domain registry.** Each domain registers its request/response schema, routing description, graph entry point, and trace builder in one place. The router, `_build_trace`, `OrchestratorResponse`, the API, and the MCP server read from the registry. Adding a domain touches the domain's own files plus one registration.
+- **9b  -  Planner/supervisor graph + routing evals.** A LangGraph supervisor that breaks a goal into a plan of domain calls, runs independent steps in parallel (`Send`), and merges grounded outputs with per-step citations intact. The default planner is local (rules or Ollama); Claude is opt-in. Ships with a routing and planning eval set (routing accuracy, plan correctness) gated in CI.
+- **9c  -  Grounded MCP tool loop.** The model-directed tool loop ends in the same forced-tool grounding schema and `validate_response` node as the domain workflows, with deterministic fallback. Removes the one exception to the grounding invariant.
+- **9d  -  Saved state + human approval.** LangGraph checkpointing (SQLite) for resumable runs, `interrupt()` for operator approval before final output, run history surfaced in `apps/web`.
+- **9e  -  External MCP data sources.** AI-OS consumes external MCP servers (GitHub first) as retrieval sources, not only exposes its own tools.
+- **9f  -  Hosted demo.** A deployed read-only demo on synthetic data plus a short walkthrough video, linked from the top of the README.
+
+### Exit Criteria
+
+- A single goal can fan out to multiple domains, and the merged response still passes grounding validation item by item
+- Routing and planning accuracy are measured and gated in CI
+- No response path returns uncited content
+- A run can pause for approval and resume from a checkpoint
+- The system still runs end to end with no API keys
+
+### Status
+
+- Not started. Prerequisite hygiene shipped first: model IDs centralized in `config/models.yaml` with the validated default test-enforced, MCP server startup no longer imports LangGraph/ChromaDB (fixes cold-start connect timeouts), README and SHOWCASE scope wording aligned with what the system does today.
+- Deferred: a fifth workflow domain (Recruiting OS). It adds breadth on the existing pattern; Phase 9 adds the orchestration depth the project is missing. Revisit after 9a, when adding a domain becomes a single registration.
+
 ## Recommended Immediate Next Steps
 
-Sprints 1–22 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. 252 tests passing.
+Sprints 1–23 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. 254 tests passing.
 
 **Sprint 20  -  Debt paydown (complete, PRs #93–97):**
 Shared grounding primitives extracted to `grounding.py`. Orchestrator circuit breaker and trace token flush. Ghost token capture on fallback path. `section_counts` moved into domain schemas. `_COMPETING_PREFIXES` constant. `_get_chroma_client()` singleton.
@@ -483,14 +518,12 @@ Shared grounding primitives extracted to `grounding.py`. Orchestrator circuit br
 **Sprint 22  -  ChromaDB staleness + eval dispatcher + BaseResponse (complete, PRs #100–102):**
 ChromaDB per-path staleness detection. Unified `scripts/run_evals.py` dispatcher. `BaseResponse` schema contract enforced across all four domains.
 
-**Phase 8  -  recommended next:**
+**Phase 8  -  Next.js frontend (complete, PRs #104–105).**
 
-| Candidate | Value | Effort |
-|---|---|---|
-| `apps/web` Next.js frontend | Makes the system fully demonstrable without a terminal; strongest remaining portfolio signal — the evidence grounding, multi-agent trace, and cache metrics need to be visible in a browser to land with a non-technical hiring manager or live demo audience | High |
-| Fifth workflow domain (Recruiting OS) | Extends the multi-domain story; natural fit alongside Interview OS and the shared `BaseResponse` + graph infrastructure; follows the CLAUDE.md domain-addition checklist exactly | Medium |
+**Sprint 23  -  Model config + MCP startup + scope wording (complete):**
+Single source of truth for model IDs in `config/models.yaml`. MCP server defers workflow imports so `initialize` answers before the client's connect timeout. README/SHOWCASE wording matches current scope.
 
-Use `.github/ISSUE_TEMPLATE/workflow.md` to propose a new domain before building.
+**Phase 9  -  recommended next: start with 9a (domain registry).** It is the enabler for the planner in 9b and shrinks the domain-addition checklist from ten files to the domain's own files plus one registration. See [Phase 9](#phase-9-from-router-to-orchestrator) above.
 
 ## Definition of Success
 

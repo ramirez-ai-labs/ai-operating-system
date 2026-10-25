@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 
 from packages.shared.agents.researcher import ResearchSynthesis
+from packages.shared.config.models import DEFAULT_CLAUDE_MODEL
 from packages.shared.schemas.orchestrator import AgentCall
 
 _AUDIENCE_INSTRUCTIONS: dict[str, str] = {
@@ -51,7 +52,7 @@ SUPPORTED_AUDIENCES = frozenset(_AUDIENCE_INSTRUCTIONS)
 class WriterAgent:
     """Claude agent that formats a research synthesis for a target audience."""
 
-    def __init__(self, model: str = "claude-haiku-4-5-20251001") -> None:
+    def __init__(self, model: str = DEFAULT_CLAUDE_MODEL) -> None:
         self.model = model
 
     def format(

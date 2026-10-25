@@ -7,7 +7,7 @@ Community: [AI Builders: LatinX Edition podcast](https://rss.com/podcasts/ai-bui
 
 ---
 
-AI Operating System (AI-OS) is a production-grade multi-agent system I built to
+AI Operating System (AI-OS) is an evidence-grounded workflow platform I built to
 solve a real problem I face as a Director of Developer & Platform Experience:
 technical leaders operate across fragmented systems - Jira, Confluence, 1:1 notes,
 roadmap docs, candidate pipelines - and spend significant time synthesizing that
@@ -15,8 +15,13 @@ information into structured output for stakeholders.
 
 AI-OS automates that synthesis. It reads local markdown notes, retrieves the most
 relevant evidence, and produces grounded output where every item cites the exact
-source file and line number it came from. No hallucination, no black-box summaries -
-every output item is traceable back to the data.
+source file and line number it came from. No black-box summaries - every structured
+output item is validated against the retrieved evidence before it reaches the caller,
+and anything that fails validation is rebuilt on the deterministic path.
+
+Today an LLM router sends each request to one of four fixed, validated workflows.
+The next layer — a planner that breaks a goal into steps across domains and calls
+those workflows as grounded tools — is the Phase 9 roadmap in [plan.md](plan.md).
 
 Four workflow domains, each solving a specific synthesis problem a technical leader
 faces weekly:

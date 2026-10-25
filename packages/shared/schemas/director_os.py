@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from packages.shared.config.models import DEFAULT_OLLAMA_MODEL
 from packages.shared.schemas.base import (
     BaseRequest,
     BaseResponse,
@@ -54,7 +55,7 @@ class WeeklyUpdateRequest(BaseRequest):
         description="Base URL for the local Ollama server when provider is 'ollama'.",
     )
     ollama_model: str = Field(
-        default="llama3.2",
+        default=DEFAULT_OLLAMA_MODEL,
         description="Ollama model name used when provider is 'ollama'.",
     )
 

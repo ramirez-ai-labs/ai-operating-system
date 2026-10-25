@@ -73,6 +73,7 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 | Interview OS schemas | `packages/shared/schemas/interview_os.py` |
 | One-on-One OS schemas | `packages/shared/schemas/one_on_one_os.py` |
 | Orchestrator schema | `packages/shared/schemas/orchestrator.py` |
+| Default model IDs (single source of truth) | `config/models.yaml`, read by `packages/shared/config/models.py` |
 | Eval cases (Director OS) | `evaluations/director_os/weekly_update_cases.json` |
 | Eval cases (Brand OS) | `evaluations/brand_os/content_draft_cases.json` |
 | Sample project data | `data/local_only/projects/` |
