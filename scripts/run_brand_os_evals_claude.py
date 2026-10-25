@@ -27,6 +27,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from packages.shared.config.models import DEFAULT_CLAUDE_MODEL
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ RESULTS_PATH = (
     / "results_claude.json"
 )
 
-_CLAUDE_MODEL = "claude-haiku-4-5-20251001"
+_CLAUDE_MODEL = DEFAULT_CLAUDE_MODEL
 
 
 def run_evals(ci_mode: bool = False) -> int:

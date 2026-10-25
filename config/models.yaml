@@ -1,18 +1,25 @@
 # AI-OS Model Configuration
 #
-# Declares the layered model architecture for AI-OS workflows.
-# Provider selection is controlled per-request via the `provider` field
-# on WeeklyUpdateRequest (and equivalent domain request schemas).
-# These values document the intended defaults and available options —
-# update them here when adding new models or changing tier defaults.
+# Single source of truth for model IDs. `packages/shared/config/models.py`
+# reads `providers.<name>.default_model` at import time, and every request
+# schema, provider, agent, and eval runner takes its default model from there.
+# Changing the default model is a one-line edit to this file.
+#
+# A request can still override the model per call via `claude_model` or
+# `ollama_model`.
 
 # ---------------------------------------------------------------------------
-# Default provider
+# Default provider (documentation — set on the request schemas, not read here)
 # ---------------------------------------------------------------------------
-# The provider used when no explicit `provider` field is passed in a request.
-# "ollama" keeps the system fully local with no API key required.
-# Switch to "claude" to make Claude Haiku the default synthesis path.
-default_provider: ollama
+# No model is called unless a request sets `use_model=True`; the default path
+# is deterministic and needs no API key or local model.
+#
+# When `use_model=True` and no `provider` is passed:
+#   - Director OS (`WeeklyUpdateRequest`)       → ollama
+#   - Brand, Interview, One-on-One OS requests  → claude (Claude-only domains)
+#   - `/orchestrate` (`OrchestratorRequest`)    → claude
+# A Claude-only domain asked for a non-Claude provider falls back to the
+# deterministic path when `fallback_to_deterministic=True` (the default).
 
 # ---------------------------------------------------------------------------
 # Provider tiers
@@ -44,29 +51,39 @@ providers:
 # ---------------------------------------------------------------------------
 # Model registry
 # ---------------------------------------------------------------------------
-# Reference list of tested models per provider.
-# The code reads `provider` and `claude_model` / `ollama_model` from the
-# request — these entries document what has been validated against the
-# Director OS and Brand OS eval sets.
+# `validated: true` means the committed live eval results
+# (evaluations/<domain>/results_claude.json) were produced with this model.
+# Promote a model to `status: default` only after rerunning the live evals
+# against it (`python scripts/run_evals.py --domain all --backend claude`)
+# and committing the results.
 models:
   ollama:
     - id: llama3.2
       tier: local
       status: default
+      validated: true
       notes: Default local model. Fast and sufficient for deterministic routing.
 
   claude:
     - id: claude-haiku-4-5-20251001
       tier: synthesis
       status: default
-      notes: Cost-effective default. Validated against Director OS eval set.
-    - id: claude-sonnet-4-6
+      validated: true
+      notes: Cost-effective default. Live evals pass on all four domains.
+    - id: claude-haiku-5-5
+      tier: synthesis
+      status: available
+      validated: false
+      notes: Current-generation Haiku. Candidate replacement for the default once live evals are rerun.
+    - id: claude-sonnet-5-5
       tier: premium
       status: available
+      validated: false
       notes: Higher quality for complex or high-stakes synthesis. On-demand only.
-    - id: claude-opus-4-8
+    - id: claude-opus-5-5
       tier: premium
       status: available
+      validated: false
       notes: Maximum quality. Reserve for evaluation baselines or critical runs.
 
 # ---------------------------------------------------------------------------

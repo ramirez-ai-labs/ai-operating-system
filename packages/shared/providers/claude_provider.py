@@ -23,6 +23,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
+from packages.shared.config.models import DEFAULT_CLAUDE_MODEL
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -37,9 +39,8 @@ except ImportError:
     )
 
 
-# Default model: Haiku is fast and cheap for dev/eval iteration.
-# Swap to claude-sonnet-4-6 for higher-quality production output.
-DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+# Default model comes from config/models.yaml (see packages/shared/config/models.py).
+DEFAULT_MODEL = DEFAULT_CLAUDE_MODEL
 
 DEFAULT_MAX_TOKENS = 1024
 

@@ -2,6 +2,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from packages.shared.config.models import DEFAULT_CLAUDE_MODEL, DEFAULT_OLLAMA_MODEL
 from packages.shared.schemas.brand_os import BrandContentDraftResponse
 from packages.shared.schemas.director_os import WeeklyUpdateResponse
 from packages.shared.schemas.interview_os import InterviewBriefResponse
@@ -58,7 +59,7 @@ class OrchestratorRequest(BaseModel):
         description="Base URL for the local Ollama server when provider is 'ollama'.",
     )
     ollama_model: str = Field(
-        default="llama3.2",
+        default=DEFAULT_OLLAMA_MODEL,
         description="Ollama model name used when provider is 'ollama'.",
     )
     use_mcp: bool = Field(
@@ -74,7 +75,7 @@ class OrchestratorRequest(BaseModel):
         ),
     )
     claude_model: str = Field(
-        default="claude-haiku-4-5-20251001",
+        default=DEFAULT_CLAUDE_MODEL,
         description=(
             "Claude model ID used for synthesis across all four workflow domains "
             "when provider is 'claude', for MCP-backed synthesis when use_mcp is True, "

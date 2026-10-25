@@ -95,26 +95,19 @@ If pass rate is below threshold:
 
 ## Provider configuration
 
-`config/models.yaml` controls provider selection:
+`config/models.yaml` is the single source of truth for default model IDs. `packages/shared/config/models.py` reads it at import time, and every request schema, provider, agent, and eval runner takes its default from there:
 
 ```yaml
-# AI-OS model configuration
-# ---
-# provider: claude   → uses ANTHROPIC_API_KEY (production default)
-# provider: ollama   → uses local Ollama (dev/offline fallback)
-# provider: stub     → deterministic fake (CI without API key)
-
-default_provider: claude
-default_model: claude-haiku-4-5-20251001
-
-# For higher-quality synthesis at higher cost:
-# default_model: claude-sonnet-4-6
-
-fallback_provider: ollama
-fallback_model: llama3.2
-
-max_tokens: 1024
+providers:
+  ollama:
+    default_model: llama3.2
+  claude:
+    default_model: claude-haiku-4-5-20251001   # validated: live evals pass on all four domains
 ```
+
+To change the default model, edit `default_model` and rerun the live evals before merging (`python scripts/run_evals.py --domain all --backend claude`). The `models` registry in the same file marks which IDs are `validated` against committed eval results; `tests/test_model_config.py` fails if the default is not registered as validated.
+
+Provider *selection* is set per request (`provider` field), not in this file. No model is called unless a request sets `use_model=True`; the deterministic path is always available and needs no API key.
 
 ---
 
