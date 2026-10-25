@@ -61,6 +61,7 @@ def retrieve_relevant_documents(
     base_path: str,
     query: str | None,
     limit: int,
+    section_labels: tuple[str, ...] | None = None,
 ) -> list[EvidenceItem]:
     """
     Semantic retrieval via ChromaDB + Ollama embeddings.
@@ -80,7 +81,9 @@ def retrieve_relevant_documents(
         from packages.shared.retrieval.local_files import (
             retrieve_relevant_documents as _keyword,
         )
-        return _keyword(base_path, query, limit)
+        if section_labels is None:
+            return _keyword(base_path, query, limit)
+        return _keyword(base_path, query, limit, section_labels)
 
 
 # ---------------------------------------------------------------------------

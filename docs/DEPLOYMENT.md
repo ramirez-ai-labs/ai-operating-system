@@ -77,7 +77,7 @@ meet the quality threshold before deploying or upgrading.
 
 ```bash
 # Run evals (requires ANTHROPIC_API_KEY)
-python scripts/run_director_os_evals_claude.py
+python scripts/run_director_os_evals_claude.py --allow-live
 
 # Check results
 cat evaluations/director_os/results_claude.json | python -m json.tool | grep pass_rate
@@ -105,7 +105,7 @@ providers:
     default_model: claude-haiku-4-5-20251001   # validated: live evals pass on all four domains
 ```
 
-To change the default model, edit `default_model` and rerun the live evals before merging (`python scripts/run_evals.py --domain all --backend claude`). The `models` registry in the same file marks which IDs are `validated` against committed eval results; `tests/test_model_config.py` fails if the default is not registered as validated.
+To change the default model, edit `default_model` and rerun the live evals before merging (`python scripts/run_evals.py --domain all --backend claude --allow-live`). The `models` registry in the same file marks which IDs are `validated` against committed eval results; `tests/test_model_config.py` fails if the default is not registered as validated.
 
 Provider *selection* is set per request (`provider` field), not in this file. No model is called unless a request sets `use_model=True`; the deterministic path is always available and needs no API key.
 

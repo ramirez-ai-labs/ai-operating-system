@@ -64,14 +64,16 @@
   },
   {
     "id": "plan-prep-my-week",
-    "description": "Three deliverables across three domains in one goal.",
+    "description": "Three deliverables across three domains in one goal; executed end to end.",
     "goal": "Prep my week: leadership update, 1:1 brief for Priya, and a LinkedIn post on the platform migration",
     "expected_workflows": [
       "director_os.weekly_update",
       "one_on_one_os.brief",
       "brand_os.content_draft"
     ],
-    "tags": ["multi_domain"]
+    "tags": ["multi_domain"],
+    "execute": true,
+    "expected_status": "ok"
   },
   {
     "id": "plan-interview-and-one-on-one",

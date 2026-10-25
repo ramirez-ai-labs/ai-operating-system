@@ -530,13 +530,17 @@ Single source of truth for model IDs in `config/models.yaml`. MCP server defers 
 **Sprint 24  -  Phase 9a domain registry (complete, PR #115):**
 `packages/shared/domains/` is the single list of domains. Router, trace builder, API routes, and MCP tools derive from it; model-facing tool definitions are snapshotted and their input schemas exclude operator settings.
 
-**Sprint 25  -  Phase 9b planner/supervisor + routing evals (complete):**
+**Sprint 25  -  Phase 9b planner/supervisor + routing evals (complete, PR #116):**
 `POST /plan` with rules, Ollama, and Claude planners over the registry's tool definitions; parallel `Send` fan-out; merge-time grounding validation; 19-case routing/planning eval set in CI.
+
+**Sprint 26  -  Live-call guard + section-aware retrieval (complete):**
+Eval runners never call the Anthropic API without `--allow-live`, whatever `.env` contains. Keyword retrieval drops stopwords and boosts each domain's own section labels, so weak or missing focus no longer fails with "must include at least one populated section". The "prep my week" plan now runs end to end with `status: ok`.
 
 **Phase 9  -  recommended next:**
 
 1. **Score the Ollama planner** on all 19 planning cases (`python scripts/run_evals.py --domain planner --backend ollama`) and commit `results_ollama.json`. This is free, and it is the first number for the keyword-free cases.
 2. **9c grounded MCP tool loop.** This closes the last path that can return uncited content.
+3. **When you choose to spend:** rerun the live Claude domain evals with `--allow-live`. The committed `results_claude.json` files predate the Sprint 26 retrieval change.
 
 See [Phase 9](#phase-9-from-router-to-orchestrator) above.
 

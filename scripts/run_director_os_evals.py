@@ -4,6 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
+from packages.shared.config.live_calls import (
+    ALLOW_LIVE_FLAG,
+    ALLOW_LIVE_HELP,
+    check_live_claude_run,
+)
 from packages.shared.evaluations.director_os import (
     DEFAULT_DIRECTOR_OS_EVALS_PATH,
     apply_provider_override,
@@ -33,15 +38,24 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Override the model provider for all evaluation cases. "
-            "'claude' requires ANTHROPIC_API_KEY. "
+            f"'claude' requires ANTHROPIC_API_KEY and {ALLOW_LIVE_FLAG}. "
             "Skips cases that use a provider_scenario (fake-provider tests)."
         ),
+    )
+    parser.add_argument(
+        ALLOW_LIVE_FLAG, dest="allow_live", action="store_true", help=ALLOW_LIVE_HELP
     )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    if args.provider == "claude":
+        stop = check_live_claude_run(
+            allow_live=args.allow_live, ci_mode=False, what="Director OS evals (--provider claude)"
+        )
+        if stop is not None:
+            raise SystemExit(stop)
     cases = load_director_os_eval_cases(Path(args.cases_path))
 
     if args.provider:

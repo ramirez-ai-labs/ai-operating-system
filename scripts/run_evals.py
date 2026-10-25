@@ -13,7 +13,7 @@ no new script is needed.
 Usage:
     python scripts/run_evals.py                              # all domains, local
     python scripts/run_evals.py --domain director_os        # one domain, local
-    python scripts/run_evals.py --domain director_os --backend claude
+    python scripts/run_evals.py --domain director_os --backend claude --allow-live
     python scripts/run_evals.py --domain all --backend chroma --ci
     python scripts/run_evals.py --domain brand_os --langsmith
     python scripts/run_evals.py --domain planner --backend ollama   # model planner, local
@@ -28,6 +28,12 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+from packages.shared.config.live_calls import (
+    ALLOW_LIVE_FLAG,
+    ALLOW_LIVE_HELP,
+    check_live_claude_run,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 logger = logging.getLogger(__name__)
@@ -94,7 +100,9 @@ def _log_case_results(results: list) -> None:
         logger.info("  %s  %s%s", status, r["case_id"], detail)
 
 
-def _run_local(domain: str, cases_path: str | None, ci_mode: bool) -> int:
+def _run_local(
+    domain: str, cases_path: str | None, ci_mode: bool, allow_live: bool = False
+) -> int:
     mod = _load_module(domain)
     cases = _load_cases(mod, domain, cases_path)
     run_fn = getattr(mod, f"run_local_{domain}_evaluations")
@@ -108,16 +116,16 @@ def _run_local(domain: str, cases_path: str | None, ci_mode: bool) -> int:
     return 0
 
 
-def _run_claude(domain: str, cases_path: str | None, ci_mode: bool) -> int:
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        if ci_mode:
-            logger.info(
-                "ANTHROPIC_API_KEY not set — skipping %s Claude evals in CI", domain
-            )
-            return 0
-        logger.error("ANTHROPIC_API_KEY not set. Add it to .env to run Claude evals.")
-        return 1
+def _run_claude(
+    domain: str, cases_path: str | None, ci_mode: bool, allow_live: bool = False
+) -> int:
+    # .env is loaded above, so the key's presence is not an opt-in. Live calls
+    # need --allow-live on this run (see packages/shared/config/live_calls.py).
+    stop = check_live_claude_run(
+        allow_live=allow_live, ci_mode=ci_mode, what=f"{domain} Claude evals"
+    )
+    if stop is not None:
+        return stop
 
     mod = _load_module(domain)
     cases = _load_cases(mod, domain, cases_path)
@@ -150,7 +158,9 @@ def _run_claude(domain: str, cases_path: str | None, ci_mode: bool) -> int:
     return 0 if failed_count == 0 else 1
 
 
-def _run_chroma(domain: str, cases_path: str | None, ci_mode: bool) -> int:
+def _run_chroma(
+    domain: str, cases_path: str | None, ci_mode: bool, allow_live: bool = False
+) -> int:
     from packages.shared.retrieval.chroma import is_index_ready
 
     if not is_index_ready():
@@ -195,7 +205,9 @@ def _ollama_reachable(url: str) -> bool:
         return False
 
 
-def _run_ollama(domain: str, cases_path: str | None, ci_mode: bool) -> int:
+def _run_ollama(
+    domain: str, cases_path: str | None, ci_mode: bool, allow_live: bool = False
+) -> int:
     mod = _load_module(domain)
     # Only modules that opt in are run against Ollama; for the others an
     # "ollama" run would not mean anything (e.g. Claude-only domains).
@@ -275,6 +287,12 @@ def main() -> None:
         help="Override the eval cases JSON path (single-domain runs only).",
     )
     parser.add_argument(
+        ALLOW_LIVE_FLAG,
+        dest="allow_live",
+        action="store_true",
+        help=ALLOW_LIVE_HELP,
+    )
+    parser.add_argument(
         "--ci",
         action="store_true",
         help="Skip gracefully when API keys or ChromaDB index are absent.",
@@ -294,7 +312,7 @@ def main() -> None:
             code = _run_langsmith(domain, args.cases_path, args.ci)
         else:
             runner = _BACKEND_RUNNERS[args.backend]
-            code = runner(domain, args.cases_path, args.ci)
+            code = runner(domain, args.cases_path, args.ci, args.allow_live)
         if code != 0:
             exit_code = code
 

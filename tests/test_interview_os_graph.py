@@ -187,7 +187,7 @@ def test_interview_brief_validate_response_triggers_fallback_on_empty_sections(
     """validate_response must fall back to deterministic when model returns empty sections."""
     from packages.shared.schemas.director_os import EvidenceItem
 
-    def fake_retrieve(*, base_path, query, limit):
+    def fake_retrieve(*, base_path, query, limit, section_labels=None):
         return [
             EvidenceItem(
                 source="role_brief.md",

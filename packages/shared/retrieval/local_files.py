@@ -6,13 +6,37 @@ from packages.shared.schemas.director_os import EvidenceItem
 
 ALLOWED_LOCAL_DATA_ROOT = (Path.cwd() / "data" / "local_only").resolve()
 
+# Function words that appear in almost every line. Counting them let a focus
+# like "a post on the platform migration" rank lines by how often they say
+# "the", crowding out the lines that actually match the topic.
+_STOPWORDS = frozenset(
+    {
+        "the", "and", "for", "with", "about", "from", "into", "onto", "over",
+        "this", "that", "these", "those", "our", "your", "their", "its",
+        "are", "was", "were", "has", "have", "had", "but", "not", "all", "any",
+        "can", "will", "would", "should", "what", "when", "who", "how",
+        "you", "her", "his", "him", "she", "they", "them", "than", "then",
+        "there", "here", "also", "just", "get", "out",
+    }
+)
+
+# Section labels boosted when a caller does not pass its own. These are
+# Director OS's labels, the only ones retrieval used to know about.
+DEFAULT_SECTION_LABELS: tuple[str, ...] = ("Win:", "Risk:", "Next:")
+
 
 def retrieve_relevant_documents(
     base_path: str,
     query: str | None,
     limit: int,
+    section_labels: tuple[str, ...] = DEFAULT_SECTION_LABELS,
 ) -> list[EvidenceItem]:
-    """Search local markdown files and return the best matching evidence snippets."""
+    """Search local markdown files and return the best matching evidence snippets.
+
+    `section_labels` are the line labels the calling domain extracts sections
+    from (e.g. "Action:", "Blocker:"). Lines starting with one get a small rank
+    boost, so a domain's evidence is made of lines it can actually use.
+    """
     # Retrieval is intentionally local-only: the workflow only looks at files
     # under the provided directory and never calls an external service here.
     root = _resolve_allowed_data_path(base_path)
@@ -43,6 +67,7 @@ def retrieve_relevant_documents(
             text=text,
             keywords=keywords,
             file_priority=file_rank[file_path.resolve()],
+            section_labels=tuple(label.lower() for label in section_labels),
         )
         matches.extend(file_matches)
 
@@ -64,10 +89,15 @@ def _resolve_allowed_data_path(base_path: str) -> Path:
 
 
 def _normalize_keywords(query: str | None) -> list[str]:
-    """Drop very short tokens so retrieval focuses on more meaningful terms."""
+    """Drop very short tokens and stopwords so retrieval focuses on meaningful terms."""
     if not query:
         return []
-    return [part.lower() for part in query.split() if len(part.strip()) > 2]
+    keywords = []
+    for part in query.split():
+        token = part.strip(" .,;:!?\"'()").lower()
+        if len(token) > 2 and token not in _STOPWORDS:
+            keywords.append(token)
+    return keywords
 
 
 def _score_text(text: str, keywords: list[str]) -> int:
@@ -84,6 +114,7 @@ def _extract_matching_lines(
     text: str,
     keywords: list[str],
     file_priority: int,
+    section_labels: tuple[str, ...],
 ) -> list[tuple[int, EvidenceItem]]:
     """Convert a markdown file into ranked line-level evidence items."""
     matches: list[tuple[int, EvidenceItem]] = []
@@ -101,7 +132,7 @@ def _extract_matching_lines(
         if _should_skip_line(cleaned_line):
             continue
 
-        line_score = _line_score(cleaned_line, keywords, file_priority)
+        line_score = _line_score(cleaned_line, keywords, file_priority, section_labels)
         if keywords and line_score == 0:
             continue
 
@@ -120,7 +151,12 @@ def _extract_matching_lines(
     return matches
 
 
-def _line_score(line: str, keywords: list[str], file_priority: int) -> int:
+def _line_score(
+    line: str,
+    keywords: list[str],
+    file_priority: int,
+    section_labels: tuple[str, ...],
+) -> int:
     """Rank lines by keyword overlap and common status markers."""
     lowered = line.lower()
     # The score is just a weighted keyword count plus a couple of simple boosts.
@@ -131,9 +167,12 @@ def _line_score(line: str, keywords: list[str], file_priority: int) -> int:
         else 1
     )
 
-    # Status prefixes are useful signals for the weekly-update workflow even
-    # when the explicit query terms only appear elsewhere in the same file.
-    if lowered.startswith(("win:", "risk:", "next:")):
+    # Lines carrying one of the calling domain's section labels are what its
+    # deterministic synthesis extracts, so they get a small boost even when the
+    # query terms only appear elsewhere in the same file. Labels are per domain:
+    # boosting every "Label:" line also boosted metadata such as "Status:" and
+    # let it crowd out usable lines.
+    if lowered.startswith(section_labels):
         score += 2
 
     # Lightly bias toward later files so newer-looking notes edge out older ones

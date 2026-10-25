@@ -20,6 +20,10 @@ from packages.shared.schemas.director_os import (
 )
 from packages.shared.validation.weekly_update import validate_weekly_update
 
+# Line labels the wins / risks / next_steps sections extract from. Retrieval
+# boosts lines carrying these labels so the evidence is made of usable lines.
+SECTION_LABELS: tuple[str, ...] = ("Win:", "Risk:", "Next:")
+
 
 class DirectorOSState(TypedDict, total=False):
     """State carried through the Director OS weekly update graph."""
@@ -56,6 +60,7 @@ def retrieve_evidence(state: DirectorOSState) -> DirectorOSState:
         base_path=request.data_path,
         query=request.focus,
         limit=request.max_documents,
+        section_labels=SECTION_LABELS,
     )
     if not evidence:
         raise ValueError(
