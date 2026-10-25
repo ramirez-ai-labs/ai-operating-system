@@ -55,6 +55,8 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 | Next.js frontend | `apps/web/src/app/page.tsx` |
 | API entry point | `apps/api/main.py` |
 | Chief of Staff routing | `packages/shared/orchestration/chief_of_staff.py` |
+| Domain registry | `packages/shared/domains/__init__.py` (`_REGISTERED`), one spec per domain in `packages/shared/domains/<domain>.py` |
+| Model-facing tool definitions snapshot | `tests/snapshots/domain_tool_definitions.json` (regenerate: `python -m packages.shared.domains --write`) |
 | Director OS graph | `packages/shared/graphs/director_os.py` |
 | Brand OS graph | `packages/shared/graphs/brand_os.py` |
 | Interview OS graph | `packages/shared/graphs/interview_os.py` |
@@ -86,6 +88,9 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 - Provider selection is handled by `_build_provider()` in each domain graph. Switching providers is a single field change on the request  -  no workflow logic should branch on provider identity.
 - **Director OS supports both Claude and Ollama** for model synthesis (`provider='ollama'` or `provider='claude'`). **Brand OS, Interview OS, and One-on-One OS are Claude-only** (`provider='claude'`, requires `ANTHROPIC_API_KEY`). Passing a non-Claude provider to these three domains raises a `ValueError` that is caught by the graph's `build_response` node and falls back to deterministic synthesis when `fallback_to_deterministic=True` (the default). The system is therefore fully runnable without any API keys — set `use_model=False` (the default) or rely on the fallback.
 - The API layer (`apps/api/main.py`) stays thin. Workflow logic lives in the domain graph files so it can be tested without FastAPI.
+- The domain registry (`packages/shared/domains/`) is the only place domains are listed. The router prompt, keyword fallback, `_run_workflow`, `_build_trace`, API routes, and MCP tools are all derived from it — do not name individual domains in those files.
+- A domain's tool input schema (`DomainTool.input_model`) exposes only what a model may choose: retrieval focus, `data_path` under `data/local_only/`, `max_documents`, and domain context fields. Provider, model ID, Ollama URL, `use_model`, and fallback policy stay operator-controlled and must never appear in it (test-enforced).
+- Domain spec modules import their workflow inside `run`, not at module level, so importing the registry (and starting the MCP server) does not load LangGraph or ChromaDB.
 - Deterministic fallback must always be available. Any model-assisted path must have a fallback when `fallback_to_deterministic=True`.
 - Evidence grounding is non-negotiable. Every output item must cite a source and line number that appears in the retrieved evidence. Do not relax this in the validator or provider.
 - All domain response schemas must inherit from `BaseResponse` in `packages/shared/schemas/base.py`. This enforces `evidence: list[EvidenceItem]` and `provider_usage: dict[str, int]` at the Pydantic level and requires a `section_counts` property (`NotImplementedError` at runtime if missing).
@@ -94,7 +99,7 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 
 Use Interview OS as the canonical reference implementation.
 
-**Files to create (5):**
+**Files to create (7):**
 
 | File | Template |
 | --- | --- |
@@ -102,17 +107,22 @@ Use Interview OS as the canonical reference implementation.
 | `packages/shared/graphs/<domain>.py` | `packages/shared/graphs/interview_os.py` |
 | `packages/shared/validation/<domain>.py` | `packages/shared/validation/interview_os.py` |
 | `packages/shared/evaluations/<domain>.py` | `packages/shared/evaluations/interview_os.py` |
-| `evaluations/<domain>/<cases>.json` | `evaluations/interview_os/interview_cases.json` |
+| `evaluations/<domain>/<name>_cases.json` | `evaluations/interview_os/interview_cases.json` |
+| `<domain>/workflows/<name>.py` | `interview_os/workflows/interview_brief.py` |
+| `packages/shared/domains/<domain>.py` | `packages/shared/domains/interview_os.py` — the `DomainSpec`: routing hint, keywords + priority, tool description + input model, `build_request`, `model_used`, API path |
 
-**Files to modify (5):**
+**Files to modify:**
 
 | File | Change |
 | --- | --- |
-| `packages/shared/schemas/orchestrator.py` | Add response type to `OrchestratorResponse.result` union |
-| `packages/shared/orchestration/chief_of_staff.py` | Add workflow constant, routing keyword, and `_build_trace` branch |
-| `apps/api/main.py` | Register new route |
+| `packages/shared/domains/__init__.py` | Add the new `SPEC` to `_REGISTERED` — this registers the router prompt entry, keyword fallback, API route, and MCP tool |
+| `packages/shared/schemas/orchestrator.py` | Add response type to `OrchestratorResponse.result` union (kept explicit for a typed OpenAPI schema; test fails if it drifts from the registry) |
+| `.github/workflows/ci.yml` | Add eval runner step (test fails if missing) |
+| `pyproject.toml` | Add the new `<domain>` and `<domain>.workflows` packages |
+| `tests/snapshots/domain_tool_definitions.json` | Regenerate with `python -m packages.shared.domains --write` |
 | `CLAUDE.md` | Update key file locations table |
-| `.github/workflows/ci.yml` | Add eval runner step |
+
+`chief_of_staff.py`, `apps/api/main.py`, and `apps/mcp/server.py` need no changes. For every registered domain, `tests/test_domain_registry.py` checks the `BaseResponse` inheritance, the response union, the evals module and cases file, the CI eval step, the API route, the MCP tool, the tool-input boundary, and the tool snapshot.
 
 **Invariants to satisfy:**
 

@@ -6,6 +6,11 @@ from packages.shared.schemas.director_os import EvidenceItem, GroundedItem, Week
 client = TestClient(app)
 
 
+# Patch the public workflow entry point; the router reaches it through the
+# domain registry, which imports it at call time.
+_WEEKLY_UPDATE_PATCH = "director_os.workflows.weekly_update.build_weekly_update"
+
+
 def test_operator_console_page_returns_html() -> None:
     """The local operator console should render as an HTML page."""
     response = client.get("/")
@@ -246,7 +251,6 @@ def test_orchestrate_brand_model_request_falls_back_without_api_key() -> None:
 
 def test_orchestrate_reports_director_fallback_in_api_trace(monkeypatch) -> None:
     """Director fallback should remain visible through the orchestrator API trace."""
-    from packages.shared.orchestration import chief_of_staff as orchestration_module
 
     def fake_weekly_update(_request):
         return WeeklyUpdateResponse(
@@ -279,7 +283,7 @@ def test_orchestrate_reports_director_fallback_in_api_trace(monkeypatch) -> None
             ],
         )
 
-    monkeypatch.setattr(orchestration_module, "build_weekly_update", fake_weekly_update)
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, fake_weekly_update)
 
     response = client.post(
         "/orchestrate",

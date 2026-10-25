@@ -532,16 +532,37 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 9 (prerequisites)
 
-**Status: Complete. 254 tests passing.**
+**Status: Complete  -  shipped in PR #114. 254 tests passing.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| `packages/shared/config/models.py` reads `config/models.yaml`; request schemas, `ClaudeProvider`, researcher/writer agents, and Claude eval runners take default model IDs from it (12 hardcoded IDs removed) | Done | This PR |
-| `models.yaml` registry gains `validated` flag; Claude 5.5 models listed as available, unvalidated; default stays on the model the committed live eval results were produced with | Done | This PR |
-| `tests/test_model_config.py`  -  defaults match config; default is registered, unique, and validated; missing config fails loudly; MCP server import does not load LangGraph/ChromaDB | Done | This PR |
-| `apps/mcp/server.py` defers workflow imports to first tool call (warm startup 2.4s → 1.2s; cold ~56s → ~28s, under Claude Code's 30s connect timeout) | Done | This PR |
-| README, SHOWCASE, DEPLOYMENT: scope wording matches the routed-workflow design; ungrounded `mcp_synthesis` called out; fictional `models.yaml` example replaced | Done | This PR |
-| plan.md: Phase 6/8 status corrected; Phase 9 (router → orchestrator) defined | Done | This PR |
+| `packages/shared/config/models.py` reads `config/models.yaml`; request schemas, `ClaudeProvider`, researcher/writer agents, and Claude eval runners take default model IDs from it (12 hardcoded IDs removed) | Done | [#114](https://github.com/ramirez-ai-labs/ai-operating-system/pull/114) |
+| `models.yaml` registry gains `validated` flag; Claude 5.5 models listed as available, unvalidated; default stays on the model the committed live eval results were produced with | Done | [#114](https://github.com/ramirez-ai-labs/ai-operating-system/pull/114) |
+| `tests/test_model_config.py`  -  defaults match config; default is registered, unique, and validated; missing config fails loudly; MCP server import does not load LangGraph/ChromaDB | Done | [#114](https://github.com/ramirez-ai-labs/ai-operating-system/pull/114) |
+| `apps/mcp/server.py` defers workflow imports to first tool call (warm startup 2.4s → 1.2s; cold ~56s → ~28s, under Claude Code's 30s connect timeout) | Done | [#114](https://github.com/ramirez-ai-labs/ai-operating-system/pull/114) |
+| README, SHOWCASE, DEPLOYMENT: scope wording matches the routed-workflow design; ungrounded `mcp_synthesis` called out; fictional `models.yaml` example replaced | Done | [#114](https://github.com/ramirez-ai-labs/ai-operating-system/pull/114) |
+| plan.md: Phase 6/8 status corrected; Phase 9 (router → orchestrator) defined | Done | [#114](https://github.com/ramirez-ai-labs/ai-operating-system/pull/114) |
+
+---
+
+## Sprint 24  -  Phase 9a Domain Registry
+
+**Objective:** Make the domain list data instead of hand-written branches, so the router, API, MCP server, and the Phase 9b planner all read one registry, and every domain is described to models exactly once.
+
+**Maps to:** plan.md Phase 9a
+
+**Status: Complete. 293 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| `packages/shared/domains/spec.py`  -  `DomainSpec` (operator-facing: request/response models, `build_request`, `model_used`, keywords + priority, API path, providers) + `DomainTool` (model-facing: name, description, input model, `to_tool_definition()`) | Done | This PR |
+| `DomainToolInput` base  -  narrow model-facing input (`focus`, `data_path`, `max_documents` + domain context fields); `data_path` validated under `data/local_only/` before a workflow runs | Done | This PR |
+| One spec module per domain; workflows imported inside `run` so the registry and MCP server stay free of LangGraph/ChromaDB at import | Done | This PR |
+| `packages/shared/domains/__init__.py`  -  explicit `_REGISTERED` list, read-only `DOMAINS` mapping, import-time validation (unique names/ids/tools/paths/priorities, exactly one default) | Done | This PR |
+| `chief_of_staff.py`  -  router prompt, keyword fallback, `_run_workflow`, `_build_trace` derived from the registry; generated prompt is byte-identical to the previous hand-written one | Done | This PR |
+| `apps/api/main.py` and `apps/mcp/server.py`  -  routes and tools registered by looping over the registry; paths, tool names, and request schemas unchanged | Done | This PR |
+| `tests/test_domain_registry.py` (39 tests) + `tests/snapshots/domain_tool_definitions.json`; 8 existing tests retargeted to patch the workflow entry point instead of a router import | Done | This PR |
+| CLAUDE.md domain checklist: router, API, and MCP server no longer touched when adding a domain | Done | This PR |
 
 ---
 

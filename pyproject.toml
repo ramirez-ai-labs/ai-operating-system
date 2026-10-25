@@ -44,6 +44,7 @@ packages = [
   "packages",
   "packages.shared",
   "packages.shared.config",
+  "packages.shared.domains",
   "packages.shared.evaluations",
   "packages.shared.graphs",
   "packages.shared.observability",

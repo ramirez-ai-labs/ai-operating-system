@@ -613,5 +613,5 @@ not a summary of past runs.
 | | |
 |---|---|
 | **ruff** | Linting and import sorting — `pyproject.toml` (config), `.github/workflows/ci.yml` (CI step) |
-| **pytest** | 252 passing tests, 6 skipped (Claude/Ollama tests skipped without API keys). Claude-dependent tests use environment checks so the full suite passes in CI without any API keys. |
+| **pytest** | 293 passing tests, 6 skipped (Claude/Ollama tests skipped without API keys). Claude-dependent tests use environment checks so the full suite passes in CI without any API keys. |
 | **Where** | `tests/` |

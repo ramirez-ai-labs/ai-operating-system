@@ -24,6 +24,11 @@ from packages.shared.schemas.orchestrator import OrchestratorRequest, WorkflowTr
 # ---------------------------------------------------------------------------
 
 
+# Patch the public workflow entry point; the router reaches it through the
+# domain registry, which imports it at call time.
+_WEEKLY_UPDATE_PATCH = "director_os.workflows.weekly_update.build_weekly_update"
+
+
 def _make_evidence(
     source: str = "notes.md",
     line_number: int = 1,
@@ -175,7 +180,7 @@ def test_cache_tokens_surface_in_trace(monkeypatch: pytest.MonkeyPatch) -> None:
             },
         )
 
-    monkeypatch.setattr(csm, "build_weekly_update", fake_weekly_update)
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, fake_weekly_update)
 
     resp = csm.route_request(
         OrchestratorRequest(
@@ -202,7 +207,7 @@ def test_cache_tokens_zero_when_provider_usage_absent(monkeypatch: pytest.Monkey
             evidence=[_make_evidence("notes.md", 1, "shipped v2")],
         )
 
-    monkeypatch.setattr(csm, "build_weekly_update", fake_weekly_update)
+    monkeypatch.setattr(_WEEKLY_UPDATE_PATCH, fake_weekly_update)
 
     resp = csm.route_request(
         OrchestratorRequest(
