@@ -28,6 +28,7 @@ __all__ = [
     "DomainToolInput",
     "default_domain",
     "domain_for_routing_token",
+    "domain_for_tool_name",
     "get_domain",
     "keyword_routing_order",
     "tool_definitions",
@@ -87,6 +88,11 @@ def get_domain(workflow_id: str) -> DomainSpec:
 def domain_for_routing_token(token: str) -> DomainSpec | None:
     """Map a router classification token (e.g. 'brand_os') to its domain."""
     return next((spec for spec in DOMAINS.values() if spec.domain == token), None)
+
+
+def domain_for_tool_name(tool_name: str) -> DomainSpec | None:
+    """Map a model-facing tool name (e.g. 'brand_os_content_draft') to its domain."""
+    return next((spec for spec in DOMAINS.values() if spec.tool.name == tool_name), None)
 
 
 def default_domain() -> DomainSpec:

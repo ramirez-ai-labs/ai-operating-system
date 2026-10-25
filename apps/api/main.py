@@ -6,12 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from packages.shared.domains import DOMAINS, DomainSpec
+from packages.shared.graphs.planner import run_plan_graph
 from packages.shared.orchestration.chief_of_staff import route_request
 from packages.shared.schemas.director_os import ErrorResponse
 from packages.shared.schemas.orchestrator import (
     OrchestratorRequest,
     OrchestratorResponse,
 )
+from packages.shared.schemas.planner import PlanRequest, PlanResponse
 
 app = FastAPI(
     title="AI Operating System API",
@@ -100,4 +102,23 @@ def orchestrate(request: OrchestratorRequest) -> OrchestratorResponse:
         # workflow should handle it.
         return route_request(request)
     except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post(
+    "/plan",
+    response_model=PlanResponse,
+    responses={400: {"model": ErrorResponse}},
+)
+def plan(request: PlanRequest) -> PlanResponse:
+    """Break a goal into domain workflow steps, run them in parallel, and merge the results.
+
+    Unlike /orchestrate, which routes a request to exactly one domain, /plan can
+    fan out across several domains. A step that fails is reported in the
+    response (status "partial") rather than failing the whole request.
+    """
+    try:
+        return run_plan_graph(request)
+    except ValueError as exc:
+        # Raised when a model planner fails and fallback_to_deterministic is False.
         raise HTTPException(status_code=400, detail=str(exc)) from exc

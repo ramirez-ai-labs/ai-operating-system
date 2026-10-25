@@ -124,6 +124,7 @@ Rules:
         tools: list[dict[str, Any]] | None = None,
         messages: list[dict[str, Any]] | None = None,
         system_override: str | None = None,
+        tool_choice: dict[str, Any] | None = None,
     ) -> ProviderResponse:
         """
         Send a completion request to Claude.
@@ -138,6 +139,8 @@ Rules:
                              When provided, prompt and context are appended as
                              a final user turn only if they are non-empty.
             system_override: Replace the default system prompt. Use sparingly.
+            tool_choice:     Optional tool_choice, e.g. {"type": "any"} to require
+                             at least one tool call. Ignored when tools is empty.
 
         Returns:
             ProviderResponse with content, token counts, and any tool_calls.
@@ -166,6 +169,8 @@ Rules:
 
         if tools:
             kwargs["tools"] = tools
+            if tool_choice:
+                kwargs["tool_choice"] = tool_choice
 
         try:
             response = self._client.messages.create(**kwargs)
