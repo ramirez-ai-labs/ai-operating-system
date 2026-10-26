@@ -1,0 +1,639 @@
+{
+  "run_at": "2026-10-26T08:30:24.863144+00:00",
+  "domain": "planner",
+  "backend": "ollama",
+  "summary": {
+    "total": 19,
+    "passed": 5,
+    "failed": 14,
+    "pass_rate": 0.263
+  },
+  "planner": "ollama",
+  "ollama_model": "llama3.2",
+  "run_notes": "All 19 cases, including the 5 the rules planner does not support. Run on a 2-core i5-8210Y / 8 GB (CPU only, ~130s per planning call), so the 60s planner timeout was raised for this scoring run only; production code and settings were unchanged. llama3.1:8b was not scored: it does not fit in 8 GB without swapping.",
+  "cases": [
+    {
+      "case_id": "route-director-leadership-update",
+      "planner_used": "rules",
+      "plan": [
+        "director_os.weekly_update"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": false,
+          "comment": "Fell back to rules: invalid arguments for 'director_os_weekly_update': max_documents: Input should be a valid integer, unable to parse string as an integer"
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "route-director-operating-review",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "director_os.weekly_update",
+        "brand_os.content_draft"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=[] extra=['brand_os.content_draft']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "2 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "route-director-default",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "director_os.weekly_update",
+        "brand_os.content_draft"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=[] extra=['brand_os.content_draft']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "2 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "route-brand-linkedin",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "brand_os.content_draft"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "route-brand-podcast",
+      "planner_used": "rules",
+      "plan": [
+        "brand_os.content_draft"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": false,
+          "comment": "Fell back to rules: invalid arguments for 'brand_os_content_draft': max_documents: Input should be a valid integer"
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "route-interview-candidate",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "interview_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "route-interview-screening",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "interview_os.brief",
+        "one_on_one_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=[] extra=['one_on_one_os.brief']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "2 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "route-one-on-one-prep",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "one_on_one_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "route-one-on-one-direct-report",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "one_on_one_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "plan-prep-my-week",
+      "planner_used": "rules",
+      "plan": [
+        "director_os.weekly_update",
+        "one_on_one_os.brief",
+        "brand_os.content_draft"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "3 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": false,
+          "comment": "Fell back to rules: invalid arguments for 'director_os_weekly_update': max_documents: Input should be a valid integer, unable to parse string as an integer"
+        },
+        {
+          "key": "status_matches",
+          "score": true,
+          "comment": "status=ok (expected ok)."
+        },
+        {
+          "key": "all_steps_grounded",
+          "score": true,
+          "comment": "3/3 steps returned grounded output; 12 items validated against 15 evidence lines."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "plan-interview-and-one-on-one",
+      "planner_used": "rules",
+      "plan": [
+        "interview_os.brief",
+        "one_on_one_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "2 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": false,
+          "comment": "Fell back to rules: invalid arguments for 'interview_os_brief': max_documents: Input should be greater than or equal to 1"
+        },
+        {
+          "key": "status_matches",
+          "score": true,
+          "comment": "status=ok (expected ok)."
+        },
+        {
+          "key": "all_steps_grounded",
+          "score": true,
+          "comment": "2/2 steps returned grounded output; 7 items validated against 10 evidence lines."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "plan-leadership-and-one-on-one",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "director_os.weekly_update",
+        "one_on_one_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "2 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        },
+        {
+          "key": "status_matches",
+          "score": false,
+          "comment": "status=error (expected ok)."
+        },
+        {
+          "key": "all_steps_grounded",
+          "score": false,
+          "comment": "step 1: Data path does not exist or is not a directory: data/local_only/project_notes; step 2: Data path does not exist or is not a directory: data/local_only/1_1_notes"
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "plan-three-one-on-ones",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "one_on_one_os.brief",
+        "one_on_one_os.brief",
+        "one_on_one_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "3 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        },
+        {
+          "key": "status_matches",
+          "score": false,
+          "comment": "status=error (expected ok)."
+        },
+        {
+          "key": "all_steps_grounded",
+          "score": false,
+          "comment": "step 1: Data path does not exist or is not a directory: data/local_only/notes; step 2: Data path does not exist or is not a directory: data/local_only/notes; step 3: Data path does not exist or is not a directory: data/local_only/notes"
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "plan-update-then-podcast",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "director_os.weekly_update",
+        "brand_os.content_draft"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": true,
+          "comment": "Plan calls exactly the expected workflows."
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "2 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "semantic-promotion-conversation",
+      "planner_used": "rules",
+      "plan": [
+        "director_os.weekly_update"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=['one_on_one_os.brief'] extra=['director_os.weekly_update']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": false,
+          "comment": "Fell back to rules: planner returned no tool calls"
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "semantic-what-to-ask-candidate",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "one_on_one_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=['interview_os.brief'] extra=['one_on_one_os.brief']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "semantic-share-publicly",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "director_os.weekly_update"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=['brand_os.content_draft'] extra=['director_os.weekly_update']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "1 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "semantic-monday-prep",
+      "planner_used": "ollama/llama3.2",
+      "plan": [
+        "brand_os.content_draft",
+        "director_os.weekly_update",
+        "interview_os.brief"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=['one_on_one_os.brief'] extra=['brand_os.content_draft', 'interview_os.brief']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "3 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": true,
+          "comment": "Planned by ollama/llama3.2."
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "over-split-single-deliverable",
+      "planner_used": "rules",
+      "plan": [
+        "director_os.weekly_update",
+        "director_os.weekly_update"
+      ],
+      "results": [
+        {
+          "key": "workflows_match",
+          "score": false,
+          "comment": "missing=[] extra=['director_os.weekly_update']"
+        },
+        {
+          "key": "within_max_steps",
+          "score": true,
+          "comment": "2 steps (max 5)."
+        },
+        {
+          "key": "tool_inputs_valid",
+          "score": true,
+          "comment": "All step inputs validate."
+        },
+        {
+          "key": "model_planned",
+          "score": false,
+          "comment": "Fell back to rules: invalid arguments for 'director_os_weekly_update': max_documents: Input should be a valid integer"
+        }
+      ],
+      "passed": false
+    }
+  ]
+}

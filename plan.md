@@ -541,9 +541,20 @@ Eval runners never call the Anthropic API without `--allow-live`, whatever `.env
 **Sprint 27  -  Phase 9c grounded MCP tool loop (complete):**
 The MCP loop ends only through a forced, schema-checked submit; every item is validated against the lines the model read, or the synthesis is dropped with a recorded reason. No response path returns uncited content.
 
+**Ollama planner baseline (`evaluations/planner/results_ollama.json`):**
+`llama3.2` (3B) scores 5/19, and 0/5 on the keyword-free and over-split cases, below the rules planner's 14/14 on the cases it supports. Of its plans:
+- 6 fell back to `rules` (non-integer or zero `max_documents`, or no tool call)
+- 4 called an extra domain
+- 2 used invented data paths that only failed at execution
+- every semantic case routed to the wrong domain
+
+The fallback and merge-time validation behaved as designed: no invalid plan ran, and no step with bad input was reported `ok`. Two gaps showed up:
+- `data_path` validation checks only the `data/local_only/` prefix, not that the folder exists, so planning-only evals pass with invented paths.
+- A 3B model is not a viable planner. The keyword-free cases need a stronger model, such as Claude, to beat `rules`.
+
 **Phase 9  -  recommended next:**
 
-1. **Score the Ollama planner** on all 19 planning cases (`python scripts/run_evals.py --domain planner --backend ollama`) and commit `results_ollama.json`. This is free, and it is the first number for the keyword-free cases.
+1. **Tighten the planner's tool inputs.** Reject a `data_path` that does not exist, or remove `data_path` and `max_documents` from the model-facing schema and let operator defaults apply. Then score the Claude planner on all 19 cases (opt-in, `--allow-live`).
 2. **9d checkpointing + human approval.** SQLite checkpointer, `interrupt()` before final output, and run history in `apps/web`.
 3. **When you choose to spend:** rerun the live Claude domain evals with `--allow-live`, and exercise the MCP loop once against the real API. The committed `results_claude.json` files predate the Sprint 26 retrieval change, and the 9c loop has been tested only with mocked responses.
 
