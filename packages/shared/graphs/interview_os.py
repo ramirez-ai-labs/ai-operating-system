@@ -101,7 +101,7 @@ def validate_response(state: InterviewOSState) -> InterviewOSState:
     response = state["response"]
     request = state["request"]
     try:
-        validated = validate_interview_brief(response)
+        validated = validate_interview_brief(response, request)
         return {"response": validated}
     except ValueError:
         if not state.get("used_model", False) or not request.fallback_to_deterministic:

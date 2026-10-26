@@ -72,13 +72,23 @@ def _run(*args: str) -> subprocess.CompletedProcess:
     ids=["unified-ci", "unified", "brand-script-ci", "director-script", "director-provider"],
 )
 def test_runners_refuse_live_calls_without_allow_live(args, expected_code) -> None:
-    results_path = REPO_ROOT / "evaluations" / "planner" / "results_claude.json"
-    existed_before = results_path.exists()
+    before = _claude_results_snapshot()
 
     result = _run(*args)
 
     output = result.stdout + result.stderr
     assert result.returncode == expected_code, output
     assert "--allow-live" in output
-    # Nothing was evaluated, so no results file was (re)written.
-    assert results_path.exists() == existed_before
+    # Nothing was evaluated, so no domain's results file was created or rewritten.
+    assert _claude_results_snapshot() == before
+
+
+def _claude_results_snapshot() -> dict[str, bytes | None]:
+    """Content of every evaluations/<domain>/results_claude.json, None if absent."""
+    snapshot: dict[str, bytes | None] = {}
+    for domain_dir in sorted((REPO_ROOT / "evaluations").iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        path = domain_dir / "results_claude.json"
+        snapshot[domain_dir.name] = path.read_bytes() if path.exists() else None
+    return snapshot

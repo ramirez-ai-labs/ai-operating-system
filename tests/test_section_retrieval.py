@@ -14,11 +14,15 @@ import pytest
 from packages.shared.domains import DOMAINS
 from packages.shared.graphs import brand_os, director_os, interview_os, one_on_one_os
 from packages.shared.graphs.interview_os import _matches_interview_section
+from packages.shared.retrieval import local_files
 from packages.shared.retrieval.local_files import (
     DEFAULT_SECTION_LABELS,
     _line_score,
     _normalize_keywords,
 )
+from packages.shared.schemas.base import EvidenceItem
+from packages.shared.schemas.interview_os import InterviewBriefRequest, InterviewBriefResponse
+from packages.shared.validation.interview_os import validate_interview_brief
 
 
 def test_stopwords_and_punctuation_are_dropped_from_queries() -> None:
@@ -97,8 +101,65 @@ def test_plain_questions_count_as_interview_key_questions() -> None:
     assert not matches(question, "talking_points", ("Talking Point:",))
 
 
-def test_interview_empty_brief_error_says_how_to_fix_the_request() -> None:
+def test_interview_brief_with_no_focus_and_few_documents_is_grounded() -> None:
+    # This used to fail: file order outranked labeled lines, so the top 3 were
+    # the guide's intro text.
     spec = DOMAINS["interview_os.brief"]
     request = spec.request_from_tool_input(spec.tool.input_model(max_documents=3), {})
+    assert any(spec.run(request).section_counts.values())
+
+
+@pytest.mark.parametrize("request_", [None, InterviewBriefRequest()], ids=["no-request", "unset"])
+def test_interview_empty_brief_error_says_how_to_fix_the_request(request_) -> None:
     with pytest.raises(ValueError, match="Set focus, candidate_name, or role"):
-        spec.run(request)
+        validate_interview_brief(_empty_interview_brief(), request_)
+
+
+def _empty_interview_brief() -> InterviewBriefResponse:
+    evidence = EvidenceItem(source="guide.md", line_number=1, title="Guide", excerpt="Date: today")
+    return InterviewBriefResponse(
+        candidate_summary="Brief.",
+        key_questions=[],
+        talking_points=[],
+        red_flags=[],
+        evidence=[evidence],
+    )
+
+
+def test_interview_empty_brief_error_does_not_ask_for_fields_already_set() -> None:
+    request = InterviewBriefRequest(focus="system design", candidate_name="Ana", role="SRE")
+    with pytest.raises(ValueError) as exc:
+        validate_interview_brief(_empty_interview_brief(), request)
+    message = str(exc.value)
+    assert "Set focus, candidate_name, or role" not in message
+    assert "max_documents" in message
+
+
+def test_section_labels_outrank_file_order_with_many_notes(tmp_path, monkeypatch) -> None:
+    # File order used to add up to +len(files) to every line, so past a handful
+    # of notes it buried labeled lines from older files under unlabeled ones.
+    monkeypatch.setattr(local_files, "ALLOWED_LOCAL_DATA_ROOT", tmp_path.resolve())
+    for index in range(12):
+        (tmp_path / f"note_{index:02d}.md").write_text("Date: 2026-10-01\n", encoding="utf-8")
+    # The last file in sort order gets the lowest file priority.
+    (tmp_path / "note_11.md").write_text(
+        "Date: 2026-10-01\nAction: send the RFC\n", encoding="utf-8"
+    )
+
+    top = local_files.retrieve_relevant_documents(
+        str(tmp_path), None, limit=1, section_labels=("Action:",)
+    )
+
+    assert [item.excerpt for item in top] == ["Action: send the RFC"]
+
+
+def test_file_order_still_breaks_ties(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(local_files, "ALLOWED_LOCAL_DATA_ROOT", tmp_path.resolve())
+    (tmp_path / "a.md").write_text("Action: from a\n", encoding="utf-8")
+    (tmp_path / "b.md").write_text("Action: from b\n", encoding="utf-8")
+
+    top = local_files.retrieve_relevant_documents(
+        str(tmp_path), None, limit=1, section_labels=("Action:",)
+    )
+
+    assert [item.source for item in top] == ["a.md"]
