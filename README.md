@@ -14,7 +14,7 @@ Four workflow domains share a common architecture: a routing layer that classifi
 
 Production AI deployment fails in predictable ways: hallucinated content with no citation trail, model paths that break silently when the LLM is unavailable, no way to measure whether synthesis quality regresses as the system evolves, and observability that requires code changes to turn on or off. AI-OS is designed to address all four at the architecture level — not as afterthoughts, but as invariants.
 
-Evidence grounding is enforced at the schema level via forced tool use: every output item must carry a `source` filename and `line_number`. No structured workflow result can contain an uncited item. (The one exception is the free-form `mcp_synthesis` text returned by the opt-in MCP tool loop, which is not yet validated — see [Scope today](#scope-today-and-the-path-to-orchestration).) Deterministic fallback is always available — if model synthesis fails or no API key is present, the system produces grounded output from keyword extraction with no silent degradation. The evaluation harness runs 22 cases across three retrieval paths in CI on every PR. Observability is opt-in by environment variable: setting `LANGSMITH_TRACING=true` emits node-level traces across all four domain graphs with no code changes.
+Evidence grounding is enforced at the schema level via forced tool use: every output item must carry a `source` filename and `line_number`. No response path returns an uncited item. That includes the model-directed MCP tool loop, which must finish through a forced submit tool whose items are validated against the exact lines the model read. Deterministic fallback is always available — if model synthesis fails or no API key is present, the system produces grounded output from keyword extraction with no silent degradation. The evaluation harness runs 22 cases across three retrieval paths in CI on every PR. Observability is opt-in by environment variable: setting `LANGSMITH_TRACING=true` emits node-level traces across all four domain graphs with no code changes.
 
 ---
 
@@ -56,9 +56,10 @@ AI-OS has two layers. Underneath are **fixed, validated domain workflows**: pred
 
 | Shipped | Still ahead (Phase 9 in [plan.md](plan.md)) |
 |---|---|
-| ✅ **9a** Domain registry in `packages/shared/domains/`: each domain registers its schemas, routing rules, and a model-facing tool definition; the router, API, and MCP server are derived from it | **9c** The MCP tool loop's free-form output is not yet grounding-validated; it will end in the same forced-tool schema and `validate_response` as every workflow |
-| ✅ **9b** `POST /plan`: a goal ("prep my week") becomes steps across domains, run in parallel, each re-validated for grounding at merge | **9d** Requests are stateless; LangGraph checkpointing, run history, and human approval come next |
-| ✅ **9b** Routing and planning eval set (19 cases) gated in CI | **9e** Local markdown is the only data source; external MCP servers (GitHub first) are next |
+| ✅ **9a** Domain registry in `packages/shared/domains/`: each domain registers its schemas, routing rules, and a model-facing tool definition; the router, API, and MCP server are derived from it | **9d** Requests are stateless; LangGraph checkpointing, run history, and human approval come next |
+| ✅ **9b** `POST /plan`: a goal ("prep my week") becomes steps across domains, run in parallel, each re-validated for grounding at merge | **9e** Local markdown is the only data source; external MCP servers (GitHub first) are next |
+| ✅ **9b** Routing and planning eval set (19 cases) gated in CI | **9f** Hosted demo and walkthrough video |
+| ✅ **9c** The MCP tool loop ends in a forced `submit_grounded_synthesis` call; every item is validated against the lines the model read, or the synthesis is dropped with a recorded reason | |
 
 ---
 
@@ -248,7 +249,7 @@ Falls back to the Ollama / deterministic path when the key is absent.
 
 Two MCP integration patterns:
 
-**In-process tool loop** — When `use_mcp=True` on `/orchestrate`, the LLM calls `list_files`, `read_file`, and `search_content` tools autonomously. The orchestrator executes each call, appends the result to the message history, and continues until the model produces a final response. No pre-selected evidence — the model decides what to read.
+**In-process tool loop** — When `use_mcp=True` on `/orchestrate`, the LLM calls `list_files`, `read_file`, and `search_content` tools autonomously. The orchestrator executes each call, appends the result to the message history, and continues until the model calls `submit_grounded_synthesis`. No pre-selected evidence — the model decides what to read — but it cannot finish with free text: every round forces a tool call, `read_file` numbers each line, and each submitted item must cite a `source` and `line_number` the tools actually served and match that line's text. A synthesis that fails is dropped (`trace.mcp_fallback_reason` says why) and the deterministic workflow result is returned instead.
 
 **Standalone MCP server** — `apps/mcp/server.py` exports all four domain workflows as MCP tools (`director_os.weekly_update`, `brand_os.content_draft`, `interview_os.brief`, `one_on_one_os.brief`) for Claude Desktop or Claude Code. Wire via `claude_desktop_config.json` and all four workflows are available as tool calls without touching the HTTP API.
 

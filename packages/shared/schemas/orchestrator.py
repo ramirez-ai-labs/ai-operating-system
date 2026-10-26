@@ -3,6 +3,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from packages.shared.config.models import DEFAULT_CLAUDE_MODEL, DEFAULT_OLLAMA_MODEL
+from packages.shared.schemas.base import EvidenceItem, GroundedItem
 from packages.shared.schemas.brand_os import BrandContentDraftResponse
 from packages.shared.schemas.director_os import WeeklyUpdateResponse
 from packages.shared.schemas.interview_os import InterviewBriefResponse
@@ -100,6 +101,20 @@ class OrchestratorRequest(BaseModel):
     )
 
 
+class McpSynthesis(BaseModel):
+    """Grounded synthesis from the MCP tool loop.
+
+    `items` were submitted by the model through a forced tool schema and each
+    one validated against `evidence`: the exact lines the filesystem tools
+    served to the model during the loop. A synthesis that fails validation is
+    never returned; the response carries `trace.mcp_fallback_reason` instead.
+    """
+
+    summary: str
+    items: list[GroundedItem]
+    evidence: list[EvidenceItem]
+
+
 class AgentCall(BaseModel):
     """Token-level record of a single agent invocation in a multi-agent run."""
 
@@ -134,6 +149,10 @@ class WorkflowTrace(BaseModel):
     # Populated when use_mcp=True. Each entry records the tool name, input,
     # success flag, and a preview of what was retrieved.
     mcp_tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    # Set when use_mcp=True but no grounded MCP synthesis was returned: the
+    # loop failed, or the submitted synthesis failed grounding validation.
+    # The deterministic workflow result in `result` is still returned.
+    mcp_fallback_reason: str | None = None
     # Populated when target_audience is set. Records researcher and writer
     # agent invocations with token counts for operator visibility.
     agent_calls: list[AgentCall] = Field(default_factory=list)
@@ -149,8 +168,9 @@ class OrchestratorResponse(BaseModel):
     # Populated when target_audience is set — the writer agent's audience-
     # formatted output alongside the structured workflow result.
     formatted_content: str | None = None
-    # Populated when use_mcp=True — Claude's free-form synthesis after reading
-    # project files via MCP tool calls. This is the primary synthesis output
-    # when MCP is enabled; the structured result field contains evidence and
-    # section counts from the deterministic workflow path.
+    # Populated when use_mcp=True and the model's submitted synthesis passed
+    # grounding validation: every item cites a file and line the model read.
+    mcp_result: McpSynthesis | None = None
+    # The validated synthesis's summary, kept for existing clients. None
+    # whenever mcp_result is None.
     mcp_synthesis: str | None = None

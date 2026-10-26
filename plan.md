@@ -506,7 +506,9 @@ Each item ships as its own PR, in order — later items depend on earlier ones.
 - 9a implemented (Sprint 24, [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115)): `packages/shared/domains/` registry. Each `DomainSpec` pairs a model-facing `DomainTool` (name, description, narrow input schema, `to_tool_definition()`) with operator-facing routing, request-building, and trace rules. The router prompt (byte-identical to the previous hand-written one), keyword fallback, `_run_workflow`, `_build_trace`, API routes, and MCP tools are all derived from it. Tool definitions are snapshotted in `tests/snapshots/domain_tool_definitions.json` so description changes show up as reviewable diffs.
 - 9b implemented (Sprint 25): `POST /plan`. There are three planners: `rules` (the deterministic default), `ollama`, and `claude`. The model planners receive `tool_definitions()` and plan by making parallel tool calls; every call is validated against its domain's `DomainToolInput`, and any failure falls back to `rules` with a recorded reason. A LangGraph supervisor fans steps out with `Send`, re-validates grounding at merge (`validation/plan.py`), and returns ok / partial / error. A routing and planning eval set of 19 cases is CI-gated on the 14 the rules planner should solve. The rules planner scores 0% on the 5 keyword-free and over-split cases, which is the target for the model planners.
 - Exit criteria met by 9b: one goal fans out to multiple domains and the merged response passes grounding validation item by item; routing and planning accuracy are measured and gated in CI; the system still runs end to end with no API keys.
-- Next: 9c grounded MCP tool loop.
+- 9c implemented (Sprint 27): the MCP tool loop runs with `tool_choice: any` and can only finish through `submit_grounded_synthesis`. `read_file` returns numbered lines, the filesystem server records every line it serves, and each submitted item must cite a served `(source, line_number)` and pass `validate_grounded_item`. One bad item drops the whole synthesis; `trace.mcp_fallback_reason` records why, and the deterministic workflow result is returned. `OrchestratorResponse.mcp_result` carries the validated items and the cited evidence. The legacy console now escapes all API content.
+- Exit criterion met by 9c: no response path returns uncited content.
+- Next: 9d checkpointing + human approval.
 - Deferred: a fifth workflow domain (Recruiting OS). It adds breadth on the existing pattern; Phase 9 adds the orchestration depth the project is missing. With 9a in place, adding a domain no longer touches the router, API, or MCP server.
 
 ## Recommended Immediate Next Steps
@@ -533,14 +535,17 @@ Single source of truth for model IDs in `config/models.yaml`. MCP server defers 
 **Sprint 25  -  Phase 9b planner/supervisor + routing evals (complete, PR #116):**
 `POST /plan` with rules, Ollama, and Claude planners over the registry's tool definitions; parallel `Send` fan-out; merge-time grounding validation; 19-case routing/planning eval set in CI.
 
-**Sprint 26  -  Live-call guard + section-aware retrieval (complete):**
+**Sprint 26  -  Live-call guard + section-aware retrieval (complete, PR #117):**
 Eval runners never call the Anthropic API without `--allow-live`, whatever `.env` contains. Keyword retrieval drops stopwords and boosts each domain's own section labels, so weak or missing focus no longer fails with "must include at least one populated section". The "prep my week" plan now runs end to end with `status: ok`.
+
+**Sprint 27  -  Phase 9c grounded MCP tool loop (complete):**
+The MCP loop ends only through a forced, schema-checked submit; every item is validated against the lines the model read, or the synthesis is dropped with a recorded reason. No response path returns uncited content.
 
 **Phase 9  -  recommended next:**
 
 1. **Score the Ollama planner** on all 19 planning cases (`python scripts/run_evals.py --domain planner --backend ollama`) and commit `results_ollama.json`. This is free, and it is the first number for the keyword-free cases.
-2. **9c grounded MCP tool loop.** This closes the last path that can return uncited content.
-3. **When you choose to spend:** rerun the live Claude domain evals with `--allow-live`. The committed `results_claude.json` files predate the Sprint 26 retrieval change.
+2. **9d checkpointing + human approval.** SQLite checkpointer, `interrupt()` before final output, and run history in `apps/web`.
+3. **When you choose to spend:** rerun the live Claude domain evals with `--allow-live`, and exercise the MCP loop once against the real API. The committed `results_claude.json` files predate the Sprint 26 retrieval change, and the 9c loop has been tested only with mocked responses.
 
 See [Phase 9](#phase-9-from-router-to-orchestrator) above.
 

@@ -498,8 +498,20 @@
     const promptInput = document.getElementById("prompt");
     const workflowInput = document.getElementById("workflow");
 
+    // Everything rendered below comes from the API: model output, retrieved
+    // note text, and error messages that can echo request input. Escape it all
+    // before it reaches innerHTML so none of it is interpreted as markup.
+    function esc(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
     function flag(val) {
-      return `<span class="${val ? 'flag-true' : 'flag-false'}">${val}</span>`;
+      return `<span class="${val ? 'flag-true' : 'flag-false'}">${esc(val)}</span>`;
     }
 
     function renderItems(items, labelKey) {
@@ -507,8 +519,10 @@
         return '<p class="result-summary-text" style="color:var(--muted)">None</p>';
       return items.map(item => {
         const text = item[labelKey] || item.text || JSON.stringify(item);
-        const src = item.source || '';
-        return `<div class="result-item">${text}<span class="source-tag">${src}</span></div>`;
+        const src = item.source
+          ? item.source + (item.line_number ? ":" + item.line_number : "") : "";
+        return `<div class="result-item">${esc(text)}`
+          + `<span class="source-tag">${esc(src)}</span></div>`;
       }).join("");
     }
 
@@ -563,20 +577,21 @@
         if (!response.ok) {
           statusNode.textContent = "Request failed. Inspect the raw response below.";
           rawResponse.textContent = JSON.stringify(body, null, 2);
-          const errMsg = body.detail || "The API returned an error.";
+          const detail = body.detail || "The API returned an error.";
+          const errMsg = typeof detail === "string" ? detail : JSON.stringify(detail);
           resultDetail.innerHTML =
-            `<p class="result-summary-text" style="color:var(--accent-2)">${errMsg}</p>`;
+            `<p class="result-summary-text" style="color:var(--accent-2)">${esc(errMsg)}</p>`;
           return;
         }
 
         statusNode.textContent = "Workflow complete. Trace updated below.";
         routingMeta.innerHTML =
-          "<dt>Workflow</dt><dd>" + body.selected_workflow + "</dd>" +
-          "<dt>Rationale</dt><dd>" + body.rationale + "</dd>";
+          "<dt>Workflow</dt><dd>" + esc(body.selected_workflow) + "</dd>" +
+          "<dt>Rationale</dt><dd>" + esc(body.rationale) + "</dd>";
 
         const providerRow = body.trace.model_used && body.trace.provider_used
-          ? "<dt>Provider</dt><dd>" + body.trace.provider_used + "</dd>" +
-            "<dt>Model</dt><dd>" + (body.trace.model_id_used || "—") + "</dd>"
+          ? "<dt>Provider</dt><dd>" + esc(body.trace.provider_used) + "</dd>" +
+            "<dt>Model</dt><dd>" + esc(body.trace.model_id_used || "—") + "</dd>"
           : "<dt>Provider</dt><dd style='color:var(--muted)'>deterministic (no model)</dd>";
 
         const cacheRead = body.trace.cache_read_input_tokens || 0;
@@ -591,19 +606,19 @@
           : cacheCreate > 0 ? cachePrimedHtml : "";
 
         traceMeta.innerHTML =
-          "<dt>Evidence</dt><dd>" + body.trace.evidence_count + " items</dd>" +
+          "<dt>Evidence</dt><dd>" + esc(body.trace.evidence_count) + " items</dd>" +
           providerRow +
           cacheRow +
           "<dt>Model used</dt><dd>" + flag(body.trace.model_used) + "</dd>" +
           "<dt>Fallback</dt><dd>" + flag(body.trace.fallback_used) + "</dd>" +
-          "<dt>Data Path</dt><dd>" + body.trace.data_path + "</dd>";
+          "<dt>Data Path</dt><dd>" + esc(body.trace.data_path) + "</dd>";
 
         sectionCounts.innerHTML = Object.entries(body.trace.section_counts)
-          .map(([key, value]) => "<li><strong>" + key + "</strong>: " + value + "</li>")
+          .map(([key, value]) => "<li><strong>" + esc(key) + "</strong>: " + esc(value) + "</li>")
           .join("");
 
         evidenceSources.innerHTML = body.trace.evidence_sources
-          .map((source) => "<li>" + source + "</li>")
+          .map((source) => "<li>" + esc(source) + "</li>")
           .join("");
 
         const result = body.result || {};
@@ -623,7 +638,7 @@
           : result.talking_points ? "Talking Points" : "Next Steps";
 
         let detailHtml = summary
-          ? `<p class="result-summary-text">${summary}</p>` : "";
+          ? `<p class="result-summary-text">${esc(summary)}</p>` : "";
         if (wins.length) detailHtml +=
           `<div class="result-section"><h4>${winsLabel}</h4>${renderItems(wins, "text")}</div>`;
         if (risks.length) detailHtml +=
@@ -649,9 +664,9 @@
             const arrow = i < calls.length - 1
               ? "<div style='color:var(--muted);padding:4px 0 4px 12px'>↓</div>" : "";
             return "<div class='result-item'>"
-              + "<strong>" + c.agent + "</strong>"
-              + " &nbsp;<span style='color:var(--muted);font-size:0.85rem'>" + c.model + "</span>"
-              + " &nbsp;in:" + c.input_tokens + " out:" + c.output_tokens
+              + "<strong>" + esc(c.agent) + "</strong>"
+              + " &nbsp;<span style='color:var(--muted);font-size:0.85rem'>" + esc(c.model) + "</span>"
+              + " &nbsp;in:" + esc(c.input_tokens) + " out:" + esc(c.output_tokens)
               + cacheNote
               + "</div>" + arrow;
           }).join("");
@@ -668,21 +683,28 @@
             "white-space:pre-wrap;font-family:Georgia,serif;"
             + "font-size:0.97rem;line-height:1.6";
           formattedDetail.innerHTML =
-            "<pre style='" + preStyle + "'>" + body.formatted_content + "</pre>";
+            "<pre style='" + preStyle + "'>" + esc(body.formatted_content) + "</pre>";
         } else {
           formattedCard.style.display = "none";
         }
 
-        // MCP synthesis card — Claude's free-form synthesis when use_mcp=True.
+        // MCP synthesis card — Claude's grounded synthesis when use_mcp=True.
+        // Every item cites a file and line the model read via the tool loop.
         const mcpCard = document.getElementById("mcp-synthesis-card");
         const mcpDetail = document.getElementById("mcp-synthesis-detail");
-        if (body.mcp_synthesis) {
+        const mcpResult = body.mcp_result;
+        const mcpFallback = body.trace.mcp_fallback_reason;
+        if (mcpResult) {
           mcpCard.style.display = "";
-          const mcpPreStyle =
-            "white-space:pre-wrap;font-family:Georgia,serif;"
-            + "font-size:0.97rem;line-height:1.6";
           mcpDetail.innerHTML =
-            "<pre style='" + mcpPreStyle + "'>" + body.mcp_synthesis + "</pre>";
+            `<p class="result-summary-text">${esc(mcpResult.summary)}</p>`
+            + renderItems(mcpResult.items, "text");
+        } else if (mcpFallback) {
+          mcpCard.style.display = "";
+          mcpDetail.innerHTML =
+            "<p class='result-summary-text' style='color:var(--muted)'>"
+            + "MCP synthesis rejected; showing the deterministic result. Reason: "
+            + esc(mcpFallback) + "</p>";
         } else {
           mcpCard.style.display = "none";
         }
@@ -691,7 +713,7 @@
       } catch (error) {
         statusNode.textContent = "Request failed before the API responded.";
         resultDetail.innerHTML =
-          `<p class="result-summary-text" style="color:var(--accent-2)">${String(error)}</p>`;
+          `<p class="result-summary-text" style="color:var(--accent-2)">${esc(error)}</p>`;
       }
     });
   </script>

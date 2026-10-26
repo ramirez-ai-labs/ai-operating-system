@@ -24,6 +24,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from packages.shared.schemas.base import EvidenceItem
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +70,8 @@ def get_tool_definitions() -> list[dict[str, Any]]:
             "name": "read_file",
             "description": (
                 "Read the full contents of a file within the AI-OS data "
-                "directory. Use this to retrieve project notes, meeting "
+                "directory. Lines are numbered as '<line>| <text>' so they "
+                "can be cited. Use this to retrieve project notes, meeting "
                 "summaries, roadmap documents, or brand materials for "
                 "synthesis. Prefer reading specific files over listing "
                 "directories when the file path is already known."
@@ -146,7 +149,30 @@ class FilesystemMCPServer:
 
     def __init__(self, root_path: str | Path = "data/local_only") -> None:
         self.root = Path(root_path).resolve()
+        # Every line shown to the model via read_file or search_content, keyed
+        # by (source, line_number). This is the evidence a grounded synthesis
+        # may cite: the model can only cite what it was actually shown.
+        self._served: dict[tuple[str, int], EvidenceItem] = {}
         logger.info("FilesystemMCPServer root: %s", self.root)
+
+    def served_evidence(self) -> list[EvidenceItem]:
+        """Lines served to the model so far, in the order they were first served."""
+        return list(self._served.values())
+
+    def _record_served(self, file_path: Path, line_number: int, text: str) -> None:
+        excerpt = text.strip().strip("- ").strip()
+        if not excerpt:
+            return
+        source = file_path.relative_to(self.root).as_posix()
+        self._served.setdefault(
+            (source, line_number),
+            EvidenceItem(
+                source=source,
+                line_number=line_number,
+                title=file_path.stem.replace("_", " ").replace("-", " ").title(),
+                excerpt=excerpt[:280],
+            ),
+        )
 
     def call_tool(self, name: str, tool_input: dict[str, Any]) -> dict[str, Any]:
         """
@@ -226,7 +252,14 @@ class FilesystemMCPServer:
         except UnicodeDecodeError:
             raise ValueError(f"File is not valid UTF-8 text: {path}")
 
-        return f"=== {path} ===\n{content}"
+        # Number every line so the model can cite source + line_number, and
+        # record each served line as citable evidence.
+        numbered: list[str] = []
+        for line_number, line in enumerate(content.splitlines(), start=1):
+            numbered.append(f"{line_number:>4}| {line}")
+            self._record_served(target, line_number, line)
+        source = target.relative_to(self.root).as_posix()
+        return f"=== {source} ===\n" + "\n".join(numbered)
 
     def _search_content(
         self,
@@ -270,7 +303,8 @@ class FilesystemMCPServer:
 
             for lineno, line in enumerate(text.splitlines(), start=1):
                 if query_lower in line.lower():
-                    matches.append(f"{rel}:{lineno}: {line.strip()}")
+                    matches.append(f"{rel.as_posix()}:{lineno}: {line.strip()}")
+                    self._record_served(file_path, lineno, line)
                     if len(matches) >= max_results:
                         break
 

@@ -593,17 +593,36 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 9 (hardening before 9c)
 
-**Status: Complete. 364 tests passing.**
+**Status: Complete  -  shipped in PR #117. 364 tests passing.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| `packages/shared/config/live_calls.py`  -  one rule for every runner: no `--allow-live`, no live call; `--ci` skips (exit 0), interactive refuses (exit 1); key checked only after opt-in | Done | This PR |
-| Guard wired into `run_evals.py --backend claude`, the four `run_*_evals_claude.py` scripts, and `run_director_os_evals.py --provider claude` | Done | This PR |
-| `local_files.py`  -  stopwords and punctuation dropped from queries ("the" no longer dominates scoring) | Done | This PR |
-| Section-label boost is per domain: each graph declares `SECTION_LABELS` from the same prefixes its sections extract; default stays Director's `Win:/Risk:/Next:` (a generic "any Label:" boost was tried and rejected; it boosted `Status:` metadata and regressed 2 Director evals) | Done | This PR |
-| Interview OS treats a line ending in "?" as a key question; its empty-brief error now says to set focus, candidate_name, or role | Done | This PR |
-| `plan-prep-my-week` planner case now executed end to end, expecting `status: ok` | Done | This PR |
-| `tests/test_live_call_guard.py` (13, subprocesses use a fake key + unroutable base URL) + `tests/test_section_retrieval.py` (16); retrieval fakes in 4 test files accept the new optional `section_labels` argument | Done | This PR |
+| `packages/shared/config/live_calls.py`  -  one rule for every runner: no `--allow-live`, no live call; `--ci` skips (exit 0), interactive refuses (exit 1); key checked only after opt-in | Done | [#117](https://github.com/ramirez-ai-labs/ai-operating-system/pull/117) |
+| Guard wired into `run_evals.py --backend claude`, the four `run_*_evals_claude.py` scripts, and `run_director_os_evals.py --provider claude` | Done | [#117](https://github.com/ramirez-ai-labs/ai-operating-system/pull/117) |
+| `local_files.py`  -  stopwords and punctuation dropped from queries ("the" no longer dominates scoring) | Done | [#117](https://github.com/ramirez-ai-labs/ai-operating-system/pull/117) |
+| Section-label boost is per domain: each graph declares `SECTION_LABELS` from the same prefixes its sections extract; default stays Director's `Win:/Risk:/Next:` (a generic "any Label:" boost was tried and rejected; it boosted `Status:` metadata and regressed 2 Director evals) | Done | [#117](https://github.com/ramirez-ai-labs/ai-operating-system/pull/117) |
+| Interview OS treats a line ending in "?" as a key question; its empty-brief error now says to set focus, candidate_name, or role | Done | [#117](https://github.com/ramirez-ai-labs/ai-operating-system/pull/117) |
+| `plan-prep-my-week` planner case now executed end to end, expecting `status: ok` | Done | [#117](https://github.com/ramirez-ai-labs/ai-operating-system/pull/117) |
+| `tests/test_live_call_guard.py` (13, subprocesses use a fake key + unroutable base URL) + `tests/test_section_retrieval.py` (16); retrieval fakes in 4 test files accept the new optional `section_labels` argument | Done | [#117](https://github.com/ramirez-ai-labs/ai-operating-system/pull/117) |
+
+---
+
+## Sprint 27  -  Phase 9c Grounded MCP Tool Loop
+
+**Objective:** Close the last path that could return uncited content: the model-directed MCP loop's free-text `mcp_synthesis`.
+
+**Maps to:** plan.md Phase 9c
+
+**Status: Complete. 382 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| `filesystem_server.py`  -  `read_file` returns numbered lines; the server records every line served by `read_file` / `search_content` as `EvidenceItem`s (`served_evidence()`); `list_files` serves none | Done | This PR |
+| `orchestrator_integration.py`  -  `submit_grounded_synthesis` tool built on the shared `GROUNDED_ITEM_SCHEMA`; `tool_choice: any` on every round; grounded system prompt; loop finishes only by submit, provider failure, no tool call, or max rounds | Done | This PR |
+| `validate_submission`  -  citations checked with `parse_grounded_items` against served lines, text checked with `validate_grounded_item`; one bad item rejects the synthesis; evidence narrowed to cited lines | Done | This PR |
+| `McpSynthesis` schema; `OrchestratorResponse.mcp_result`; `mcp_synthesis` kept as the validated summary only; `WorkflowTrace.mcp_fallback_reason` | Done | This PR |
+| Legacy console: `esc()` applied to every API value assigned to `innerHTML` (model output, retrieved text, echoed errors); MCP card renders cited items or the fallback reason | Done | This PR |
+| `tests/test_grounded_mcp_loop.py` (18, mocked provider only); 3 loop tests and 2 orchestrator tests updated for the new contract (a text reply no longer ends the loop successfully) | Done | This PR |
 
 ---
 
