@@ -16,6 +16,7 @@ Ollama and ChromaDB are mocked in every test — the suite is CI-safe.
 """
 from __future__ import annotations
 
+from packages.shared.graphs import brand_os, director_os
 from packages.shared.schemas.director_os import EvidenceItem, WeeklyUpdateRequest
 
 # ---------------------------------------------------------------------------
@@ -101,14 +102,19 @@ def test_brand_os_graph_routes_through_chroma_when_backend_set(monkeypatch) -> N
 # ---------------------------------------------------------------------------
 
 
-def _make_chroma_backed_by_local_files():
-    """Return a _chroma_retrieve replacement that delegates to keyword retrieval."""
+def _make_chroma_backed_by_local_files(section_labels: tuple[str, ...]):
+    """Return a _chroma_retrieve replacement that delegates to keyword retrieval.
+
+    It ranks with the calling domain's section labels, as the real keyword
+    fallback does. Another domain's labels would favor lines this domain
+    cannot turn into sections.
+    """
     from packages.shared.retrieval.local_files import (
         retrieve_relevant_documents as _keyword,
     )
 
     def _local_files_via_chroma(base_path: str, query: str, limit: int) -> list[EvidenceItem]:
-        return _keyword(base_path, query, limit)
+        return _keyword(base_path, query, limit, section_labels)
 
     return _local_files_via_chroma
 
@@ -121,7 +127,7 @@ def test_director_os_eval_cases_all_pass_with_chroma_evidence(monkeypatch) -> No
     monkeypatch.setenv("RETRIEVAL_BACKEND", "chroma")
     monkeypatch.setattr(
         "packages.shared.retrieval.chroma._chroma_retrieve",
-        _make_chroma_backed_by_local_files(),
+        _make_chroma_backed_by_local_files(director_os.SECTION_LABELS),
     )
 
     from packages.shared.evaluations.director_os import (
@@ -144,7 +150,7 @@ def test_brand_os_eval_cases_all_pass_with_chroma_evidence(monkeypatch) -> None:
     monkeypatch.setenv("RETRIEVAL_BACKEND", "chroma")
     monkeypatch.setattr(
         "packages.shared.retrieval.chroma._chroma_retrieve",
-        _make_chroma_backed_by_local_files(),
+        _make_chroma_backed_by_local_files(brand_os.SECTION_LABELS),
     )
 
     from packages.shared.evaluations.brand_os import (
