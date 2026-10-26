@@ -259,6 +259,22 @@ def test_ollama_unreachable_falls_back_to_rules() -> None:
     assert usage == {}
 
 
+@pytest.mark.parametrize(
+    "error",
+    [TimeoutError("timed out"), ConnectionResetError("Remote end closed connection")],
+    ids=["read-timeout", "connection-reset"],
+)
+def test_ollama_transport_errors_fall_back_to_rules(error) -> None:
+    # A read timeout is a bare TimeoutError, not a URLError. It used to escape
+    # make_plan and fail the whole request on a slow Ollama host.
+    with patch("urllib.request.urlopen", side_effect=error):
+        plan, usage = make_plan(PlanRequest(goal=_PREP_MY_WEEK, planner="ollama"))
+    assert plan.planner_used == "rules"
+    assert plan.planner_requested == "ollama"
+    assert "Ollama unreachable" in plan.fallback_reason
+    assert usage == {}
+
+
 def test_ollama_text_only_reply_falls_back_to_rules() -> None:
     with patch("urllib.request.urlopen", return_value=_ollama_response([])):
         plan, _ = make_plan(PlanRequest(goal=_PREP_MY_WEEK, planner="ollama"))

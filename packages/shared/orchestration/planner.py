@@ -24,7 +24,6 @@ import json
 import logging
 import re
 from typing import Any
-from urllib import error as urllib_error
 from urllib import request as urllib_request
 
 from pydantic import ValidationError
@@ -265,8 +264,11 @@ def _plan_with_ollama(request: PlanRequest) -> tuple[list[tuple[str, Any]], str,
     try:
         with urllib_request.urlopen(http_request, timeout=60) as resp:
             body = json.loads(resp.read().decode("utf-8"))
-    except urllib_error.URLError as exc:
-        raise PlannerError(f"Ollama unreachable at {request.ollama_url}: {exc}") from exc
+    except OSError as exc:
+        # URLError covers refused connections, but a read timeout is a bare
+        # TimeoutError and a dropped connection a ConnectionResetError. All are
+        # OSError, and all must fall back to rules rather than fail the request.
+        raise PlannerError(f"Ollama unreachable at {request.ollama_url}: {exc!r}") from exc
     except json.JSONDecodeError as exc:
         raise PlannerError("Ollama returned a non-JSON response") from exc
 
