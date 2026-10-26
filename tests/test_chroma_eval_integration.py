@@ -16,6 +16,8 @@ Ollama and ChromaDB are mocked in every test — the suite is CI-safe.
 """
 from __future__ import annotations
 
+import pytest
+
 from packages.shared.schemas.director_os import EvidenceItem, WeeklyUpdateRequest
 
 # ---------------------------------------------------------------------------
@@ -242,3 +244,42 @@ def test_brand_os_chroma_runner_skips_in_ci_when_index_absent(monkeypatch) -> No
     runner = _load_runner_by_path("run_brand_os_evals_chroma")
     exit_code = runner.run_evals(ci_mode=True)
     assert exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_attr"),
+    [
+        ("brand_os", "BRAND_OS_CHROMA_EVALUATORS"),
+        ("interview_os", "INTERVIEW_OS_CHROMA_EVALUATORS"),
+        ("one_on_one_os", "ONE_ON_ONE_OS_CHROMA_EVALUATORS"),
+        ("director_os", None),  # no chroma set defined: the default evaluators apply
+    ],
+)
+def test_unified_runner_scores_chroma_with_the_domains_chroma_evaluators(
+    monkeypatch, domain, expected_attr
+) -> None:
+    """`run_evals.py --backend chroma` scores like the per-domain chroma scripts.
+
+    Semantic ranking legitimately picks different files than keyword ranking, so
+    domains define a chroma scorer set without exact-source checks. The unified
+    runner used to ignore it and score chroma runs with the keyword scorers.
+    """
+    import importlib
+
+    runner = _load_runner_by_path("run_evals")
+    mod = importlib.import_module(f"packages.shared.evaluations.{domain}")
+    seen: dict = {}
+
+    def fake_run(cases, **kwargs):
+        seen.update(kwargs)
+        return [{"case_id": "c", "passed": True, "results": []}]
+
+    monkeypatch.setenv("RETRIEVAL_BACKEND", "local_files")  # restored after the test
+    monkeypatch.setattr("packages.shared.retrieval.chroma.is_index_ready", lambda: True)
+    monkeypatch.setattr(mod, f"run_local_{domain}_evaluations", fake_run)
+    monkeypatch.setattr(runner, "_write_results", lambda *a, **k: "unused")
+
+    assert runner._run_chroma(domain, None, ci_mode=True) == 0
+
+    expected = getattr(mod, expected_attr) if expected_attr else None
+    assert seen.get("evaluators") is expected
