@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-06-17T00:04:52.914557+00:00",
+  "run_at": "2026-10-26T07:08:51.498229+00:00",
   "retrieval_backend": "chroma",
   "eval_path": "evaluations/one_on_one_os/meeting_brief_cases.json",
   "summary": {
@@ -23,77 +23,7 @@
         "fallback_to_deterministic": true
       },
       "outputs": {
-        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Sarah Sre Lead, 1On1 Team Health Notes.",
-        "action_items": [
-          {
-            "text": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 22
-          },
-          {
-            "text": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 27
-          },
-          {
-            "text": "Action: Sarah to publish the updated Terraform 1.9 runbook by June 20.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 15
-          },
-          {
-            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 17
-          }
-        ],
-        "talking_points": [
-          {
-            "text": "Talking Point: Review Sarah's current workload split \u2014 incident response vs. platform migration.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 9
-          },
-          {
-            "text": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 27
-          }
-        ],
-        "blockers": [
-          {
-            "text": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 22
-          },
-          {
-            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 17
-          }
-        ],
-        "kudos": [
-          {
-            "text": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter.",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 25
-          },
-          {
-            "text": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 27
-          },
-          {
-            "text": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 26
-          }
-        ],
         "evidence": [
-          {
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 3,
-            "title": "1On1 Sarah Sre Lead",
-            "excerpt": "**Attendees:** Victor (Manager), Sarah (SRE Lead)"
-          },
           {
             "source": "1on1_sarah_sre_lead.md",
             "line_number": 22,
@@ -101,34 +31,28 @@
             "excerpt": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR."
           },
           {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 25,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Kudos: Sarah  -  zero-downtime incident response June 7, 30% MTTR improvement over quarter."
+          },
+          {
             "source": "1on1_sarah_sre_lead.md",
-            "line_number": 7,
+            "line_number": 26,
             "title": "1On1 Sarah Sre Lead",
-            "excerpt": "Sarah has been managing incident response while also leading the Terraform 1.9 upgrade. Both tracks are active concurrently which is creating context-switching overhead."
+            "excerpt": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime  -  executive team noticed."
           },
           {
             "source": "1on1_sarah_sre_lead.md",
             "line_number": 9,
             "title": "1On1 Sarah Sre Lead",
-            "excerpt": "Talking Point: Review Sarah's current workload split \u2014 incident response vs. platform migration."
-          },
-          {
-            "source": "1on1_team_health_notes.md",
-            "line_number": 25,
-            "title": "1On1 Team Health Notes",
-            "excerpt": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter."
+            "excerpt": "Talking Point: Review Sarah's current workload split  -  incident response vs. platform migration."
           },
           {
             "source": "1on1_sarah_sre_lead.md",
             "line_number": 27,
             "title": "1On1 Sarah Sre Lead",
             "excerpt": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter."
-          },
-          {
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 26,
-            "title": "1On1 Sarah Sre Lead",
-            "excerpt": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime \u2014 executive team noticed."
           },
           {
             "source": "1on1_sarah_sre_lead.md",
@@ -147,9 +71,80 @@
             "line_number": 16,
             "title": "1On1 Sarah Sre Lead",
             "excerpt": "Action: Sarah to hand off Monday on-call shift to Marcus to reduce context switching."
+          },
+          {
+            "source": "1on1_team_health_notes.md",
+            "line_number": 12,
+            "title": "1On1 Team Health Notes",
+            "excerpt": "Action: Victor to escalate the SRE headcount request to VP Engineering before June 20 budget freeze."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 11,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Talking Point: Check in on the on-call rotation coverage  -  Marcus flagged last week that the SRE rotation is thin."
           }
         ],
-        "provider_usage": {}
+        "provider_usage": {},
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Sarah Sre Lead, 1On1 Team Health Notes.",
+        "action_items": [
+          {
+            "text": "Action: Sarah to publish the updated Terraform 1.9 runbook by June 20.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 15
+          },
+          {
+            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          },
+          {
+            "text": "Action: Sarah to hand off Monday on-call shift to Marcus to reduce context switching.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 16
+          },
+          {
+            "text": "Action: Victor to escalate the SRE headcount request to VP Engineering before June 20 budget freeze.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 12
+          }
+        ],
+        "talking_points": [
+          {
+            "text": "Talking Point: Review Sarah's current workload split  -  incident response vs. platform migration.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 9
+          },
+          {
+            "text": "Talking Point: Check in on the on-call rotation coverage  -  Marcus flagged last week that the SRE rotation is thin.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 11
+          }
+        ],
+        "blockers": [
+          {
+            "text": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 22
+          }
+        ],
+        "kudos": [
+          {
+            "text": "Kudos: Sarah  -  zero-downtime incident response June 7, 30% MTTR improvement over quarter.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 25
+          },
+          {
+            "text": "Kudos: Sarah led the June 7 incident response with zero customer-visible downtime  -  executive team noticed.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 26
+          },
+          {
+            "text": "Kudos: Sarah's runbook improvements reduced mean time to recovery by 30% over the last quarter.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 27
+          }
+        ]
       },
       "results": [
         {
@@ -184,39 +179,18 @@
         "fallback_to_deterministic": true
       },
       "outputs": {
-        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Sarah Sre Lead, 1On1 Team Health Notes.",
-        "action_items": [],
-        "talking_points": [],
-        "blockers": [
-          {
-            "text": "Blocker: The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 21
-          },
-          {
-            "text": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply.",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 19
-          },
-          {
-            "text": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling).",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 21
-          }
-        ],
-        "kudos": [],
         "evidence": [
           {
             "source": "1on1_sarah_sre_lead.md",
             "line_number": 21,
             "title": "1On1 Sarah Sre Lead",
-            "excerpt": "Blocker: The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response."
+            "excerpt": "Blocker: The Terraform state migration is blocked on approval from the security team  -  ticket open for 12 days with no response."
           },
           {
             "source": "1on1_team_health_notes.md",
             "line_number": 19,
             "title": "1On1 Team Health Notes",
-            "excerpt": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply."
+            "excerpt": "Blocker: Security team is unresponsive on the Terraform state migration approval  -  12 days with no reply."
           },
           {
             "source": "1on1_team_health_notes.md",
@@ -228,16 +202,37 @@
             "source": "1on1_priya_ai_platform.md",
             "line_number": 21,
             "title": "1On1 Priya Ai Platform",
-            "excerpt": "Blocker: The LangSmith API key provisioning for the staging environment is pending IT \u2014 opened 8 days ago."
+            "excerpt": "Blocker: The LangSmith API key provisioning for the staging environment is pending IT  -  opened 8 days ago."
           },
           {
             "source": "1on1_marcus_devex_lead.md",
             "line_number": 22,
             "title": "1On1 Marcus Devex Lead",
-            "excerpt": "Blocker: Marcus's engineers can't start integration testing until the staging environment is stable \u2014 SRE owns this and it's been flaky."
+            "excerpt": "Blocker: Marcus's engineers can't start integration testing until the staging environment is stable  -  SRE owns this and it's been flaky."
           }
         ],
-        "provider_usage": {}
+        "provider_usage": {},
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Sarah Sre Lead, 1On1 Team Health Notes.",
+        "action_items": [],
+        "talking_points": [],
+        "blockers": [
+          {
+            "text": "Blocker: The Terraform state migration is blocked on approval from the security team  -  ticket open for 12 days with no response.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21
+          },
+          {
+            "text": "Blocker: Security team is unresponsive on the Terraform state migration approval  -  12 days with no reply.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 19
+          },
+          {
+            "text": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling).",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 21
+          }
+        ],
+        "kudos": []
       },
       "results": [
         {
@@ -272,45 +267,12 @@
         "fallback_to_deterministic": true
       },
       "outputs": {
-        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Team Health Notes, 1On1 Marcus Devex Lead.",
-        "action_items": [
-          {
-            "text": "Kudos: Marcus \u2014 CLI tool adoption by three teams, junior engineer mentorship.",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 26
-          }
-        ],
-        "talking_points": [],
-        "blockers": [
-          {
-            "text": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval.",
-            "source": "1on1_priya_ai_platform.md",
-            "line_number": 27
-          }
-        ],
-        "kudos": [
-          {
-            "text": "Kudos: Marcus \u2014 CLI tool adoption by three teams, junior engineer mentorship.",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 26
-          },
-          {
-            "text": "Kudos: Marcus mentored two junior engineers through their first production deployments this quarter.",
-            "source": "1on1_marcus_devex_lead.md",
-            "line_number": 27
-          },
-          {
-            "text": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter.",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 25
-          }
-        ],
         "evidence": [
           {
             "source": "1on1_team_health_notes.md",
             "line_number": 26,
             "title": "1On1 Team Health Notes",
-            "excerpt": "Kudos: Marcus \u2014 CLI tool adoption by three teams, junior engineer mentorship."
+            "excerpt": "Kudos: Marcus  -  CLI tool adoption by three teams, junior engineer mentorship."
           },
           {
             "source": "1on1_marcus_devex_lead.md",
@@ -320,24 +282,51 @@
           },
           {
             "source": "1on1_priya_ai_platform.md",
-            "line_number": 3,
+            "line_number": 27,
             "title": "1On1 Priya Ai Platform",
-            "excerpt": "**Attendees:** Victor (Manager), Priya (AI Platform Engineer)"
+            "excerpt": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval."
           },
           {
             "source": "1on1_team_health_notes.md",
             "line_number": 25,
             "title": "1On1 Team Health Notes",
-            "excerpt": "Kudos: Sarah \u2014 zero-downtime incident response June 7, 30% MTTR improvement over quarter."
+            "excerpt": "Kudos: Sarah  -  zero-downtime incident response June 7, 30% MTTR improvement over quarter."
           },
           {
             "source": "1on1_priya_ai_platform.md",
-            "line_number": 27,
+            "line_number": 16,
             "title": "1On1 Priya Ai Platform",
-            "excerpt": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval."
+            "excerpt": "Action: Priya to document the LangSmith dataset schema so other teams can contribute eval cases."
           }
         ],
-        "provider_usage": {}
+        "provider_usage": {},
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Team Health Notes, 1On1 Marcus Devex Lead.",
+        "action_items": [
+          {
+            "text": "Action: Priya to document the LangSmith dataset schema so other teams can contribute eval cases.",
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 16
+          }
+        ],
+        "talking_points": [],
+        "blockers": [],
+        "kudos": [
+          {
+            "text": "Kudos: Marcus  -  CLI tool adoption by three teams, junior engineer mentorship.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 26
+          },
+          {
+            "text": "Kudos: Marcus mentored two junior engineers through their first production deployments this quarter.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 27
+          },
+          {
+            "text": "Kudos: Priya presented the AI OS architecture to the CISO team and unblocked the data residency approval.",
+            "source": "1on1_priya_ai_platform.md",
+            "line_number": 27
+          }
+        ]
       },
       "results": [
         {
@@ -372,48 +361,6 @@
         "fallback_to_deterministic": true
       },
       "outputs": {
-        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Team Health Notes, 1On1 Sarah Sre Lead.",
-        "action_items": [
-          {
-            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 17
-          },
-          {
-            "text": "Action: Marcus to set up 30-minute syncs with each product team lead to align on portal requirements.",
-            "source": "1on1_marcus_devex_lead.md",
-            "line_number": 16
-          },
-          {
-            "text": "Blocker: The portal's design system dependency is owned by a team that hasn't responded to the API contract request in two weeks.",
-            "source": "1on1_marcus_devex_lead.md",
-            "line_number": 21
-          },
-          {
-            "text": "Action: Victor to unblock Priya's data governance request by escalating to the Data Council.",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 15
-          }
-        ],
-        "talking_points": [],
-        "blockers": [
-          {
-            "text": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling).",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 21
-          },
-          {
-            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 17
-          },
-          {
-            "text": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply.",
-            "source": "1on1_team_health_notes.md",
-            "line_number": 19
-          }
-        ],
-        "kudos": [],
         "evidence": [
           {
             "source": "1on1_team_health_notes.md",
@@ -431,7 +378,13 @@
             "source": "1on1_team_health_notes.md",
             "line_number": 19,
             "title": "1On1 Team Health Notes",
-            "excerpt": "Blocker: Security team is unresponsive on the Terraform state migration approval \u2014 12 days with no reply."
+            "excerpt": "Blocker: Security team is unresponsive on the Terraform state migration approval  -  12 days with no reply."
+          },
+          {
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21,
+            "title": "1On1 Sarah Sre Lead",
+            "excerpt": "Blocker: The Terraform state migration is blocked on approval from the security team  -  ticket open for 12 days with no response."
           },
           {
             "source": "1on1_marcus_devex_lead.md",
@@ -452,12 +405,6 @@
             "excerpt": "Blocker: Priya cannot finalize the retrieval metric baseline without access to the production query logs, which require a data governance approval."
           },
           {
-            "source": "1on1_sarah_sre_lead.md",
-            "line_number": 21,
-            "title": "1On1 Sarah Sre Lead",
-            "excerpt": "Blocker: The Terraform state migration is blocked on approval from the security team \u2014 ticket open for 12 days with no response."
-          },
-          {
             "source": "1on1_team_health_notes.md",
             "line_number": 15,
             "title": "1On1 Team Health Notes",
@@ -471,12 +418,54 @@
           },
           {
             "source": "1on1_priya_ai_platform.md",
-            "line_number": 16,
+            "line_number": 21,
             "title": "1On1 Priya Ai Platform",
-            "excerpt": "Action: Priya to document the LangSmith dataset schema so other teams can contribute eval cases."
+            "excerpt": "Blocker: The LangSmith API key provisioning for the staging environment is pending IT  -  opened 8 days ago."
           }
         ],
-        "provider_usage": {}
+        "provider_usage": {},
+        "meeting_summary": "One-on-One OS brief for meeting with the direct report. Grounded from local notes: 1On1 Team Health Notes, 1On1 Sarah Sre Lead.",
+        "action_items": [
+          {
+            "text": "Action: Victor to clear the backlog of infra PRs blocking Sarah's team by end of sprint.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 17
+          },
+          {
+            "text": "Action: Marcus to set up 30-minute syncs with each product team lead to align on portal requirements.",
+            "source": "1on1_marcus_devex_lead.md",
+            "line_number": 16
+          },
+          {
+            "text": "Action: Victor to unblock Priya's data governance request by escalating to the Data Council.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 15
+          },
+          {
+            "text": "Action: Victor to schedule a team retrospective for end of June to address context-switching concerns.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 14
+          }
+        ],
+        "talking_points": [],
+        "blockers": [
+          {
+            "text": "Blocker: IT ticket backlog is blocking two separate API key provisioning requests (LangSmith, internal tooling).",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 21
+          },
+          {
+            "text": "Blocker: Security team is unresponsive on the Terraform state migration approval  -  12 days with no reply.",
+            "source": "1on1_team_health_notes.md",
+            "line_number": 19
+          },
+          {
+            "text": "Blocker: The Terraform state migration is blocked on approval from the security team  -  ticket open for 12 days with no response.",
+            "source": "1on1_sarah_sre_lead.md",
+            "line_number": 21
+          }
+        ],
+        "kudos": []
       },
       "results": [
         {
