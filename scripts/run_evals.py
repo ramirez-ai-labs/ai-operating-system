@@ -182,7 +182,14 @@ def _run_chroma(
         "Running %d %s eval cases with RETRIEVAL_BACKEND=chroma...", len(cases), domain
     )
     run_fn = getattr(mod, f"run_local_{domain}_evaluations")
-    results = run_fn(cases)
+
+    # Semantic ranking legitimately picks different files than keyword ranking,
+    # so some domains define a chroma evaluator set without exact-source checks
+    # (the per-domain run_*_evals_chroma.py scripts use it too). Use it when the
+    # domain defines one; otherwise use the default.
+    chroma_evaluators = getattr(mod, f"{domain.upper()}_CHROMA_EVALUATORS", None)
+    run_kwargs = {"evaluators": chroma_evaluators} if chroma_evaluators is not None else {}
+    results = run_fn(cases, **run_kwargs)
 
     passed = sum(1 for r in results if r["passed"])
     failed_count = len(results) - passed
