@@ -36,7 +36,7 @@ def test_brand_os_graph_routes_prefixed_evidence_into_matching_sections(monkeypa
     """The graph should keep Insight, Podcast, and Improve lines in their own sections."""
     from packages.shared.graphs import brand_os as graph_module
 
-    def fake_retrieve_relevant_documents(*, base_path, query, limit):
+    def fake_retrieve_relevant_documents(*, base_path, query, limit, section_labels=None):
         return [
             EvidenceItem(
                 source="brand_week_x.md",
@@ -96,7 +96,7 @@ def test_brand_os_graph_uses_model_when_requested(monkeypatch) -> None:
         )
     ]
 
-    def fake_retrieve_relevant_documents(*, base_path, query, limit):
+    def fake_retrieve_relevant_documents(*, base_path, query, limit, section_labels=None):
         return fake_evidence
 
     fake_response = BrandContentDraftResponse(
@@ -142,7 +142,7 @@ def test_brand_os_graph_falls_back_to_deterministic_on_model_error(monkeypatch) 
     """When the model raises ValueError and fallback_to_deterministic=True, the graph succeeds."""
     from packages.shared.graphs import brand_os as graph_module
 
-    def fake_retrieve_relevant_documents(*, base_path, query, limit):
+    def fake_retrieve_relevant_documents(*, base_path, query, limit, section_labels=None):
         return [
             EvidenceItem(
                 source="brand_week_x.md",
@@ -184,7 +184,7 @@ def test_brand_os_graph_validate_response_triggers_fallback_on_empty_sections(
     """validate_response must fall back to deterministic when model returns empty sections."""
     from packages.shared.graphs import brand_os as graph_module
 
-    def fake_retrieve(*, base_path, query, limit):
+    def fake_retrieve(*, base_path, query, limit, section_labels=None):
         return [
             EvidenceItem(
                 source="brand_week_x.md",
@@ -225,7 +225,7 @@ def test_brand_os_graph_validate_response_raises_when_fallback_disabled(monkeypa
     """validate_response must raise when fallback is disabled and model output is invalid."""
     from packages.shared.graphs import brand_os as graph_module
 
-    def fake_retrieve(*, base_path, query, limit):
+    def fake_retrieve(*, base_path, query, limit, section_labels=None):
         return [
             EvidenceItem(
                 source="brand_week_x.md",
@@ -269,7 +269,7 @@ def test_brand_os_graph_raises_when_fallback_disabled_and_model_fails(monkeypatc
     """When fallback_to_deterministic=False and the model fails, the error should propagate."""
     from packages.shared.graphs import brand_os as graph_module
 
-    def fake_retrieve_relevant_documents(*, base_path, query, limit):
+    def fake_retrieve_relevant_documents(*, base_path, query, limit, section_labels=None):
         return [
             EvidenceItem(
                 source="brand_week_x.md",
@@ -314,7 +314,7 @@ def test_brand_os_non_claude_provider_falls_back_with_fallback_enabled(monkeypat
     monkeypatch.setattr(
         graph_module,
         "retrieve_relevant_documents",
-        lambda *, base_path, query, limit: [
+        lambda *, base_path, query, limit, section_labels=None: [
             EvidenceItem(
                 source="brand_week_x.md",
                 line_number=3,
@@ -344,7 +344,7 @@ def test_brand_os_non_claude_provider_raises_when_fallback_disabled(monkeypatch)
     monkeypatch.setattr(
         graph_module,
         "retrieve_relevant_documents",
-        lambda *, base_path, query, limit: [
+        lambda *, base_path, query, limit, section_labels=None: [
             EvidenceItem(
                 source="brand_week_x.md",
                 line_number=3,

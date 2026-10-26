@@ -90,7 +90,7 @@ make_plan ──Send×N──▶ run_step (parallel) ──▶ merge_results
 | Goals with no routing keywords, or "and" inside one deliverable | 5 | **0%** |
 | **All cases** | 19 | 73.7% |
 
-The last group ("Help me get ready for my conversation with Priya about her promotion case") is what the model planners exist for. CI gates the rules planner on the 14 cases it should solve. Score a model planner on all 19 with `python scripts/run_evals.py --domain planner --backend ollama` (local, free) or `--backend claude` (opt-in, uses the API).
+The last group ("Help me get ready for my conversation with Priya about her promotion case") is what the model planners exist for. CI gates the rules planner on the 14 cases it should solve. Score a model planner on all 19 with `python scripts/run_evals.py --domain planner --backend ollama` (local, free) or `--backend claude --allow-live` (opt-in, uses the API).
 
 ---
 

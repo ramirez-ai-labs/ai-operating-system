@@ -30,9 +30,13 @@ def retrieve_relevant_documents(
     base_path: str,
     query: str | None,
     limit: int,
+    section_labels: tuple[str, ...] | None = None,
 ) -> list[EvidenceItem]:
     """
     Route a retrieval request to the configured backend.
+
+    `section_labels` (the calling domain's line labels) tune keyword ranking;
+    semantic retrieval ignores them except on its keyword fallback.
 
     Director OS and Brand OS graphs call this instead of importing
     local_files directly so that backend selection stays out of workflow
@@ -56,10 +60,12 @@ def retrieve_relevant_documents(
             retrieve_relevant_documents as _chroma,
         )
         logger.debug("Retrieval backend: chroma (semantic)")
-        return _chroma(base_path, query, limit)
+        return _chroma(base_path, query, limit, section_labels)
 
     from packages.shared.retrieval.local_files import (
         retrieve_relevant_documents as _local,
     )
     logger.debug("Retrieval backend: local_files (keyword)")
-    return _local(base_path, query, limit)
+    if section_labels is None:
+        return _local(base_path, query, limit)
+    return _local(base_path, query, limit, section_labels)

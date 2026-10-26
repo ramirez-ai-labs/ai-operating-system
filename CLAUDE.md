@@ -36,7 +36,7 @@ python scripts/run_director_os_evals.py
 
 Run Director OS evals against the Claude provider (requires `ANTHROPIC_API_KEY`):
 ```bash
-python scripts/run_director_os_evals.py --provider claude
+python scripts/run_director_os_evals.py --provider claude --allow-live
 ```
 
 Run Brand OS evals:
@@ -58,7 +58,7 @@ python scripts/run_evals.py --domain planner --backend ollama
 
 Copy `.env.example` to `.env` and fill in keys. The system runs fully without any API keys  -  both `ANTHROPIC_API_KEY` and `LANGSMITH_API_KEY` are opt-in.
 
-**`.env` overrides your shell.** `scripts/run_evals.py` and the `scripts/run_*_evals_claude.py` runners load `.env` themselves. If `.env` contains `ANTHROPIC_API_KEY`, then `--backend claude` makes live API calls even when the variable is unset in the shell and `--ci` is passed. Test skip and fallback paths with unit tests and patched providers, not by running the Claude backend.
+**Live Claude evals need `--allow-live`.** The eval runners load `.env` themselves, so a key in `.env` is not an opt-in. Every runner that can call the Anthropic API (`run_evals.py --backend claude`, `run_*_evals_claude.py`, `run_director_os_evals.py --provider claude`) refuses without `--allow-live`: it skips with exit 0 under `--ci` and fails with exit 1 otherwise (`packages/shared/config/live_calls.py`, tested in `tests/test_live_call_guard.py`). Never add `--allow-live` to CI. Test skip and fallback paths with unit tests and patched providers.
 
 ## Key file locations
 
@@ -71,6 +71,8 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 | Planner/supervisor graph + `POST /plan` | `packages/shared/graphs/planner.py` |
 | Planner schemas | `packages/shared/schemas/planner.py` |
 | Merge-time grounding validation | `packages/shared/validation/plan.py` |
+| Live-API guard for eval runners | `packages/shared/config/live_calls.py` |
+| Per-domain retrieval section labels | `SECTION_LABELS` in each `packages/shared/graphs/<domain>.py` |
 | Planner eval cases | `evaluations/planner/planning_cases.json` |
 | Domain registry | `packages/shared/domains/__init__.py` (`_REGISTERED`), one spec per domain in `packages/shared/domains/<domain>.py` |
 | Model-facing tool definitions snapshot | `tests/snapshots/domain_tool_definitions.json` (regenerate: `python -m packages.shared.domains --write`) |
@@ -175,7 +177,7 @@ Use the unified dispatcher for new work:
 ```bash
 python scripts/run_evals.py                              # all domains, local
 python scripts/run_evals.py --domain director_os        # one domain
-python scripts/run_evals.py --domain director_os --backend claude
+python scripts/run_evals.py --domain director_os --backend claude --allow-live
 python scripts/run_evals.py --domain all --backend chroma --ci
 ```
 

@@ -33,7 +33,7 @@ def test_backend_defaults_to_local_files(monkeypatch) -> None:
 
     called_with: list[str] = []
 
-    def fake_local(base_path, query, limit):
+    def fake_local(base_path, query, limit, section_labels=None):
         called_with.append("local_files")
         return []
 
@@ -52,7 +52,7 @@ def test_backend_routes_to_chroma_when_env_set(monkeypatch) -> None:
 
     called_with: list[str] = []
 
-    def fake_chroma(base_path, query, limit):
+    def fake_chroma(base_path, query, limit, section_labels=None):
         called_with.append("chroma")
         return []
 
@@ -74,7 +74,7 @@ def test_backend_unknown_value_falls_back_to_local(monkeypatch, caplog) -> None:
 
     results: list = []
 
-    def fake_local(base_path, query, limit):
+    def fake_local(base_path, query, limit, section_labels=None):
         results.append("local_files")
         return []
 

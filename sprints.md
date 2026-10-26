@@ -572,18 +572,38 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 9b
 
-**Status: Complete. 335 tests passing.**
+**Status: Complete  -  shipped in PR #116. 335 tests passing.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| `schemas/planner.py`  -  `PlanRequest` (goal, planner, max_steps, operator settings), `PlanStep`, `Plan` (planner_used, fallback_reason), `StepResult`, `PlanResponse` (ok / partial / error) | Done | This PR |
-| `orchestration/planner.py`  -  `rules` planner (clause split + keyword routing, default domain, dedupe, max_steps); `ollama` and `claude` planners plan via parallel tool calls over `tool_definitions()`; every call validated against `DomainToolInput`; fallback to `rules` with recorded reason and retained token usage | Done | This PR |
-| `graphs/planner.py`  -  LangGraph supervisor: `make_plan` → `Send` fan-out → `run_step` → `merge_results`; `@traceable` on every node | Done | This PR |
-| `validation/plan.py`  -  generic merge-time grounding check over every `GroundedItem` in any domain response | Done | This PR |
-| `DomainSpec.request_from_tool_input`  -  tool input + operator settings → domain request, fields kept apart; `domain_for_tool_name`; public `match_keyword` and `build_trace` in the router | Done | This PR |
-| `POST /plan` in `apps/api/main.py`; `ClaudeProvider.complete(tool_choice=...)` | Done | This PR |
-| `evaluations/planner/planning_cases.json` (19 cases: 9 routing, 5 multi-domain, 4 keyword-free, 1 over-split) + `packages/shared/evaluations/planner.py`; CI gate on the 14 rules-supported cases; `--backend ollama` added to `scripts/run_evals.py` | Done | This PR |
-| `tests/test_planner.py` (34 tests, no live model calls) + 8 registry contract tests | Done | This PR |
+| `schemas/planner.py`  -  `PlanRequest` (goal, planner, max_steps, operator settings), `PlanStep`, `Plan` (planner_used, fallback_reason), `StepResult`, `PlanResponse` (ok / partial / error) | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+| `orchestration/planner.py`  -  `rules` planner (clause split + keyword routing, default domain, dedupe, max_steps); `ollama` and `claude` planners plan via parallel tool calls over `tool_definitions()`; every call validated against `DomainToolInput`; fallback to `rules` with recorded reason and retained token usage | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+| `graphs/planner.py`  -  LangGraph supervisor: `make_plan` → `Send` fan-out → `run_step` → `merge_results`; `@traceable` on every node | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+| `validation/plan.py`  -  generic merge-time grounding check over every `GroundedItem` in any domain response | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+| `DomainSpec.request_from_tool_input`  -  tool input + operator settings → domain request, fields kept apart; `domain_for_tool_name`; public `match_keyword` and `build_trace` in the router | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+| `POST /plan` in `apps/api/main.py`; `ClaudeProvider.complete(tool_choice=...)` | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+| `evaluations/planner/planning_cases.json` (19 cases: 9 routing, 5 multi-domain, 4 keyword-free, 1 over-split) + `packages/shared/evaluations/planner.py`; CI gate on the 14 rules-supported cases; `--backend ollama` added to `scripts/run_evals.py` | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+| `tests/test_planner.py` (34 tests, no live model calls) + 8 registry contract tests | Done | [#116](https://github.com/ramirez-ai-labs/ai-operating-system/pull/116) |
+
+---
+
+## Sprint 26  -  Live-Call Guard + Section-Aware Retrieval
+
+**Objective:** Make it impossible for an eval run to call the Anthropic API by accident, and fix the "must include at least one populated section" failures that made the headline "prep my week" plan return `partial`.
+
+**Maps to:** plan.md Phase 9 (hardening before 9c)
+
+**Status: Complete. 364 tests passing.**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| `packages/shared/config/live_calls.py`  -  one rule for every runner: no `--allow-live`, no live call; `--ci` skips (exit 0), interactive refuses (exit 1); key checked only after opt-in | Done | This PR |
+| Guard wired into `run_evals.py --backend claude`, the four `run_*_evals_claude.py` scripts, and `run_director_os_evals.py --provider claude` | Done | This PR |
+| `local_files.py`  -  stopwords and punctuation dropped from queries ("the" no longer dominates scoring) | Done | This PR |
+| Section-label boost is per domain: each graph declares `SECTION_LABELS` from the same prefixes its sections extract; default stays Director's `Win:/Risk:/Next:` (a generic "any Label:" boost was tried and rejected; it boosted `Status:` metadata and regressed 2 Director evals) | Done | This PR |
+| Interview OS treats a line ending in "?" as a key question; its empty-brief error now says to set focus, candidate_name, or role | Done | This PR |
+| `plan-prep-my-week` planner case now executed end to end, expecting `status: ok` | Done | This PR |
+| `tests/test_live_call_guard.py` (13, subprocesses use a fake key + unroutable base URL) + `tests/test_section_retrieval.py` (16); retrieval fakes in 4 test files accept the new optional `section_labels` argument | Done | This PR |
 
 ---
 

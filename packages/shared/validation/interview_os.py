@@ -12,7 +12,9 @@ def validate_interview_brief(response: InterviewBriefResponse) -> InterviewBrief
 
     if not any((response.key_questions, response.talking_points, response.red_flags)):
         raise ValueError(
-            "Interview brief must include at least one populated section."
+            "Interview brief must include at least one populated section. "
+            "Set focus, candidate_name, or role so retrieval can target the right notes, "
+            "or raise max_documents."
         )
 
     all_items = response.key_questions + response.talking_points + response.red_flags

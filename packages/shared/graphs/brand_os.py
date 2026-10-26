@@ -19,6 +19,17 @@ from packages.shared.validation.brand_os import validate_brand_content_draft
 
 logger = logging.getLogger(__name__)
 
+# Line labels each section extracts from. Retrieval boosts lines carrying
+# these labels so the evidence is made of lines this domain can use.
+_INSIGHT_PREFIXES = ("Insight:", "Workflow:")
+_PODCAST_PREFIXES = ("Podcast:",)
+_IMPROVEMENT_PREFIXES = ("Improve:", "Next:")
+SECTION_LABELS: tuple[str, ...] = (
+    *_INSIGHT_PREFIXES,
+    *_PODCAST_PREFIXES,
+    *_IMPROVEMENT_PREFIXES,
+)
+
 
 class BrandOSState(TypedDict, total=False):
     """State carried through the Brand OS content-draft graph."""
@@ -54,6 +65,7 @@ def retrieve_evidence(state: BrandOSState) -> BrandOSState:
         base_path=request.data_path,
         query=request.focus,
         limit=request.max_documents,
+        section_labels=SECTION_LABELS,
     )
     if not evidence:
         raise ValueError(
@@ -141,21 +153,21 @@ def _build_deterministic_response(
         post_outline=_collect_items(
             evidence,
             section_name="post_outline",
-            allowed_prefixes=("Insight:", "Workflow:"),
+            allowed_prefixes=_INSIGHT_PREFIXES,
             keywords=("insight", "win", "retrieval", "evaluation", "workflow"),
             limit=3,
         ),
         podcast_angles=_collect_items(
             evidence,
             section_name="podcast_angles",
-            allowed_prefixes=("Podcast:",),
+            allowed_prefixes=_PODCAST_PREFIXES,
             keywords=("podcast", "theme", "discussion", "leadership", "operating"),
             limit=2,
         ),
         repo_improvements=_collect_items(
             evidence,
             section_name="repo_improvements",
-            allowed_prefixes=("Improve:", "Next:"),
+            allowed_prefixes=_IMPROVEMENT_PREFIXES,
             keywords=("improve", "next", "validation", "filtering"),
             limit=3,
         ),

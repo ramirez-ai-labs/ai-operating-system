@@ -11,9 +11,9 @@ produces grounded, structured output — not a separate bespoke code path.
 
 Usage:
     # Local run (requires ANTHROPIC_API_KEY in .env)
-    python scripts/run_director_os_evals_claude.py
+    python scripts/run_director_os_evals_claude.py --allow-live
 
-    # CI (skips gracefully if key absent)
+    # CI (always skips: CI never makes live calls without --allow-live)
     python scripts/run_director_os_evals_claude.py --ci
 """
 
@@ -26,6 +26,12 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+from packages.shared.config.live_calls import (
+    ALLOW_LIVE_FLAG,
+    ALLOW_LIVE_HELP,
+    check_live_claude_run,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 logger = logging.getLogger(__name__)
@@ -47,18 +53,15 @@ RESULTS_PATH = (
 )
 
 
-def run_evals(ci_mode: bool = False) -> int:
+def run_evals(ci_mode: bool = False, allow_live: bool = False) -> int:
     """Run evals and return exit code (0 = pass, 1 = fail)."""
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        if ci_mode:
-            logger.info("ANTHROPIC_API_KEY not set — skipping Claude evals in CI")
-            return 0
-        logger.error(
-            "ANTHROPIC_API_KEY not set. "
-            "Add it to your .env to run live Claude evaluations."
-        )
-        return 1
+    # .env is loaded above, so the key's presence is not an opt-in. Live calls
+    # need --allow-live on this run (see packages/shared/config/live_calls.py).
+    stop = check_live_claude_run(
+        allow_live=allow_live, ci_mode=ci_mode, what="director_os Claude evals"
+    )
+    if stop is not None:
+        return stop
 
     from packages.shared.evaluations.director_os import (
         apply_provider_override,
@@ -116,10 +119,13 @@ def main() -> None:
     parser.add_argument(
         "--ci",
         action="store_true",
-        help="Skip gracefully when ANTHROPIC_API_KEY is absent (for CI use).",
+        help="Skip gracefully instead of failing when a live run is not permitted (CI).",
+    )
+    parser.add_argument(
+        ALLOW_LIVE_FLAG, dest="allow_live", action="store_true", help=ALLOW_LIVE_HELP
     )
     args = parser.parse_args()
-    sys.exit(run_evals(ci_mode=args.ci))
+    sys.exit(run_evals(ci_mode=args.ci, allow_live=args.allow_live))
 
 
 if __name__ == "__main__":

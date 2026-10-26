@@ -16,6 +16,17 @@ from packages.shared.validation.interview_os import validate_interview_brief
 
 logger = logging.getLogger(__name__)
 
+# Line labels each section extracts from. Retrieval boosts lines carrying
+# these labels so the evidence is made of lines this domain can use.
+_KEY_QUESTION_PREFIXES = ("Question:", "Q:")
+_TALKING_POINT_PREFIXES = ("Talking Point:", "Topic:", "Discuss:")
+_RED_FLAG_PREFIXES = ("Red Flag:", "Concern:", "Risk:", "Watch:")
+SECTION_LABELS: tuple[str, ...] = (
+    *_KEY_QUESTION_PREFIXES,
+    *_TALKING_POINT_PREFIXES,
+    *_RED_FLAG_PREFIXES,
+)
+
 
 class InterviewOSState(TypedDict, total=False):
     """State carried through the Interview OS brief graph."""
@@ -52,6 +63,7 @@ def retrieve_evidence(state: InterviewOSState) -> InterviewOSState:
         base_path=request.data_path,
         query=query,
         limit=request.max_documents,
+        section_labels=SECTION_LABELS,
     )
     if not evidence:
         raise ValueError(
@@ -138,21 +150,21 @@ def _build_deterministic_response(
         key_questions=_collect_items(
             evidence,
             section_name="key_questions",
-            allowed_prefixes=("Question:", "Q:"),
+            allowed_prefixes=_KEY_QUESTION_PREFIXES,
             keywords=("question", "ask", "explore", "probe", "assess"),
             limit=4,
         ),
         talking_points=_collect_items(
             evidence,
             section_name="talking_points",
-            allowed_prefixes=("Talking Point:", "Topic:", "Discuss:"),
+            allowed_prefixes=_TALKING_POINT_PREFIXES,
             keywords=("discuss", "cover", "highlight", "mention", "experience", "background"),
             limit=4,
         ),
         red_flags=_collect_items(
             evidence,
             section_name="red_flags",
-            allowed_prefixes=("Red Flag:", "Concern:", "Risk:", "Watch:"),
+            allowed_prefixes=_RED_FLAG_PREFIXES,
             keywords=("concern", "risk", "gap", "flag", "watch", "unclear", "missing"),
             limit=3,
         ),
@@ -230,6 +242,12 @@ def _matches_interview_section(
             lowered_excerpt.startswith(p) for p in other_prefixes
         ):
             return False
+
+    # Interview guides are mostly written as plain questions ("What happened,
+    # and what did you change afterward?") rather than "Question:" lines, so a
+    # line that ends in "?" is a key question even without a keyword.
+    if section_name == "key_questions" and lowered_excerpt.rstrip().endswith("?"):
+        return True
 
     return any(keyword in lowered_excerpt for keyword in keywords)
 

@@ -16,6 +16,19 @@ from packages.shared.validation.one_on_one_os import validate_meeting_brief
 
 logger = logging.getLogger(__name__)
 
+# Line labels each section extracts from. Retrieval boosts lines carrying
+# these labels so the evidence is made of lines this domain can use.
+_ACTION_ITEM_PREFIXES = ("Action:", "TODO:", "Follow-up:")
+_TALKING_POINT_PREFIXES = ("Talking Point:", "Topic:", "Discuss:")
+_BLOCKER_PREFIXES = ("Blocker:", "Blocked:", "Blocking:")
+_KUDOS_PREFIXES = ("Kudos:", "Win:", "Recognition:")
+SECTION_LABELS: tuple[str, ...] = (
+    *_ACTION_ITEM_PREFIXES,
+    *_TALKING_POINT_PREFIXES,
+    *_BLOCKER_PREFIXES,
+    *_KUDOS_PREFIXES,
+)
+
 
 class OneOnOneOSState(TypedDict, total=False):
     """State carried through the One-on-One OS brief graph."""
@@ -52,6 +65,7 @@ def retrieve_evidence(state: OneOnOneOSState) -> OneOnOneOSState:
         base_path=request.data_path,
         query=query,
         limit=request.max_documents,
+        section_labels=SECTION_LABELS,
     )
     if not evidence:
         raise ValueError(
@@ -138,28 +152,28 @@ def _build_deterministic_response(
         action_items=_collect_items(
             evidence,
             section_name="action_items",
-            allowed_prefixes=("Action:", "TODO:", "Follow-up:"),
+            allowed_prefixes=_ACTION_ITEM_PREFIXES,
             keywords=("action", "follow-up", "todo", "commit", "will", "by "),
             limit=4,
         ),
         talking_points=_collect_items(
             evidence,
             section_name="talking_points",
-            allowed_prefixes=("Talking Point:", "Topic:", "Discuss:"),
+            allowed_prefixes=_TALKING_POINT_PREFIXES,
             keywords=("discuss", "cover", "review", "check in", "talking"),
             limit=4,
         ),
         blockers=_collect_items(
             evidence,
             section_name="blockers",
-            allowed_prefixes=("Blocker:", "Blocked:", "Blocking:"),
+            allowed_prefixes=_BLOCKER_PREFIXES,
             keywords=("blocker", "blocked", "blocking", "waiting on", "pending", "no response"),
             limit=3,
         ),
         kudos=_collect_items(
             evidence,
             section_name="kudos",
-            allowed_prefixes=("Kudos:", "Win:", "Recognition:"),
+            allowed_prefixes=_KUDOS_PREFIXES,
             keywords=("kudos", "recognition", "great work", "shoutout", "achieved", "delivered"),
             limit=3,
         ),
