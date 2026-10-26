@@ -46,12 +46,14 @@ def retrieve_relevant_documents(
     # Turn a free-form query into simple keywords. This is intentionally basic:
     # the MVP is using understandable ranking rules instead of embeddings.
     keywords = _normalize_keywords(query)
-    matches: list[tuple[int, EvidenceItem]] = []
+    matches: list[tuple[float, EvidenceItem]] = []
     all_files = sorted(root.rglob("*.md"))
-    # Later files get a slightly higher tie-breaker so newer-looking notes can
-    # win when two files are otherwise similarly relevant.
+    # File order is a tie-breaker only: a fraction below 1, so it never outweighs
+    # a keyword hit (10) or a section label (2). As whole numbers it grew with
+    # the file count and buried labeled lines in older notes.
     file_rank = {
-        file_path.resolve(): len(all_files) - index for index, file_path in enumerate(all_files)
+        file_path.resolve(): (len(all_files) - index) / (len(all_files) + 1)
+        for index, file_path in enumerate(all_files)
     }
 
     for file_path in all_files:
@@ -113,11 +115,11 @@ def _extract_matching_lines(
     root: Path,
     text: str,
     keywords: list[str],
-    file_priority: int,
+    file_priority: float,
     section_labels: tuple[str, ...],
-) -> list[tuple[int, EvidenceItem]]:
+) -> list[tuple[float, EvidenceItem]]:
     """Convert a markdown file into ranked line-level evidence items."""
-    matches: list[tuple[int, EvidenceItem]] = []
+    matches: list[tuple[float, EvidenceItem]] = []
     title = file_path.stem.replace("_", " ").replace("-", " ").title()
 
     for line_number, raw_line in enumerate(text.splitlines(), start=1):
@@ -154,9 +156,9 @@ def _extract_matching_lines(
 def _line_score(
     line: str,
     keywords: list[str],
-    file_priority: int,
+    file_priority: float,
     section_labels: tuple[str, ...],
-) -> int:
+) -> float:
     """Rank lines by keyword overlap and common status markers."""
     lowered = line.lower()
     # The score is just a weighted keyword count plus a couple of simple boosts.
