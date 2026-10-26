@@ -56,6 +56,13 @@ EMBEDDING_MODEL = "nomic-embed-text"
 # process is sufficient — the collection is read-only at query time.
 _chroma_client: object | None = None
 
+# Semantic candidates fetched per requested line when the caller passes section
+# labels. Semantic rank decides which lines are candidates; labels decide which
+# of those the domain can turn into sections. 4 is the smallest factor that
+# passes every chroma eval case on the sample data (3 leaves a Brand OS case
+# with max_documents=1 and no usable line); larger factors gain nothing.
+_LABEL_CANDIDATE_FACTOR = 4
+
 
 def retrieve_relevant_documents(
     base_path: str,
@@ -69,9 +76,12 @@ def retrieve_relevant_documents(
     Falls back to keyword retrieval (local_files) on any error so that
     the system stays functional before the first ingest run and in
     environments where Ollama is offline.
+
+    `section_labels` apply to both paths: semantic results prefer lines with
+    one of the calling domain's labels, as keyword ranking does.
     """
     try:
-        return _chroma_retrieve(base_path, query or "", limit)
+        return _chroma_retrieve(base_path, query or "", limit, section_labels)
     except Exception as exc:
         logger.warning(
             "ChromaDB retrieval failed — falling back to keyword retrieval. "
@@ -106,7 +116,12 @@ def _get_chroma_client() -> object:
     return _chroma_client
 
 
-def _chroma_retrieve(base_path: str, query: str, limit: int) -> list[EvidenceItem]:
+def _chroma_retrieve(
+    base_path: str,
+    query: str,
+    limit: int,
+    section_labels: tuple[str, ...] | None = None,
+) -> list[EvidenceItem]:
     """
     Core ChromaDB query path. Raises on any error so the public wrapper
     can decide whether to fall back or propagate.
@@ -159,14 +174,26 @@ def _chroma_retrieve(base_path: str, query: str, limit: int) -> list[EvidenceIte
     # stays within projects/ and Brand OS retrieval stays within brand/.
     # The data_root stored during ingestion is the resolved absolute path
     # so it matches regardless of how the caller passes the relative path.
+    candidates = limit * _LABEL_CANDIDATE_FACTOR if section_labels else limit
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=min(limit, doc_count),
+        n_results=min(candidates, doc_count),
         where={"data_root": str(root)},
         include=["documents", "metadatas", "distances"],
     )
 
-    return _parse_results(results)
+    evidence = _parse_results(results, root)
+    if section_labels:
+        evidence = _prefer_section_lines(evidence, section_labels)
+    return evidence[:limit]
+
+
+def _prefer_section_lines(
+    evidence: list[EvidenceItem], section_labels: tuple[str, ...]
+) -> list[EvidenceItem]:
+    """Move lines carrying a section label first, keeping semantic order in each group."""
+    lowered = tuple(label.lower() for label in section_labels)
+    return sorted(evidence, key=lambda item: not item.excerpt.lower().startswith(lowered))
 
 
 def _embed(text: str, model: str, ollama_url: str) -> list[float]:
@@ -195,13 +222,16 @@ def is_index_ready() -> bool:
     return path.exists() and any(path.iterdir())
 
 
-def _parse_results(results: dict) -> list[EvidenceItem]:
+def _parse_results(results: dict, root: Path | None = None) -> list[EvidenceItem]:
     """
     Convert raw ChromaDB query results to EvidenceItem objects.
 
     results["documents"] and results["metadatas"] are each a list-of-lists
     because ChromaDB supports batched queries. We always send a single query
     so we take index [0].
+
+    `root` is the queried data path. Sources are cited relative to it, as
+    keyword retrieval cites them, rather than relative to the ingest root.
     """
     documents: list[str] = results.get("documents", [[]])[0]
     metadatas: list[dict] = results.get("metadatas", [[]])[0]
@@ -210,17 +240,27 @@ def _parse_results(results: dict) -> list[EvidenceItem]:
     for doc, meta in zip(documents, metadatas):
         if not doc:
             continue
-        raw_path = meta.get("relative_path", "unknown")
         evidence.append(
             EvidenceItem(
                 # Keep the full relative path (not just the basename) so
                 # citations match the local_files backend exactly — two files
                 # with the same name in different folders must stay
                 # distinguishable in the evidence a caller cites back.
-                source=raw_path,
+                source=_source_path(meta, root),
                 line_number=int(meta.get("line_number", 0)),
                 title=meta.get("title", ""),
                 excerpt=doc[:280],
             )
         )
     return evidence
+
+
+def _source_path(meta: dict, root: Path | None) -> str:
+    """Cite a line relative to the queried data path, falling back to the ingest path."""
+    if root is not None and meta.get("data_root") and meta.get("file_name"):
+        file_path = Path(meta["data_root"]) / meta["file_name"]
+        try:
+            return str(file_path.relative_to(root))
+        except ValueError:
+            pass
+    return meta.get("relative_path", "unknown")
