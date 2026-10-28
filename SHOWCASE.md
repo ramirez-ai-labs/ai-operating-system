@@ -600,7 +600,7 @@ not a summary of past runs.
 | | |
 |---|---|
 | **Used for** | CI gate on every PR to `main` |
-| **Pipeline steps** | `ruff` lint → `pytest` with coverage → 4 deterministic eval runners → 4 chroma eval runners (skipped if index absent) → multiagent eval runner |
+| **Pipeline steps** | `ruff` lint → `pytest` with coverage → 4 deterministic eval runners → multiagent eval runner → planner routing/planning set → 4 chroma eval runners (skipped if index absent); a separate job type-checks and builds the Next.js frontend |
 | **Where** | `.github/workflows/ci.yml` |
 | **Design principle** | All CI steps run without API keys. LangSmith and Claude evals are on-demand only — never blocking CI. |
 
@@ -611,7 +611,7 @@ not a summary of past runs.
 | **Used for** | Operator console — browser-based UI for running workflows and inspecting results |
 | **Key features used** | App Router, server/client component split, custom Tailwind color palette matching the brand, TypeScript type guards for 4 domain response shapes |
 | **Where** | `apps/web/` |
-| **Features** | Domain tabs, adaptive form (domain-specific fields), grounded sections with `source:line_number` chips, TracePane with routing rationale / execution metadata / cache hit badge / agent pipeline visualization, Evidence accordion, Raw JSON drawer |
+| **Features** | Domain tabs, an Auto tab for `/orchestrate`, a Plan tab for `/plan` (per-step status, grounded results, and tool calls), adaptive form (domain-specific fields), grounded sections with `source:line_number` chips, validated MCP items or the reason they were dropped, TracePane with routing rationale / execution metadata / cache hit badge / agent pipeline visualization, Evidence accordion, Raw JSON drawer |
 
 ### ruff + pytest
 

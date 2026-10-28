@@ -44,6 +44,7 @@ Evidence grounding is enforced at the schema level via forced tool use: every ou
 | Two-stage agent pipeline | `ResearcherAgent → WriterAgent` with structured handoff contract |
 | LLM evaluation framework | 22 domain cases across 3 retrieval paths + 19 routing/planning cases, committed results, CI-gated |
 | Node-level observability | LangSmith `@traceable` on all 4 domain graphs — silent no-op without config |
+| Operator UI | Next.js frontend (`apps/web`) with per-domain tabs, an Auto tab for `/orchestrate`, and a Plan tab for `/plan`; type-checked and built in CI |
 | Prompt caching + cost visibility | `cache_read_input_tokens` / `cache_creation_input_tokens` in every `WorkflowTrace` |
 
 The architecture is designed to be adapted. The provider layer, the in-process filesystem tool loop, and the standalone MCP server are all swappable — designed for the kind of environment customization that enterprise AI work requires.
@@ -174,7 +175,19 @@ cp .env.example .env
 uvicorn apps.api.main:app --reload --env-file .env
 ```
 
-The system runs fully without any API keys. Model synthesis is opt-in via `use_model=True` on any request. Open the operator console at `http://127.0.0.1:8000/`.
+The system runs fully without any API keys. Model synthesis is opt-in via `use_model=True` on any request.
+
+Two browser UIs sit on the API:
+
+- **Next.js frontend** (`apps/web`): one tab per domain, an **Auto** tab that goes through `/orchestrate` (router, MCP loop, audience formatting), and a **Plan** tab that sends a goal to `/plan` and shows each step's grounded result, status, and tool call. Every item renders with its `source:line_number` citation.
+
+  ```bash
+  cd apps/web && npm install && npm run dev   # http://localhost:3000, API must be running
+  ```
+
+  The frontend reads the API URL from `NEXT_PUBLIC_API_URL` (default `http://127.0.0.1:8000`); see `apps/web/.env.local.example`.
+
+- **Legacy console** at `http://127.0.0.1:8000/`: a single page served by FastAPI that runs `/orchestrate`, with no build step.
 
 > **Sample data is synthetic.** The 1:1 meeting notes, project updates, and interview materials under `data/local_only/` (`one_on_one/`, `projects/`, `interviews/`) are fictional and were written for demos and evals. The people, team members, and candidates named in them are invented and do not refer to real colleagues.
 

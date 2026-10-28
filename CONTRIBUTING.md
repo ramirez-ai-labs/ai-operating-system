@@ -16,7 +16,11 @@ Start the API server:
 uvicorn apps.api.main:app --reload --env-file .env
 ```
 
-Open the console at `http://127.0.0.1:8000/`.
+Open the legacy console at `http://127.0.0.1:8000/`, or start the Next.js frontend:
+
+```bash
+cd apps/web && npm install && npm run dev   # http://localhost:3000
+```
 
 ## Branch and commit rules
 
@@ -38,7 +42,8 @@ python scripts/run_evals.py --domain director_os
 CI runs `ruff`, `pytest`, and local eval steps for all four domains (Director OS, Brand OS,
 Interview OS, One-on-One OS) — plus a Director OS multi-agent set, the planner
 routing/planning set, and a ChromaDB pass per domain (skipped when no index is present),
-ten eval steps in total. The build must be green before merge.
+ten eval steps in total. A separate job type-checks and builds the Next.js frontend
+(`npm run type-check && npm run build` in `apps/web`). The build must be green before merge.
 
 ## Architecture rules
 
@@ -76,6 +81,7 @@ Use `.github/ISSUE_TEMPLATE/workflow.md` to propose new domains before building.
 - [ ] Local evals pass (`scripts/run_director_os_evals.py`)
 - [ ] New domain? All 10 steps above are complete and `tests/test_domain_registry.py` passes
 - [ ] Evidence grounding verified (every output item has `source` + `line_number`)
+- [ ] Changed a request or response schema? `apps/web/src/lib/types.ts` updated and `npm run type-check` passes
 - [ ] No API keys committed
 
 ## Questions?

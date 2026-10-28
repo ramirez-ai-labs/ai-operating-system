@@ -155,7 +155,9 @@ export function WorkflowForm({ domain, values, onChange, onSubmit, loading, stat
               className={inputClass}
             >
               <option value="claude">Claude Haiku (default)</option>
-              <option value="ollama">Ollama (local)</option>
+              <option value="ollama" disabled={!cfg.supportsOllama}>
+                {cfg.supportsOllama ? 'Ollama (local)' : 'Ollama (Director OS only)'}
+              </option>
             </select>
           </Field>
 

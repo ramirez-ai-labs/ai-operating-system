@@ -101,3 +101,31 @@ jobs:
         with:
           name: coverage-report
           path: coverage.xml
+
+  web:
+    name: Next.js Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # A missing or git-ignored source module fails here, not on a reviewer's machine.
+      - name: Type-check frontend
+        run: npm run type-check
+
+      - name: Build frontend
+        run: npm run build

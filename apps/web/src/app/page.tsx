@@ -6,6 +6,8 @@ import { DOMAIN_CONFIG } from '@/lib/types'
 import { runWorkflow, checkHealth } from '@/lib/api'
 import type { FormValues } from '@/lib/api'
 import { DomainTabs } from '@/components/DomainTabs'
+import type { Tab } from '@/components/DomainTabs'
+import { PlanPanel } from '@/components/PlanPanel'
 import { WorkflowForm } from '@/components/WorkflowForm'
 import { ResultsPane } from '@/components/ResultsPane'
 import { TracePane } from '@/components/TracePane'
@@ -29,6 +31,7 @@ function defaultValues(domain: Domain): FormValues {
 }
 
 export default function Page() {
+  const [tab, setTab] = useState<Tab>('director_os')
   const [domain, setDomain] = useState<Domain>('director_os')
   const [values, setValues] = useState<FormValues>(defaultValues('director_os'))
   const [loading, setLoading] = useState(false)
@@ -49,6 +52,11 @@ export default function Page() {
     setError(null)
     setStatus('Ready. Configure and run a workflow.')
   }, [])
+
+  const handleTabChange = useCallback((t: Tab) => {
+    setTab(t)
+    if (t !== 'plan') handleDomainChange(t)
+  }, [handleDomainChange])
 
   const handleValuesChange = useCallback((v: FormValues) => {
     setValues(v)
@@ -136,11 +144,18 @@ export default function Page() {
         <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-muted">
           Domain
         </p>
-        <DomainTabs active={domain} onChange={handleDomainChange} />
-        <p className="mt-3 text-xs text-aios-muted">{cfg.description}</p>
+        <DomainTabs active={tab} onChange={handleTabChange} />
+        <p className="mt-3 text-xs text-aios-muted">
+          {tab === 'plan'
+            ? 'Turn one goal into steps across domains (/plan). Steps run in parallel; each is re-validated for grounding at merge.'
+            : cfg.description}
+        </p>
       </div>
 
-      {/* Main workspace */}
+      {tab === 'plan' ? (
+        <PlanPanel />
+      ) : (
+      /* Main workspace */
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
 
         {/* Form panel */}
@@ -190,6 +205,7 @@ export default function Page() {
 
         </div>
       </div>
+      )}
 
       {/* Footer */}
       <footer className="mt-12 border-t border-aios-line pt-6">
@@ -198,11 +214,11 @@ export default function Page() {
             AI Operating System · Evidence-grounded synthesis from local notes
           </p>
           <div className="flex gap-4 text-xs text-aios-muted">
-            <span>246 tests passing</span>
-            <span>·</span>
             <span>4 domains</span>
             <span>·</span>
-            <span>22 eval cases</span>
+            <span>22 domain eval cases</span>
+            <span>·</span>
+            <span>19 planner eval cases</span>
           </div>
         </div>
       </footer>

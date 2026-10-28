@@ -20,7 +20,8 @@ The repository is a fully implemented multi-agent AI operating system. Sprints 1
 
 Current implemented areas include:
 
-- a local FastAPI service under `apps/api` with an operator console at `/`
+- a local FastAPI service under `apps/api` with a legacy operator console at `/`
+- a Next.js frontend under `apps/web` with per-domain tabs, an Auto tab for `/orchestrate`, and a Plan tab for `/plan`
 - a Chief of Staff orchestrator with Ollama LLM classification routing and keyword fallback
 - a graph-backed `Director OS` weekly update workflow using LangGraph
 - `Brand OS`, `Interview OS`, and `One-on-One OS` workflows on the same shared graph foundation

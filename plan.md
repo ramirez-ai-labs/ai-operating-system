@@ -43,7 +43,7 @@ The repository currently includes:
 
 The repository also includes:
 
-- a Next.js frontend under `apps/web` with domain tabs, workflow form, results pane, and trace pane (shipped Phase 8, PRs #104–105)
+- a Next.js frontend under `apps/web` with domain tabs, workflow form, results pane, and trace pane (shipped Phase 8, PRs #104–105), plus a Plan tab for `/plan` (Sprint 29); type-checked and built in CI
 
 ## Guiding Principles
 
@@ -543,6 +543,9 @@ The MCP loop ends only through a forced, schema-checked submit; every item is va
 
 **Sprint 28  -  Retrieval and planner hardening (complete, PRs #119–123):**
 File order only breaks ties in keyword retrieval. Chroma retrieval honors each domain's section labels and cites query-relative paths, and the unified runner scores Chroma runs with each domain's Chroma evaluators. The Ollama planner falls back to `rules` on timeouts, and tests block live Ollama calls. The `llama3.2` planner baseline is committed.
+
+**Sprint 29  -  Frontend fix + Plan tab (complete, PR #126):**
+`apps/web/src/lib/` (the API client and types every component imports) had never been committed: the Python `.gitignore` rule `lib/` matched it, so the frontend failed to build from any clone. The folder is restored and un-ignored, a CI job now type-checks and builds the frontend, the Auto tab renders validated MCP items, and a Plan tab runs `/plan` from the browser.
 
 **Ollama planner baseline (`evaluations/planner/results_ollama.json`):**
 `llama3.2` (3B) scores 5/19, and 0/5 on the keyword-free and over-split cases, below the rules planner's 14/14 on the cases it supports. Of its plans:
