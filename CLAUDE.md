@@ -22,7 +22,12 @@ Start the Next.js frontend (requires the API server running first):
 cd apps/web && npm install && npm run dev
 ```
 
-Open the Next.js frontend at `http://localhost:3000/`.
+Open the Next.js frontend at `http://localhost:3000/`. It has a tab per domain, an Auto tab (`/orchestrate`), and a Plan tab (`/plan`). Set `NEXT_PUBLIC_API_URL` in `apps/web/.env.local` if the API is not on `http://127.0.0.1:8000`.
+
+Type-check and build the frontend (CI runs both):
+```bash
+cd apps/web && npm run type-check && npm run build
+```
 
 Run tests:
 ```bash
@@ -65,6 +70,9 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 | What | Where |
 |---|---|
 | Next.js frontend | `apps/web/src/app/page.tsx` |
+| Frontend API client | `apps/web/src/lib/api.ts` |
+| Frontend types (mirror the Pydantic schemas) | `apps/web/src/lib/types.ts` |
+| Frontend Plan tab | `apps/web/src/components/PlanPanel.tsx` |
 | API entry point | `apps/api/main.py` |
 | Chief of Staff routing | `packages/shared/orchestration/chief_of_staff.py` |
 | Planner (rules / Ollama / Claude) | `packages/shared/orchestration/planner.py` |
@@ -112,6 +120,7 @@ Copy `.env.example` to `.env` and fill in keys. The system runs fully without an
 - Domain spec modules import their workflow inside `run`, not at module level, so importing the registry (and starting the MCP server) does not load LangGraph or ChromaDB.
 - The planner's default is `rules`, which is deterministic and needs no model. A model plan (`ollama`/`claude`) is used only after every tool call validates against its domain's `DomainToolInput` and the plan fits `max_steps`. Otherwise the planner falls back to `rules` and records `plan.fallback_reason`. Do not let planner output set operator settings; those come only from `PlanRequest.operator_settings()`.
 - The MCP tool loop (`packages/shared/mcp/orchestrator_integration.py`) can only finish through `submit_grounded_synthesis`, with `tool_choice: any` on every round. Each submitted item must cite a `(source, line_number)` that the filesystem server recorded as served, and must pass `validate_grounded_item` against that line. Never return or render unvalidated MCP text; on failure, set `trace.mcp_fallback_reason` and return the deterministic workflow result.
+- `apps/web/src/lib/types.ts` mirrors the Pydantic response schemas field for field. When a request or response schema changes, update it in the same PR; the CI `web` job type-checks every component against it.
 - The legacy console (`apps/api/templates/console.html`) passes every API value through `esc()` before assigning `innerHTML`. API values include model output and echoed input.
 - The supervisor re-validates every step's grounding at merge (`validation/plan.py`). A step that fails is reported as `status: "error"` in the response, never dropped or passed through.
 - Deterministic fallback must always be available. Any model-assisted path must have a fallback when `fallback_to_deterministic=True`.
@@ -199,5 +208,7 @@ GitHub Actions runs on every PR to `main`:
 - `python scripts/run_one_on_one_os_evals.py` (local evals, no API key)
 - `python scripts/run_evals.py --domain planner --backend local --ci` (rules planner, gated on the 14 cases it should solve)
 - Chroma evals (all 4 domains, skip gracefully in CI if index absent)
+
+A separate `web` job runs `npm ci`, `npm run type-check`, and `npm run build` in `apps/web`.
 
 LangSmith-backed evals are on-demand only and not run in CI.

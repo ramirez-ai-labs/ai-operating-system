@@ -104,15 +104,24 @@ export function ResultsPane({ result, domain, error }: Props) {
         </div>
       )}
 
-      {/* MCP synthesis */}
-      {result.mcpSynthesis && (
+      {/* MCP synthesis — only items that cite a line the model actually read */}
+      {result.mcpResult && (
         <div className="rounded-2xl border border-aios-accent/20 bg-aios-panel p-5">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-accent">
             MCP Synthesis
           </p>
-          <pre className="whitespace-pre-wrap font-serif text-sm leading-relaxed text-aios-ink">
-            {result.mcpSynthesis}
-          </pre>
+          <p className="mb-4 text-sm leading-relaxed text-aios-ink">{result.mcpResult.summary}</p>
+          <GroundedSection label="Grounded items" items={result.mcpResult.items} />
+        </div>
+      )}
+      {result.trace?.mcp_fallback_reason && (
+        <div className="rounded-2xl border border-aios-accent2/30 bg-aios-panel p-5">
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-aios-accent2">
+            MCP synthesis dropped
+          </p>
+          <p className="text-sm leading-relaxed text-aios-muted">
+            {result.trace.mcp_fallback_reason}. Showing the deterministic workflow result instead.
+          </p>
         </div>
       )}
 
