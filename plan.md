@@ -37,7 +37,7 @@ The repository currently includes:
 - ChromaDB staleness detection: per-path pre-flight document count before querying; clear warning + keyword fallback when collection exists but has no docs for the requested `data_root`
 - unified `scripts/run_evals.py` dispatcher auto-discovering domains from `packages/shared/evaluations/`; `--domain`, `--backend`, `--langsmith`, `--ci` flags replace 12 standalone scripts
 - `config/models.yaml` as the single source of truth for default model IDs, read by `packages/shared/config/models.py`; the validated default is test-enforced
-- 254 tests passing (6 skipped without API keys); local evals for all four domains in CI; chroma evals skip gracefully when index absent
+- 398 tests passing (6 skipped without API keys); local evals for all four domains and the planner routing/planning set in CI; chroma evals skip gracefully when index absent
 - optional LangSmith tracing with `@traceable` on all graph nodes across all four domains
 - issue templates, `CONTRIBUTING.md`, branch protection on `main`
 
@@ -506,14 +506,14 @@ Each item ships as its own PR, in order — later items depend on earlier ones.
 - 9a implemented (Sprint 24, [#115](https://github.com/ramirez-ai-labs/ai-operating-system/pull/115)): `packages/shared/domains/` registry. Each `DomainSpec` pairs a model-facing `DomainTool` (name, description, narrow input schema, `to_tool_definition()`) with operator-facing routing, request-building, and trace rules. The router prompt (byte-identical to the previous hand-written one), keyword fallback, `_run_workflow`, `_build_trace`, API routes, and MCP tools are all derived from it. Tool definitions are snapshotted in `tests/snapshots/domain_tool_definitions.json` so description changes show up as reviewable diffs.
 - 9b implemented (Sprint 25): `POST /plan`. There are three planners: `rules` (the deterministic default), `ollama`, and `claude`. The model planners receive `tool_definitions()` and plan by making parallel tool calls; every call is validated against its domain's `DomainToolInput`, and any failure falls back to `rules` with a recorded reason. A LangGraph supervisor fans steps out with `Send`, re-validates grounding at merge (`validation/plan.py`), and returns ok / partial / error. A routing and planning eval set of 19 cases is CI-gated on the 14 the rules planner should solve. The rules planner scores 0% on the 5 keyword-free and over-split cases, which is the target for the model planners.
 - Exit criteria met by 9b: one goal fans out to multiple domains and the merged response passes grounding validation item by item; routing and planning accuracy are measured and gated in CI; the system still runs end to end with no API keys.
-- 9c implemented (Sprint 27): the MCP tool loop runs with `tool_choice: any` and can only finish through `submit_grounded_synthesis`. `read_file` returns numbered lines, the filesystem server records every line it serves, and each submitted item must cite a served `(source, line_number)` and pass `validate_grounded_item`. One bad item drops the whole synthesis; `trace.mcp_fallback_reason` records why, and the deterministic workflow result is returned. `OrchestratorResponse.mcp_result` carries the validated items and the cited evidence. The legacy console now escapes all API content.
+- 9c implemented (Sprint 27, [#118](https://github.com/ramirez-ai-labs/ai-operating-system/pull/118)): the MCP tool loop runs with `tool_choice: any` and can only finish through `submit_grounded_synthesis`. `read_file` returns numbered lines, the filesystem server records every line it serves, and each submitted item must cite a served `(source, line_number)` and pass `validate_grounded_item`. One bad item drops the whole synthesis; `trace.mcp_fallback_reason` records why, and the deterministic workflow result is returned. `OrchestratorResponse.mcp_result` carries the validated items and the cited evidence. The legacy console now escapes all API content.
 - Exit criterion met by 9c: no response path returns uncited content.
 - Next: 9d checkpointing + human approval.
 - Deferred: a fifth workflow domain (Recruiting OS). It adds breadth on the existing pattern; Phase 9 adds the orchestration depth the project is missing. With 9a in place, adding a domain no longer touches the router, API, or MCP server.
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–25 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. A planner/supervisor (`POST /plan`) runs multi-domain goals in parallel. 335 tests passing.
+Sprints 1–28 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. A planner/supervisor (`POST /plan`) runs multi-domain goals in parallel, and the MCP tool loop can only return grounded content. 398 tests passing (6 skipped without API keys).
 
 **Sprint 20  -  Debt paydown (complete, PRs #93–97):**
 Shared grounding primitives extracted to `grounding.py`. Orchestrator circuit breaker and trace token flush. Ghost token capture on fallback path. `section_counts` moved into domain schemas. `_COMPETING_PREFIXES` constant. `_get_chroma_client()` singleton.
@@ -538,8 +538,11 @@ Single source of truth for model IDs in `config/models.yaml`. MCP server defers 
 **Sprint 26  -  Live-call guard + section-aware retrieval (complete, PR #117):**
 Eval runners never call the Anthropic API without `--allow-live`, whatever `.env` contains. Keyword retrieval drops stopwords and boosts each domain's own section labels, so weak or missing focus no longer fails with "must include at least one populated section". The "prep my week" plan now runs end to end with `status: ok`.
 
-**Sprint 27  -  Phase 9c grounded MCP tool loop (complete):**
+**Sprint 27  -  Phase 9c grounded MCP tool loop (complete, PR #118):**
 The MCP loop ends only through a forced, schema-checked submit; every item is validated against the lines the model read, or the synthesis is dropped with a recorded reason. No response path returns uncited content.
+
+**Sprint 28  -  Retrieval and planner hardening (complete, PRs #119–123):**
+File order only breaks ties in keyword retrieval. Chroma retrieval honors each domain's section labels and cites query-relative paths, and the unified runner scores Chroma runs with each domain's Chroma evaluators. The Ollama planner falls back to `rules` on timeouts, and tests block live Ollama calls. The `llama3.2` planner baseline is committed.
 
 **Ollama planner baseline (`evaluations/planner/results_ollama.json`):**
 `llama3.2` (3B) scores 5/19, and 0/5 on the keyword-free and over-split cases, below the rules planner's 14/14 on the cases it supports. Of its plans:

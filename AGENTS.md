@@ -16,23 +16,25 @@ This repo should be treated as a reusable local-first agent system, not a generi
 
 ## Current Repository State
 
-The repository is a fully implemented multi-agent AI operating system. Sprints 1–22 are complete.
+The repository is a fully implemented multi-agent AI operating system. Sprints 1–28 are complete, including Phase 9a–9c (domain registry, planner/supervisor, grounded MCP tool loop).
 
 Current implemented areas include:
 
 - a local FastAPI service under `apps/api` with an operator console at `/`
 - a Chief of Staff orchestrator with Ollama LLM classification routing and keyword fallback
 - a graph-backed `Director OS` weekly update workflow using LangGraph
-- a `Brand OS` content-draft workflow on the same shared graph foundation
+- `Brand OS`, `Interview OS`, and `One-on-One OS` workflows on the same shared graph foundation
+- a domain registry (`packages/shared/domains/`) that is the single list of domains; the router prompt, keyword fallback, API routes, and MCP tools derive from it
+- a planner/supervisor (`POST /plan`) with `rules`, Ollama, and Claude planners, parallel step execution, and merge-time grounding validation
 - a `ClaudeWeeklyUpdateProvider` using the Anthropic tool use API for grounded structured output
 - prompt caching (`cache_control: ephemeral`) on the Claude provider with cache metrics in every `WorkflowTrace`
 - a `ResearcherAgent → WriterAgent` multi-agent pipeline for audience-targeted content formatting
-- an in-process filesystem MCP tool loop (`packages/shared/mcp/`) for Claude-driven retrieval traces
-- a standalone MCP server (`apps/mcp/server.py`) exposing both workflows as tools for Claude Desktop / Claude Code
+- an in-process filesystem MCP tool loop (`packages/shared/mcp/`) that can only finish through `submit_grounded_synthesis`, with every item validated against the lines the model read
+- a standalone MCP server (`apps/mcp/server.py`) exposing all four domain workflows as tools for Claude Desktop / Claude Code
 - ChromaDB semantic vector search backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
 - shared schemas, retrieval, validation, provider, observability, and evaluation helpers under `packages/shared`
 - a realistic enterprise scenario dataset under `data/local_only/`
-- 26 test files, 252 tests passing; local evals for all four domains (Director OS, Brand OS, Interview OS, One-on-One OS) running in CI
+- 398 tests passing (6 skipped without API keys); local evals for all four domains plus the planner routing/planning set running in CI
 - optional LangSmith tracing
 - GitHub Actions CI running lint, tests, and evals on every PR
 

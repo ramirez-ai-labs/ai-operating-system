@@ -193,9 +193,11 @@ GitHub Actions runs on every PR to `main`:
 - `ruff` lint
 - `pytest` with coverage
 - `python scripts/run_director_os_evals.py` (local evals, no API key)
+- `python scripts/run_director_os_evals.py --cases-path evaluations/director_os/multiagent_cases.json` (multi-agent set)
 - `python scripts/run_brand_os_evals.py` (local evals, no API key)
 - `python scripts/run_interview_os_evals.py` (local evals, no API key)
 - `python scripts/run_one_on_one_os_evals.py` (local evals, no API key)
+- `python scripts/run_evals.py --domain planner --backend local --ci` (rules planner, gated on the 14 cases it should solve)
 - Chroma evals (all 4 domains, skip gracefully in CI if index absent)
 
 LangSmith-backed evals are on-demand only and not run in CI.

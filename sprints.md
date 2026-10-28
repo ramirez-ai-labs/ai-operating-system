@@ -613,7 +613,7 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 9c
 
-**Status: Complete. 382 tests passing.**
+**Status: Complete  -  shipped in PR [#118](https://github.com/ramirez-ai-labs/ai-operating-system/pull/118). 382 tests passing.**
 
 | Step | Status | PR |
 | --- | --- | --- |
@@ -623,6 +623,24 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 | `McpSynthesis` schema; `OrchestratorResponse.mcp_result`; `mcp_synthesis` kept as the validated summary only; `WorkflowTrace.mcp_fallback_reason` | Done | This PR |
 | Legacy console: `esc()` applied to every API value assigned to `innerHTML` (model output, retrieved text, echoed errors); MCP card renders cited items or the fallback reason | Done | This PR |
 | `tests/test_grounded_mcp_loop.py` (18, mocked provider only); 3 loop tests and 2 orchestrator tests updated for the new contract (a text reply no longer ends the loop successfully) | Done | This PR |
+
+---
+
+## Sprint 28  -  Retrieval and Planner Hardening
+
+**Objective:** Fix the retrieval and planner defects found after 9c, and record an honest baseline for the local model planner.
+
+**Maps to:** plan.md Phase 9 (hardening before 9d)
+
+**Status: Complete  -  shipped in PRs #119–123. 398 tests passing (6 skipped without API keys).**
+
+| Step | Status | PR |
+| --- | --- | --- |
+| `local_files.py`  -  file order only breaks score ties; Interview OS empty-brief error suggests the fix that fits the request (set context fields, or broaden the ones already set); live-call guard test tightened | Done | [#119](https://github.com/ramirez-ai-labs/ai-operating-system/pull/119) |
+| `chroma.py`  -  semantic results prefer lines with the calling domain's section labels; citations use query-relative paths; Chroma results regenerated for all four domains | Done | [#120](https://github.com/ramirez-ai-labs/ai-operating-system/pull/120) |
+| `scripts/run_evals.py`  -  `--backend chroma` scores each domain with its own Chroma evaluators | Done | [#121](https://github.com/ramirez-ai-labs/ai-operating-system/pull/121) |
+| `planner.py`  -  Ollama planner falls back to `rules` on timeouts; `tests/conftest.py` blocks live Ollama calls in tests | Done | [#122](https://github.com/ramirez-ai-labs/ai-operating-system/pull/122) |
+| `evaluations/planner/results_ollama.json`  -  `llama3.2` baseline committed: 5/19 overall, 0/5 keyword-free; findings recorded in plan.md | Done | [#123](https://github.com/ramirez-ai-labs/ai-operating-system/pull/123) |
 
 ---
 
@@ -649,3 +667,9 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 20 is complete (PRs #93–97, 2026-06-17). Six technical-debt items resolved: shared grounding primitives extracted to `grounding.py`, orchestrator circuit breaker + trace token flush, ghost token capture on fallback path, `section_counts` moved into domain schemas, `_COMPETING_PREFIXES` constant, `_get_chroma_client()` singleton. 246 tests passing at sprint close.
 - Sprint 21 is complete (PRs #98–99, 2026-06-17). Validation + fallback parity extended to Brand OS, Interview OS, and One-on-One OS: `validate_response` node + `route_after_validation` conditional edge wired into all three graphs. Provider-fallback tests added for Interview OS and One-on-One OS. 246 tests passing at sprint close.
 - Sprint 22 is complete (PRs #100–102, 2026-06-17). ChromaDB staleness detection (per-path pre-flight count), unified `scripts/run_evals.py` auto-discovering dispatcher, `packages/shared/schemas/base.py` `BaseResponse` contract enforced across all four domains. SHOWCASE.md eval count corrected (22 cases). 246 tests passing at sprint close; Phase 8 (Next.js frontend, PRs #104–105) brought the total to 252.
+- Sprint 23 is complete (PR #114, 2026-10-25). Model IDs centralized in `config/models.yaml`; MCP server cold-start timeout fixed. 254 tests passing.
+- Sprint 24 is complete (PR #115, 2026-10-25). Phase 9a domain registry. 293 tests passing.
+- Sprint 25 is complete (PR #116, 2026-10-25). Phase 9b planner/supervisor and 19-case routing/planning eval set. 335 tests passing.
+- Sprint 26 is complete (PR #117, 2026-10-25). Live-call guard (`--allow-live`) and section-aware keyword retrieval. 364 tests passing.
+- Sprint 27 is complete (PR #118, 2026-10-25). Phase 9c grounded MCP tool loop. 382 tests passing.
+- Sprint 28 is complete (PRs #119–123, 2026-10-26). Retrieval and planner hardening; `llama3.2` planner baseline committed. 398 tests passing.

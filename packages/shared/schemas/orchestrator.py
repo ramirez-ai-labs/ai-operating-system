@@ -141,7 +141,8 @@ class WorkflowTrace(BaseModel):
     fallback_used: bool
     section_counts: dict[str, int]
     validation_summary: str
-    # "keyword-match" until Ollama classification replaces the keyword router.
+    # "ollama/<model>" when Ollama classified the request, "explicit" when the
+    # caller named the workflow, otherwise "keyword-match (<reason>)".
     routing_model: str = "keyword-match"
     # Prompt-caching fields — populated when Claude provider is used.
     cache_read_input_tokens: int = 0

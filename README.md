@@ -14,7 +14,7 @@ Four workflow domains share a common architecture: a routing layer that classifi
 
 Production AI deployment fails in predictable ways: hallucinated content with no citation trail, model paths that break silently when the LLM is unavailable, no way to measure whether synthesis quality regresses as the system evolves, and observability that requires code changes to turn on or off. AI-OS is designed to address all four at the architecture level — not as afterthoughts, but as invariants.
 
-Evidence grounding is enforced at the schema level via forced tool use: every output item must carry a `source` filename and `line_number`. No response path returns an uncited item. That includes the model-directed MCP tool loop, which must finish through a forced submit tool whose items are validated against the exact lines the model read. Deterministic fallback is always available — if model synthesis fails or no API key is present, the system produces grounded output from keyword extraction with no silent degradation. The evaluation harness runs 22 cases across three retrieval paths in CI on every PR. Observability is opt-in by environment variable: setting `LANGSMITH_TRACING=true` emits node-level traces across all four domain graphs with no code changes.
+Evidence grounding is enforced at the schema level via forced tool use: every output item must carry a `source` filename and `line_number`. No response path returns an uncited item. That includes the model-directed MCP tool loop, which must finish through a forced submit tool whose items are validated against the exact lines the model read. Deterministic fallback is always available — if model synthesis fails or no API key is present, the system produces grounded output from keyword extraction with no silent degradation. CI runs the 22 domain eval cases on the keyword retrieval path and the 19-case routing/planning set on every PR; semantic (ChromaDB) and live-Claude results are run on demand and committed. Observability is opt-in by environment variable: setting `LANGSMITH_TRACING=true` emits node-level traces across all four domain graphs with no code changes.
 
 ---
 
@@ -91,7 +91,7 @@ make_plan ──Send×N──▶ run_step (parallel) ──▶ merge_results
 | Goals with no routing keywords, or "and" inside one deliverable | 5 | **0%** |
 | **All cases** | 19 | 73.7% |
 
-The last group ("Help me get ready for my conversation with Priya about her promotion case") is what the model planners exist for. CI gates the rules planner on the 14 cases it should solve. Score a model planner on all 19 with `python scripts/run_evals.py --domain planner --backend ollama` (local, free) or `--backend claude --allow-live` (opt-in, uses the API).
+The last group ("Help me get ready for my conversation with Priya about her promotion case") is what the model planners exist for. The first model baseline shows the bar is real: `llama3.2` (3B) scores 5/19 overall and 0/5 on that group (`evaluations/planner/results_ollama.json`). Every invalid plan fell back to `rules` and none ran, so the guardrails held, but a local 3B model is not a viable planner. Scoring the Claude planner on the same 19 cases is next. CI gates the rules planner on the 14 cases it should solve. Score a model planner on all 19 with `python scripts/run_evals.py --domain planner --backend ollama` (local, free) or `--backend claude --allow-live` (opt-in, uses the API).
 
 ---
 
@@ -103,7 +103,7 @@ The system has three independently configurable layers: routing, retrieval, and 
 
 **Retrieval** — Two backends share a common interface. The keyword backend (`local_files.py`) does BM25-style scoring with no external dependencies — it runs in CI with no services required. The semantic backend (`chroma.py`) uses ChromaDB with `nomic-embed-text` embeddings via Ollama for richer recall. The backend selector reads `RETRIEVAL_BACKEND` from the environment and switches automatically. If the Chroma index is absent, it falls through to keyword retrieval.
 
-**Synthesis** — Each domain runs as a compiled LangGraph `StateGraph` with typed state. Nodes: `retrieve_evidence → build_draft → assemble_response → validate_response`. A conditional edge after `build_response` routes to `deterministic_fallback` when model synthesis fails and `fallback_to_deterministic=True`. The provider abstraction means switching synthesis providers is a single field on the request — no workflow logic changes.
+**Synthesis** — Each domain runs as a compiled LangGraph `StateGraph` with typed state. Director OS nodes: `retrieve_evidence → build_draft → assemble_response → validate_response`; the other three domains combine drafting and assembly into a single `build_response` node. A conditional edge after `validate_response` sends failed model output to the deterministic path when `fallback_to_deterministic=True`. The provider abstraction means switching synthesis providers is a single field on the request — no workflow logic changes.
 
 ```mermaid
 flowchart TB
@@ -220,28 +220,32 @@ curl -X POST http://127.0.0.1:8000/director-os/weekly-update \
   }'
 ```
 
-Every response includes a `trace` object showing which tools were called, what data was retrieved, and token counts including cache hits:
+The response carries the grounded sections plus `provider_usage` with token and prompt-cache counts. Send the same request through `/orchestrate` to also get a `trace`: which domain ran, which provider and model served it, whether fallback fired, and the cache hits.
+
+```bash
+curl -X POST http://127.0.0.1:8000/orchestrate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Weekly leadership update", "use_model": true, "provider": "claude"}'
+```
 
 ```json
 {
-  "result": "...",
+  "selected_workflow": "director_os",
   "trace": {
-    "mcp_tool_calls": [
-      {
-        "tool": "read_file",
-        "input": {"path": "projects/weekly-notes.md"},
-        "success": true,
-        "result_preview": "# Week of June 2026..."
-      }
-    ],
-    "total_input_tokens": 842,
+    "routing_model": "ollama/llama3.2",
+    "provider_used": "claude",
+    "model_id_used": "claude-haiku-4-5-20251001",
+    "fallback_used": false,
     "cache_read_input_tokens": 680,
-    "total_output_tokens": 312
-  }
+    "cache_creation_input_tokens": 0
+  },
+  "result": {"summary": "...", "wins": [...], "risks": [...], "next_steps": [...]}
 }
 ```
 
-Falls back to the Ollama / deterministic path when the key is absent.
+With `"use_mcp": true`, `trace.mcp_tool_calls` lists every `list_files` / `read_file` / `search_content` call the model made, and `mcp_result` holds the validated synthesis (see [MCP entry points](#mcp-entry-points)).
+
+Without an API key the Claude call fails and the workflow returns its deterministic result (`fallback_to_deterministic=true`, the default); `trace.fallback_used` records it.
 
 ---
 
@@ -263,7 +267,7 @@ Two MCP integration patterns:
 
 ## Eval results
 
-All 22 eval cases pass across all four domains on local (keyword) and semantic (ChromaDB) retrieval paths. Results are committed — CI fails if any case regresses.
+All 22 eval cases pass across all four domains on local (keyword) and semantic (ChromaDB) retrieval paths. Results are committed. CI fails if any keyword-path case regresses; the Chroma steps skip in CI when no index is present, so semantic results are refreshed locally.
 
 | Domain | Local (keyword) | Chroma (semantic) | Claude (live) |
 |---|---|---|---|

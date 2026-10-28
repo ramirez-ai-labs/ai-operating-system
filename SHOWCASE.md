@@ -19,9 +19,11 @@ source file and line number it came from. No black-box summaries - every structu
 output item is validated against the retrieved evidence before it reaches the caller,
 and anything that fails validation is rebuilt on the deterministic path.
 
-Today an LLM router sends each request to one of four fixed, validated workflows.
-The next layer — a planner that breaks a goal into steps across domains and calls
-those workflows as grounded tools — is the Phase 9 roadmap in [plan.md](plan.md).
+An LLM router sends each request to one of four fixed, validated workflows. On top
+of them, `POST /plan` turns a goal into steps across domains, runs them in parallel,
+and re-validates every step's grounding at merge (see the
+[Planner section of the README](README.md#planner)). Checkpointing, human approval,
+and external data sources are next — Phase 9 in [plan.md](plan.md).
 
 Four workflow domains, each solving a specific synthesis problem a technical leader
 faces weekly:
@@ -312,8 +314,9 @@ Each domain has eval cases covering three retrieval paths:
 | LangSmith (cloud) | `run_*_evals.py --langsmith` | `LANGSMITH_API_KEY` |
 
 All 22 eval cases pass across all 4 domains on the local and chroma paths.
-Results are committed as `results_chroma.json` per domain — the CI gate fails
-if any case regresses.
+Chroma results are committed as `results_chroma.json` per domain. CI fails if any
+keyword-path case regresses; the Chroma steps skip in CI when no index is present,
+so semantic results are refreshed locally and committed.
 
 ### Pydantic as the single source of truth
 
@@ -530,7 +533,7 @@ not a summary of past runs.
 |---|---|
 | **Used for** | Request/response contracts, eval case serialization, evidence grounding enforcement |
 | **Key features used** | `BaseModel` for all domain schemas, `Field()` with `ge`/`le` for range validation, `Literal` for provider enum constraints, `model_validate()` for JSON-to-typed-object deserialization, `model_dump()` for serialization to LangSmith and evaluators, `default_factory` for mutable defaults |
-| **Where** | `packages/shared/schemas/` — all 5 schema files; `packages/shared/evaluations/` — all 4 eval modules |
+| **Where** | `packages/shared/schemas/` — all 7 schema files; `packages/shared/evaluations/` — all 5 eval modules (4 domains + planner) |
 | **Architectural role** | The same schema models are shared by FastAPI (HTTP), LangGraph (state), the eval harness (case loading), and LangSmith (dataset sync). One definition drives the full stack. |
 
 ### LangGraph
