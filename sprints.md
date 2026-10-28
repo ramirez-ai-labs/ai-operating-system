@@ -650,16 +650,16 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 8 (frontend) and Phase 9b (planner)
 
-**Status: Complete  -  shipped in PR #PR_NUM.**
+**Status: Complete  -  shipped in PR #126.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| Root cause: `.gitignore` rule `lib/` (Python packaging) matched `apps/web/src/lib/`, so `api.ts` and `types.ts` were never committed and every component import failed; added `!apps/web/src/lib/` | Done | #PR_NUM |
-| `apps/web/src/lib/types.ts` rebuilt to mirror the Pydantic schemas (domain responses, `WorkflowTrace`, `McpSynthesis`, planner types); `api.ts` rebuilt with `/health`, the four domain routes, `/orchestrate`, `/plan`, and FastAPI 400/422 error formatting | Done | #PR_NUM |
-| Plan tab (`PlanPanel.tsx`): goal, planner (rules / Ollama / Claude), max steps; shows plan status, planner fallback reason, and per-step grounded results and tool calls | Done | #PR_NUM |
-| Auto tab renders `mcp_result` items with citations, or `trace.mcp_fallback_reason` when the synthesis was dropped (Phase 9c contract) | Done | #PR_NUM |
-| Ollama disabled in the provider picker for Claude-only domains; stale "246 tests passing" footer removed | Done | #PR_NUM |
-| CI `web` job: `npm ci`, `npm run type-check`, `npm run build`; `tsconfig.tsbuildinfo` untracked | Done | #PR_NUM |
+| Root cause: `.gitignore` rule `lib/` (Python packaging) matched `apps/web/src/lib/`, so `api.ts` and `types.ts` were never committed and every component import failed; added `!apps/web/src/lib/` | Done | [#126](https://github.com/ramirez-ai-labs/ai-operating-system/pull/126) |
+| `apps/web/src/lib/types.ts` rebuilt to mirror the Pydantic schemas (domain responses, `WorkflowTrace`, `McpSynthesis`, planner types); `api.ts` rebuilt with `/health`, the four domain routes, `/orchestrate`, `/plan`, and FastAPI 400/422 error formatting | Done | [#126](https://github.com/ramirez-ai-labs/ai-operating-system/pull/126) |
+| Plan tab (`PlanPanel.tsx`): goal, planner (rules / Ollama / Claude), max steps; shows plan status, planner fallback reason, and per-step grounded results and tool calls | Done | [#126](https://github.com/ramirez-ai-labs/ai-operating-system/pull/126) |
+| Auto tab renders `mcp_result` items with citations, or `trace.mcp_fallback_reason` when the synthesis was dropped (Phase 9c contract) | Done | [#126](https://github.com/ramirez-ai-labs/ai-operating-system/pull/126) |
+| Ollama disabled in the provider picker for Claude-only domains; stale "246 tests passing" footer removed | Done | [#126](https://github.com/ramirez-ai-labs/ai-operating-system/pull/126) |
+| CI `web` job: `npm ci`, `npm run type-check`, `npm run build`; `tsconfig.tsbuildinfo` untracked | Done | [#126](https://github.com/ramirez-ai-labs/ai-operating-system/pull/126) |
 
 ---
 
@@ -692,4 +692,4 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 26 is complete (PR #117, 2026-10-25). Live-call guard (`--allow-live`) and section-aware keyword retrieval. 364 tests passing.
 - Sprint 27 is complete (PR #118, 2026-10-25). Phase 9c grounded MCP tool loop. 382 tests passing.
 - Sprint 28 is complete (PRs #119–123, 2026-10-26). Retrieval and planner hardening; `llama3.2` planner baseline committed. 398 tests passing.
-- Sprint 29 is complete (PR #PR_NUM, 2026-10-27). Next.js frontend builds from a clean clone again (`apps/web/src/lib/` was git-ignored); Plan tab added; frontend type-check and build gated in CI.
+- Sprint 29 is complete (PR #126, 2026-10-27). Next.js frontend builds from a clean clone again (`apps/web/src/lib/` was git-ignored); Plan tab added; frontend type-check and build gated in CI.
