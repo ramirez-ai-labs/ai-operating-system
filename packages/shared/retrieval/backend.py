@@ -35,8 +35,9 @@ def retrieve_relevant_documents(
     """
     Route a retrieval request to the configured backend.
 
-    `section_labels` (the calling domain's line labels) tune keyword ranking;
-    semantic retrieval ignores them except on its keyword fallback.
+    `section_labels` (the calling domain's line labels) bias ranking on both
+    backends: keyword scoring boosts them, and semantic results prefer lines
+    that carry one.
 
     Director OS and Brand OS graphs call this instead of importing
     local_files directly so that backend selection stays out of workflow
