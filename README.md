@@ -107,56 +107,43 @@ The system has three independently configurable layers: routing, retrieval, and 
 
 ```mermaid
 flowchart TB
-    In([OrchestratorRequest]) --> MCP{"use_mcp?"}
-    MCP -->|true| MCPLoop["MCP Tool Loop\nLLM reads files via tool calls"]
-    MCP -->|false| CoS["Chief of Staff\nLocal LLM classification\n+ keyword fallback"]
-    MCPLoop --> CoS
+    Orch(["POST /orchestrate"]) --> CoS["Chief of Staff router<br/>explicit workflow · Ollama classification<br/>· keyword fallback"]
+    CoS --> MCP{"use_mcp?"}
+    MCP -->|true| MCPLoop["MCP tool loop · Claude<br/>list_files · read_file · search_content<br/>ends only via submit_grounded_synthesis;<br/>items checked against served lines<br/>→ mcp_result or mcp_fallback_reason"]
+    MCPLoop -->|"then run the domain<br/>with the model off"| R
+    MCP -->|false| R
 
-    CoS -->|director_os| Dir["Director OS\nretrieve_evidence"]
-    CoS -->|brand_os| Brand["Brand OS\nretrieve_evidence"]
-    CoS -->|interview_os| Interview["Interview OS\nretrieve_evidence"]
-    CoS -->|one_on_one_os| OneOnOne["One-on-One OS\nretrieve_evidence"]
+    Plan(["POST /plan"]) --> Planner["make_plan<br/>rules · Ollama · Claude planner"]
+    Planner --> PlanCheck{"every tool call valid<br/>and within max_steps?"}
+    PlanCheck -->|yes| Fan["Send × N<br/>run_step in parallel"]
+    PlanCheck -->|no| Rules["rules planner<br/>plan.fallback_reason recorded"]
+    Rules --> Fan
+    Fan -->|one domain per step| R
 
-    Dir --> DModel{"use_model?"}
-    DModel -->|"provider: claude"| DC["Claude\ntool use + prompt cache"]
-    DModel -->|"provider: ollama"| DO["Ollama\nlocal inference"]
-    DModel -->|false| DDet["Deterministic\nkeyword extraction"]
-    DC --> DVal["validate_response\nevidence grounding"]
-    DO --> DVal
-    DDet --> DVal
+    subgraph Domain["Domain workflow · Director, Brand, Interview, One-on-One OS"]
+        R["retrieve_evidence<br/>keyword or ChromaDB"] --> S{"use_model?"}
+        S -->|"provider: claude"| C["Claude<br/>forced tool use + prompt cache"]
+        S -->|"provider: ollama<br/>Director OS only"| O["Ollama<br/>local inference"]
+        S -->|false| D["Deterministic<br/>grounded extraction"]
+        C --> V["validate_response<br/>every item cites source + line_number"]
+        O --> V
+        D --> V
+        V -->|"model output failed<br/>fallback_to_deterministic"| D
+    end
 
-    Brand --> BModel{"use_model?"}
-    BModel -->|true| BC["Claude\ntool use"]
-    BModel -->|false| BDet["Deterministic\nsection formatter"]
+    V -->|"/plan step"| Merge["merge_results<br/>re-validates each step's grounding"]
+    Merge --> PlanResp(["PlanResponse<br/>status: ok · partial · error"])
 
-    Interview --> IModel{"use_model?"}
-    IModel -->|true| IC["Claude\ntool use"]
-    IModel -->|false| IDet["Deterministic\ngrounded extraction"]
+    V -->|"/orchestrate"| TA{"target_audience?"}
+    TA -->|set| Researcher["ResearcherAgent<br/>structured synthesis"]
+    Researcher --> Writer["WriterAgent<br/>audience formatting"]
+    Writer --> Resp(["OrchestratorResponse<br/>result + trace + cache metrics"])
+    TA -->|not set| Resp
 
-    OneOnOne --> OModel{"use_model?"}
-    OModel -->|true| OC["Claude\ntool use"]
-    OModel -->|false| ODet["Deterministic\ngrounded extraction"]
-
-    DVal --> TA{"target_audience?"}
-    BC --> TA
-    BDet --> TA
-    IC --> TA
-    IDet --> TA
-    OC --> TA
-    ODet --> TA
-
-    TA -->|set| Researcher["ResearcherAgent\nstructured synthesis"]
-    Researcher --> Writer["WriterAgent\naudience formatting"]
-    Writer --> RespA(["OrchestratorResponse\nformatted_content + agent_calls + trace"])
-    TA -->|not set| RespB(["OrchestratorResponse\nWorkflowTrace + cache metrics"])
-
-    style DC fill:#e8f5e9,stroke:#388e3c
-    style BC fill:#e8f5e9,stroke:#388e3c
-    style IC fill:#e8f5e9,stroke:#388e3c
-    style OC fill:#e8f5e9,stroke:#388e3c
+    style C fill:#e8f5e9,stroke:#388e3c
     style Researcher fill:#e8f5e9,stroke:#388e3c
     style Writer fill:#e8f5e9,stroke:#388e3c
-    style DO fill:#fff3e0,stroke:#f57c00
+    style O fill:#fff3e0,stroke:#f57c00
     style MCPLoop fill:#e3f2fd,stroke:#1565c0
 ```
 
