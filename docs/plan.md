@@ -547,7 +547,7 @@ File order only breaks ties in keyword retrieval. Chroma retrieval honors each d
 **Sprint 29  -  Frontend fix + Plan tab (complete, PR #126):**
 `apps/web/src/lib/` (the API client and types every component imports) had never been committed: the Python `.gitignore` rule `lib/` matched it, so the frontend failed to build from any clone. The folder is restored and un-ignored, a CI job now type-checks and builds the frontend, the Auto tab renders validated MCP items, and a Plan tab runs `/plan` from the browser.
 
-**Sprint 30  -  Planner input tightening (complete):**
+**Sprint 30  -  Planner input tightening (complete, PR #128):**
 `DomainToolInput` rejects a `data_path` that is not an existing directory, so an invented folder fails at planning and falls back to `rules` instead of failing at execution. The check lives on the shared tool input, so the standalone MCP server gets it too. `max_documents` already rejects values outside 1–20 and is unchanged.
 
 **Ollama planner baseline (`evaluations/planner/results_ollama.json`):**

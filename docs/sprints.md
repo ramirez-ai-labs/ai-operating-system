@@ -669,12 +669,12 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 
 **Maps to:** plan.md Phase 9 (hardening before the Claude planner baseline)
 
-**Status: Complete.**
+**Status: Complete  -  shipped in PR #128.**
 
 | Step | Status | PR |
 | --- | --- | --- |
-| `DomainToolInput` rejects a `data_path` that is not an existing directory (resolved against the working directory, as retrieval does); applies to the planner and the standalone MCP server | Done | pending |
-| Tests: invented folders and a file path rejected by the tool input; a Claude plan with an invented folder falls back to `rules` with the reason recorded | Done | pending |
+| `DomainToolInput` rejects a `data_path` that is not an existing directory (resolved against the working directory, as retrieval does); applies to the planner and the standalone MCP server | Done | [#128](https://github.com/ramirez-ai-labs/ai-operating-system/pull/128) |
+| Tests: invented folders and a file path rejected by the tool input; a Claude plan with an invented folder falls back to `rules` with the reason recorded | Done | [#128](https://github.com/ramirez-ai-labs/ai-operating-system/pull/128) |
 | Rerun the `llama3.2` planner baseline against the new check | Open | Ollama not available on the dev machine at merge time |
 
 ---
@@ -709,4 +709,4 @@ Tactical execution checklist for the current build cycle. Phases and long-term r
 - Sprint 27 is complete (PR #118, 2026-10-25). Phase 9c grounded MCP tool loop. 382 tests passing.
 - Sprint 28 is complete (PRs #119–123, 2026-10-26). Retrieval and planner hardening; `llama3.2` planner baseline committed. 398 tests passing.
 - Sprint 29 is complete (PR #126, 2026-10-27). Next.js frontend builds from a clean clone again (`apps/web/src/lib/` was git-ignored); Plan tab added; frontend type-check and build gated in CI.
-- Sprint 30 is complete (2026-10-29). Planner tool inputs reject `data_path` folders that do not exist. 402 tests passing.
+- Sprint 30 is complete (PR #128, 2026-10-29). Planner tool inputs reject `data_path` folders that do not exist. 402 tests passing.
