@@ -35,7 +35,7 @@ Current implemented areas include:
 - ChromaDB semantic vector search backed by Ollama `nomic-embed-text` embeddings, with flat-file fallback
 - shared schemas, retrieval, validation, provider, observability, and evaluation helpers under `packages/shared`
 - a realistic enterprise scenario dataset under `data/local_only/`
-- 398 tests passing (6 skipped without API keys); local evals for all four domains plus the planner routing/planning set running in CI
+- 402 tests passing (6 skipped without API keys); local evals for all four domains plus the planner routing/planning set running in CI
 - optional LangSmith tracing
 - GitHub Actions CI running lint, tests, and evals on every PR
 

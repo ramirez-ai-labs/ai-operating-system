@@ -199,6 +199,21 @@ def test_tool_input_rejects_paths_outside_allowed_root(data_path: str) -> None:
         DomainToolInput(data_path=data_path)
 
 
+@pytest.mark.parametrize(
+    "data_path",
+    [
+        # Invented folders, as the llama3.2 planner baseline produced.
+        "data/local_only/linkedin_posts",
+        "data/local_only/projects/q3",
+        # A file, not a directory.
+        "data/local_only/projects/director_week_13.md",
+    ],
+)
+def test_tool_input_rejects_paths_that_are_not_existing_directories(data_path: str) -> None:
+    with pytest.raises(ValidationError, match="not an existing directory"):
+        DomainToolInput(data_path=data_path)
+
+
 def test_validate_rejects_inconsistent_registries() -> None:
     director, brand = DOMAINS["director_os.weekly_update"], DOMAINS["brand_os.content_draft"]
 
