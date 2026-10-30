@@ -178,8 +178,8 @@ Use Interview OS as the canonical reference implementation.
 
 ## What's in progress
 
-See `sprints.md` for the active sprint checklist.
-See `plan.md` for the full phased roadmap (Phases 1–7).
+See `docs/sprints.md` for the active sprint checklist.
+See `docs/plan.md` for the full phased roadmap (Phases 1–9).
 
 ## Running evals
 
