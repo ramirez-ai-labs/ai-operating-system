@@ -39,13 +39,13 @@ Current implemented areas include:
 - optional LangSmith tracing
 - GitHub Actions CI running lint, tests, and evals on every PR
 
-The README, plan.md, and sprints.md are aligned with the actual implementation.
+The README, `docs/plan.md`, and `docs/sprints.md` are aligned with the actual implementation.
 
 Implications:
 
 - Do not claim a file, feature, workflow, or deployment path exists unless it is actually present in the repo.
 - When adding implementation, keep the README and the codebase aligned in the same change when practical.
-- Use `plan.md` for the phased roadmap and `sprints.md` for sprint-level status.
+- Use `docs/plan.md` for the phased roadmap and `docs/sprints.md` for sprint-level status.
 
 ## Expected Repo Shape
 

@@ -23,7 +23,7 @@ An LLM router sends each request to one of four fixed, validated workflows. On t
 of them, `POST /plan` turns a goal into steps across domains, runs them in parallel,
 and re-validates every step's grounding at merge (see the
 [Planner section of the README](README.md#planner)). Checkpointing, human approval,
-and external data sources are next — Phase 9 in [plan.md](plan.md).
+and external data sources are next — Phase 9 in [docs/plan.md](docs/plan.md).
 
 Four workflow domains, each solving a specific synthesis problem a technical leader
 faces weekly:
@@ -376,7 +376,7 @@ dropped and the deterministic workflow result is returned.
 **Standalone MCP server** (`apps/mcp/server.py`): All four domain workflows are
 registered as MCP tools — `director_os_weekly_update`, `brand_os_content_draft`,
 `interview_os_brief`, `one_on_one_os_brief`. A Claude Desktop or Claude Code session
-with the server wired via `claude_desktop_config.json` can invoke any workflow as a
+with the server wired via the repo's `.mcp.json` can invoke any workflow as a
 tool call without touching the HTTP API. The same Pydantic schemas that drive FastAPI
 drive the MCP tool input shapes — no parallel schema definitions.
 

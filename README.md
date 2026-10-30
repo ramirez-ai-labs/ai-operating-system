@@ -10,6 +10,69 @@ Four workflow domains share a common architecture: a routing layer that classifi
 
 ---
 
+## See it run
+
+One goal goes in. The planner splits it into two domain workflows, runs them in parallel, and returns items that each cite the file and line they came from. No API key or model needed.
+
+![Plan tab: one goal split into an Interview OS step and a One-on-One OS step, each item tagged with its source file and line](docs/images/plan-tab.png)
+
+**1. Install and start the API** (Python 3.11+):
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+uvicorn apps.api.main:app
+```
+
+**2. Send a goal to the planner:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/plan \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "Interview prep for Alex Chen and 1:1 with Sarah about blockers"}'
+```
+
+**3. Read the grounded result** (trimmed; the full response also carries the evidence lines and a per-step trace):
+
+```json
+{
+  "status": "ok",
+  "plan": {
+    "planner_used": "rules",
+    "steps": [
+      {"step_id": 1, "tool_name": "interview_os_brief",  "rationale": "Clause 'Interview prep for Alex Chen' matched 'interview'."},
+      {"step_id": 2, "tool_name": "one_on_one_os_brief", "rationale": "Clause '1:1 with Sarah about blockers' matched '1:1'."}
+    ]
+  },
+  "steps": [
+    {
+      "workflow_id": "interview_os.brief",
+      "status": "ok",
+      "result": {
+        "key_questions": [
+          {"text": "Explore: How did Alex handle latency trade-offs in the real-time inference migration?",
+           "source": "candidate_profile_alex_chen.md", "line_number": 23}
+        ]
+      }
+    },
+    {
+      "workflow_id": "one_on_one_os.brief",
+      "status": "ok",
+      "result": {
+        "blockers": [
+          {"text": "Blocker: Sarah cannot finalize the on-call rotation until the headcount request for the third SRE is approved by HR.",
+           "source": "1on1_sarah_sre_lead.md", "line_number": 22}
+        ]
+      }
+    }
+  ]
+}
+```
+
+Every item points at a real line in `data/local_only/`, and the supervisor re-checks each citation against the retrieved evidence before the response leaves the API. For the browser UI, model-backed synthesis, and evals, see [Quick start](#quick-start) and [Planner](#planner).
+
+---
+
 ## Why this matters
 
 Production AI deployment fails in predictable ways: hallucinated content with no citation trail, model paths that break silently when the LLM is unavailable, no way to measure whether synthesis quality regresses as the system evolves, and observability that requires code changes to turn on or off. AI-OS is designed to address all four at the architecture level — not as afterthoughts, but as invariants.
@@ -55,7 +118,7 @@ The architecture is designed to be adapted. The provider layer, the in-process f
 
 AI-OS has two layers. Underneath are **fixed, validated domain workflows**: predictable, cheap, and testable. On top is a **planner** that decides which of those workflows a goal needs and calls them as tools. A planner is only as reliable as the tools it calls, so the workflows came first.
 
-| Shipped | Still ahead (Phase 9 in [plan.md](plan.md)) |
+| Shipped | Still ahead (Phase 9 in [docs/plan.md](docs/plan.md)) |
 |---|---|
 | ✅ **9a** Domain registry in `packages/shared/domains/`: each domain registers its schemas, routing rules, and a model-facing tool definition; the router, API, and MCP server are derived from it | **9d** Requests are stateless; LangGraph checkpointing, run history, and human approval come next |
 | ✅ **9b** `POST /plan`: a goal ("prep my week") becomes steps across domains, run in parallel, each re-validated for grounding at merge | **9e** Local markdown is the only data source; external MCP servers (GitHub first) are next |
@@ -255,7 +318,7 @@ Two MCP integration patterns:
 
 **In-process tool loop** — When `use_mcp=True` on `/orchestrate`, the LLM calls `list_files`, `read_file`, and `search_content` tools autonomously. The orchestrator executes each call, appends the result to the message history, and continues until the model calls `submit_grounded_synthesis`. No pre-selected evidence — the model decides what to read — but it cannot finish with free text: every round forces a tool call, `read_file` numbers each line, and each submitted item must cite a `source` and `line_number` the tools actually served and match that line's text. A synthesis that fails is dropped (`trace.mcp_fallback_reason` says why) and the deterministic workflow result is returned instead.
 
-**Standalone MCP server** — `apps/mcp/server.py` exports all four domain workflows as MCP tools (`director_os.weekly_update`, `brand_os.content_draft`, `interview_os.brief`, `one_on_one_os.brief`) for Claude Desktop or Claude Code. Wire via `claude_desktop_config.json` and all four workflows are available as tool calls without touching the HTTP API.
+**Standalone MCP server** — `apps/mcp/server.py` exports all four domain workflows as MCP tools (`director_os_weekly_update`, `brand_os_content_draft`, `interview_os_brief`, `one_on_one_os_brief`) for Claude Desktop or Claude Code. Claude Code picks up the server from the repo's `.mcp.json`; for Claude Desktop, copy the same `mcpServers` entry into its config file. All four workflows are then available as tool calls without touching the HTTP API.
 
 | Tool | Description |
 |---|---|
@@ -298,7 +361,7 @@ python scripts/run_director_os_evals.py --langsmith
 
 All four domain graphs emit node-level traces to LangSmith when `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` are set. Every `graph.invoke()` call is wrapped with `get_langsmith_tracing_context()` and each graph node carries a `@traceable` decorator — full input/output visibility at every step with no extra instrumentation code.
 
-![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](LangSmithOutput.png)
+![LangSmith trace showing Director OS graph execution with retrieve_evidence, build_draft, assemble_response, validate_response nodes](docs/images/langsmith-trace.png)
 
 Tracing is a silent no-op when the env vars are absent. Zero code paths branch on whether tracing is enabled.
 
