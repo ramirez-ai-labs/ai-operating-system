@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
@@ -62,6 +62,10 @@ class DomainToolInput(BaseModel):
             raise ValueError("data_path must be a relative path without '..'.")
         if path.parts[: len(ALLOWED_DATA_PREFIX.parts)] != ALLOWED_DATA_PREFIX.parts:
             raise ValueError(f"data_path must be under {ALLOWED_DATA_PREFIX}/.")
+        # Resolved against the working directory, as retrieval does. Without this
+        # check an invented folder passes planning and only fails at execution.
+        if not Path(path).is_dir():
+            raise ValueError(f"data_path {value!r} is not an existing directory.")
         return value
 
 

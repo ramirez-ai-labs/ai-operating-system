@@ -37,7 +37,7 @@ The repository currently includes:
 - ChromaDB staleness detection: per-path pre-flight document count before querying; clear warning + keyword fallback when collection exists but has no docs for the requested `data_root`
 - unified `scripts/run_evals.py` dispatcher auto-discovering domains from `packages/shared/evaluations/`; `--domain`, `--backend`, `--langsmith`, `--ci` flags replace 12 standalone scripts
 - `config/models.yaml` as the single source of truth for default model IDs, read by `packages/shared/config/models.py`; the validated default is test-enforced
-- 398 tests passing (6 skipped without API keys); local evals for all four domains and the planner routing/planning set in CI; chroma evals skip gracefully when index absent
+- 402 tests passing (6 skipped without API keys); local evals for all four domains and the planner routing/planning set in CI; chroma evals skip gracefully when index absent
 - optional LangSmith tracing with `@traceable` on all graph nodes across all four domains
 - issue templates, `CONTRIBUTING.md`, branch protection on `main`
 
@@ -513,7 +513,7 @@ Each item ships as its own PR, in order — later items depend on earlier ones.
 
 ## Recommended Immediate Next Steps
 
-Sprints 1–28 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. A planner/supervisor (`POST /plan`) runs multi-domain goals in parallel, and the MCP tool loop can only return grounded content. 398 tests passing (6 skipped without API keys).
+Sprints 1–30 are complete. v1.2.0 is tagged and released. All four workflow domains (Director OS, Brand OS, Interview OS, One-on-One OS) have full Claude provider parity, ChromaDB eval coverage, LangSmith observability, `validate_response` + fallback routing, committed live eval results (100% pass rate each), and CI eval gates. A planner/supervisor (`POST /plan`) runs multi-domain goals in parallel, and the MCP tool loop can only return grounded content. 402 tests passing (6 skipped without API keys).
 
 **Sprint 20  -  Debt paydown (complete, PRs #93–97):**
 Shared grounding primitives extracted to `grounding.py`. Orchestrator circuit breaker and trace token flush. Ghost token capture on fallback path. `section_counts` moved into domain schemas. `_COMPETING_PREFIXES` constant. `_get_chroma_client()` singleton.
@@ -547,6 +547,9 @@ File order only breaks ties in keyword retrieval. Chroma retrieval honors each d
 **Sprint 29  -  Frontend fix + Plan tab (complete, PR #126):**
 `apps/web/src/lib/` (the API client and types every component imports) had never been committed: the Python `.gitignore` rule `lib/` matched it, so the frontend failed to build from any clone. The folder is restored and un-ignored, a CI job now type-checks and builds the frontend, the Auto tab renders validated MCP items, and a Plan tab runs `/plan` from the browser.
 
+**Sprint 30  -  Planner input tightening (complete):**
+`DomainToolInput` rejects a `data_path` that is not an existing directory, so an invented folder fails at planning and falls back to `rules` instead of failing at execution. The check lives on the shared tool input, so the standalone MCP server gets it too. `max_documents` already rejects values outside 1–20 and is unchanged.
+
 **Ollama planner baseline (`evaluations/planner/results_ollama.json`):**
 `llama3.2` (3B) scores 5/19, and 0/5 on the keyword-free and over-split cases, below the rules planner's 14/14 on the cases it supports. Of its plans:
 - 6 fell back to `rules` (non-integer or zero `max_documents`, or no tool call)
@@ -555,12 +558,12 @@ File order only breaks ties in keyword retrieval. Chroma retrieval honors each d
 - every semantic case routed to the wrong domain
 
 The fallback and merge-time validation behaved as designed: no invalid plan ran, and no step with bad input was reported `ok`. Two gaps showed up:
-- `data_path` validation checks only the `data/local_only/` prefix, not that the folder exists, so planning-only evals pass with invented paths.
+- `data_path` validation checked only the `data/local_only/` prefix, not that the folder exists, so planning-only evals passed with invented paths. Fixed in Sprint 30.
 - A 3B model is not a viable planner. The keyword-free cases need a stronger model, such as Claude, to beat `rules`.
 
 **Phase 9  -  recommended next:**
 
-1. **Tighten the planner's tool inputs.** Reject a `data_path` that does not exist, or remove `data_path` and `max_documents` from the model-facing schema and let operator defaults apply. Then score the Claude planner on all 19 cases (opt-in, `--allow-live`).
+1. **Score the planners against the tightened inputs.** Rerun the `llama3.2` baseline (local, free) so its committed results reflect the existence check, then score the Claude planner on all 19 cases (opt-in, `--allow-live`).
 2. **9d checkpointing + human approval.** SQLite checkpointer, `interrupt()` before final output, and run history in `apps/web`.
 3. **When you choose to spend:** rerun the live Claude domain evals with `--allow-live`, and exercise the MCP loop once against the real API. The committed `results_claude.json` files predate the Sprint 26 retrieval change, and the 9c loop has been tested only with mocked responses.
 

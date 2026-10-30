@@ -163,6 +163,10 @@ def test_claude_planner_is_offered_every_registered_domain_and_must_call_a_tool(
         ([("engineering_os_review", {})], "unknown tool"),
         ([("brand_os_content_draft", {"data_path": "../../etc"})], "invalid arguments"),
         ([("brand_os_content_draft", {"data_path": "/etc/passwd"})], "invalid arguments"),
+        (
+            [("brand_os_content_draft", {"data_path": "data/local_only/linkedin_posts"})],
+            "not an existing directory",
+        ),
         ([("director_os_weekly_update", {"max_documents": 500})], "invalid arguments"),
         ([("director_os_weekly_update", "not json")], "not valid JSON"),
         ([("director_os_weekly_update", {})] * 6, "max_steps is 5"),

@@ -142,7 +142,7 @@ make_plan ──Send×N──▶ run_step (parallel) ──▶ merge_results
 ```
 
 - **Three planners, one contract.** `rules` (default) splits the goal into clauses and routes each with the router's keyword rules; it needs no model. `ollama` and `claude` receive every registered domain as a tool and plan by making parallel tool calls, so planning *is* tool selection.
-- **A model plan is never trusted as-is.** Each call must name a registered tool, and its arguments must pass that domain's input schema. That schema rejects `data_path` outside `data/local_only/` and has no provider, model, or fallback fields; those come only from the operator's request. A plan over `max_steps` is rejected. Any failure falls back to the rules planner, and the response records why in `plan.fallback_reason`.
+- **A model plan is never trusted as-is.** Each call must name a registered tool, and its arguments must pass that domain's input schema. That schema rejects a `data_path` outside `data/local_only/` or one that does not exist, and has no provider, model, or fallback fields; those come only from the operator's request. A plan over `max_steps` is rejected. Any failure falls back to the rules planner, and the response records why in `plan.fallback_reason`.
 - **Grounding is checked again at the merge.** Every step's grounded items are re-validated against that step's evidence before they reach the response, so a regressed workflow cannot slip an uncited item into a plan.
 - **Partial results are kept.** A failing step is reported with its error (`status: "partial"`) and the other steps still return.
 
